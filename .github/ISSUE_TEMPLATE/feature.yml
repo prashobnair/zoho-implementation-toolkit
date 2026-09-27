@@ -1,0 +1,13 @@
+name: Feature request
+description: Propose a capability (must map to a requirement ID)
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome (who it helps, what changes)
+    validations:
+      required: true
+  - type: input
+    id: req
+    attributes:
+      label: Requirement ID (e.g. TK-REL-1)

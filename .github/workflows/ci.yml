@@ -1,0 +1,119 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy --strict src
+      - run: uv run lint-imports
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --group dev
+      - run: uv run pytest -m "not eval and not bench and not e2e" --cov=zohokit --cov-report=xml --cov-fail-under=80
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: uv run pytest -m contract --disable-socket
+
+  ai-evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: |
+          if uv run pytest --collect-only -q -m eval | grep -q "::"; then
+            uv run pytest -m eval
+          else
+            echo "No eval suites yet (eval harness lands WP-16); passing by default."
+          fi
+
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync
+      - run: |
+          uv run zohokit version
+          uv run zohokit modules list
+          echo "Full scenario demo (HTML bundle) lands WP-10/WP-34."
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      - run: uvx pip-audit
+      - run: uvx bandit -r src
+      - uses: gitleaks/gitleaks-action@v2
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          if [ -f Dockerfile ]; then
+            docker build -t zohokit:ci .
+            docker run --rm zohokit:ci --help
+          else
+            echo "No Dockerfile yet (container lands WP-10/WP-34); passing by default."
+          fi
+
+  pages:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --group docs
+      - run: uv run --group docs mkdocs build --strict

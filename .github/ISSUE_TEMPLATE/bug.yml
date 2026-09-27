@@ -1,0 +1,19 @@
+name: Bug report
+description: Report a defect (include a regression test per specs/00 §1.4)
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction (synthetic data only)
+    validations:
+      required: true
+  - type: input
+    id: req
+    attributes:
+      label: Requirement ID (e.g. TK-FIX-1)
