@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --locked --group dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy --strict src
@@ -31,8 +31,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync --group dev
+      - run: uv sync --locked --group dev
       - run: uv run pytest -m "not eval and not bench and not e2e" --cov=zohokit --cov-report=xml --cov-fail-under=80
+      - run: uv run coverage report --include='src/zohokit/core/*' --fail-under=90
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}
@@ -46,7 +47,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --locked --group dev
       - run: uv run pytest -m contract --disable-socket
 
   ai-evals:
@@ -57,7 +58,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
+      - run: uv sync --locked --group dev
       - run: |
           if uv run pytest --collect-only -q -m eval | grep -q "::"; then
             uv run pytest -m eval
@@ -73,7 +74,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync
+      - run: uv sync --locked
       - run: |
           uv run zohokit version
           uv run zohokit modules list
@@ -89,9 +90,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync --group dev
-      - run: uvx pip-audit
-      - run: uvx bandit -r src
+      - run: uv sync --locked --group dev
+      - run: uv run pip-audit
+      - run: uv run bandit -r src
       - uses: gitleaks/gitleaks-action@v2
 
   docker:
@@ -115,5 +116,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: uv sync --group docs
+      - run: uv sync --locked --group docs
       - run: uv run --group docs mkdocs build --strict
