@@ -1,0 +1,33 @@
+{
+  "audience": "internal",
+  "conflicts": [
+    {
+      "code": "conflicting_claims",
+      "event_ids": [
+        "call-1",
+        "email-1"
+      ],
+      "key": "launch_date"
+    }
+  ],
+  "source_count": 2,
+  "timeline": [
+    {
+      "at": "2026-01-05T04:30:00+00:00",
+      "id": "call-1",
+      "source_id": "fictional-call-1",
+      "summary": "Fictional kickoff call",
+      "type": "call",
+      "visibility": "client"
+    },
+    {
+      "at": "2026-01-06T09:00:00+00:00",
+      "id": "email-1",
+      "source_id": "fictional-email-1",
+      "summary": "Internal email reference only; no message content",
+      "type": "email_reference",
+      "visibility": "internal"
+    }
+  ],
+  "visible_count": 2
+}

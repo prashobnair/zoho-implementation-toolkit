@@ -1,0 +1,22 @@
+{
+  "external_actions": 0,
+  "findings": [
+    {
+      "code": "missing_owner",
+      "rule": "assign-new"
+    }
+  ],
+  "mode": "simulation_only",
+  "state": {
+    "id": "deal-demo-3",
+    "owner": null,
+    "stage": "qualified"
+  },
+  "trace": [
+    {
+      "action": "set_stage",
+      "rule": "advance",
+      "value": "qualified"
+    }
+  ]
+}

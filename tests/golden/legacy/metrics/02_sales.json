@@ -1,0 +1,19 @@
+{
+  "as_of": "2026-09-26T12:00:00+00:00",
+  "audience": "sales",
+  "dashboard": false,
+  "findings": [
+    {
+      "code": "stale_snapshot",
+      "source": "books"
+    },
+    {
+      "code": "currency_mismatch",
+      "source": "i-2"
+    }
+  ],
+  "metrics": {
+    "won_accounts": 1,
+    "won_deals": 1
+  }
+}

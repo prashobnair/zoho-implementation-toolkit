@@ -1,0 +1,51 @@
+{
+  "counts": {
+    "duplicate": 1,
+    "qualified": 1,
+    "review": 3
+  },
+  "decisions": [
+    {
+      "duplicate_of": null,
+      "lead_id": "lead-1",
+      "phone": "+919000000001",
+      "reason": "qualified_sales_inquiry",
+      "route": "sales_queue",
+      "status": "qualified"
+    },
+    {
+      "duplicate_of": "lead-1",
+      "lead_id": "lead-2",
+      "phone": "+919000000001",
+      "reason": "phone_candidate_match",
+      "route": null,
+      "status": "duplicate"
+    },
+    {
+      "duplicate_of": null,
+      "lead_id": "lead-3",
+      "phone": null,
+      "reason": "invalid_or_missing_e164",
+      "route": "human_queue",
+      "status": "review"
+    },
+    {
+      "duplicate_of": null,
+      "lead_id": "lead-4",
+      "phone": "+919000000003",
+      "reason": "consent_not_verified",
+      "route": "human_queue",
+      "status": "review"
+    },
+    {
+      "duplicate_of": null,
+      "lead_id": "lead-5",
+      "phone": "+919000000004",
+      "reason": "needs_human_triage",
+      "route": "human_queue",
+      "status": "review"
+    }
+  ],
+  "mode": "simulation_only",
+  "outbound_messages": 0
+}

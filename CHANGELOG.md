@@ -13,3 +13,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Legacy history for all 8 `zoho-*` repos under `legacy/<name>/` (TK-MIG-1).
 - Import-linter contracts enforcing TK-ARCH-3 (modules independent, core pure).
 - CI pipeline per `specs/01` §3.3 (lint, test, contract, ai-evals, demo, security, docker, pages).
+- Legacy golden outputs for all 8 modules under `tests/golden/legacy/` (TK-MIG-2).

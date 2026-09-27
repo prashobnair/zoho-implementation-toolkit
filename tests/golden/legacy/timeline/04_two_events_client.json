@@ -1,0 +1,16 @@
+{
+  "audience": "client",
+  "conflicts": [],
+  "source_count": 2,
+  "timeline": [
+    {
+      "at": "2026-01-05T04:30:00+00:00",
+      "id": "call-1",
+      "source_id": "fictional-call-1",
+      "summary": "Fictional kickoff call",
+      "type": "call",
+      "visibility": "client"
+    }
+  ],
+  "visible_count": 1
+}

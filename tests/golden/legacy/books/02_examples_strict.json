@@ -1,0 +1,37 @@
+{
+  "created_invoices": 0,
+  "deal_count": 3,
+  "findings": [
+    {
+      "code": "cross_entity_invoice",
+      "deal": "d-2"
+    },
+    {
+      "code": "currency_mismatch",
+      "deal": "d-2"
+    },
+    {
+      "code": "duplicate_invoice_reference",
+      "deal": "d-2"
+    },
+    {
+      "code": "net_amount_mismatch",
+      "deal": "d-2"
+    },
+    {
+      "code": "sync_failed",
+      "deal": "d-2"
+    },
+    {
+      "code": "tax_not_reviewed",
+      "deal": "d-2"
+    },
+    {
+      "code": "missing_invoice",
+      "deal": "d-3"
+    }
+  ],
+  "invoice_count": 3,
+  "mode": "dry_run_only",
+  "ready_for_sync": false
+}

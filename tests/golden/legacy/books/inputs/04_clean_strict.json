@@ -1,0 +1,25 @@
+{
+  "deals": [
+    {
+      "currency": "INR",
+      "entity": "fictional-india",
+      "id": "d-1",
+      "net_amount": "1200.00"
+    }
+  ],
+  "entities": {
+    "fictional-india": "INR",
+    "fictional-us": "USD"
+  },
+  "invoices": [
+    {
+      "currency": "INR",
+      "deal_ref": "d-1",
+      "entity": "fictional-india",
+      "id": "i-1",
+      "net_amount": "1200.00",
+      "sync_state": "ok",
+      "tax_reviewed": true
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-lead-routing-lab/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/lead_routing/01_examples.json",
+    "input": "legacy/zoho-lead-routing-lab/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/lead_routing/inputs/02_consent_blocked.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/lead_routing/02_consent_blocked.json",
+    "input": "tests/golden/legacy/lead_routing/inputs/02_consent_blocked.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/lead_routing/inputs/03_invalid_unsupported.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/lead_routing/03_invalid_unsupported.json",
+    "input": "tests/golden/legacy/lead_routing/inputs/03_invalid_unsupported.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/lead_routing/inputs/04_single_qualified.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/lead_routing/04_single_qualified.json",
+    "input": "tests/golden/legacy/lead_routing/inputs/04_single_qualified.json"
+  }
+]

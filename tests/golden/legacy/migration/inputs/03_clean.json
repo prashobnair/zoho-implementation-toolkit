@@ -1,0 +1,34 @@
+{
+  "activities": [
+    {
+      "deal_id": "d-1",
+      "id": "a-1",
+      "summary": "Fictional call"
+    }
+  ],
+  "deals": [
+    {
+      "id": "d-1",
+      "person_id": "p-1",
+      "stage": "qualified",
+      "value": 1200
+    }
+  ],
+  "organizations": [
+    {
+      "id": "o-1",
+      "name": "Fictional Northstar Bakery"
+    }
+  ],
+  "people": [
+    {
+      "email": "alex@example.invalid",
+      "id": "p-1",
+      "name": "Alex Demo",
+      "organization_id": "o-1"
+    }
+  ],
+  "stage_mapping": {
+    "qualified": "Qualification"
+  }
+}

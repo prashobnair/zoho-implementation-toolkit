@@ -1,0 +1,19 @@
+{
+  "counts": {
+    "duplicate": 0,
+    "qualified": 0,
+    "review": 1
+  },
+  "decisions": [
+    {
+      "duplicate_of": null,
+      "lead_id": "new",
+      "phone": "+919999999999",
+      "reason": "consent_not_verified",
+      "route": "human_queue",
+      "status": "review"
+    }
+  ],
+  "mode": "simulation_only",
+  "outbound_messages": 0
+}

@@ -1,0 +1,28 @@
+{
+  "initial_event": "deal_created",
+  "record": {
+    "id": "deal-demo-3",
+    "owner": null,
+    "stage": "new"
+  },
+  "rules": [
+    {
+      "action": "assign_owner",
+      "event": "deal_created",
+      "id": "assign-new",
+      "value": "",
+      "when": {
+        "stage": "new"
+      }
+    },
+    {
+      "action": "set_stage",
+      "event": "deal_created",
+      "id": "advance",
+      "value": "qualified",
+      "when": {
+        "stage": "new"
+      }
+    }
+  ]
+}

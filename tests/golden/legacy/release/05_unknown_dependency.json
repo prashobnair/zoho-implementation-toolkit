@@ -1,0 +1,20 @@
+{
+  "changes": [
+    {
+      "change": "changed",
+      "kind": "layout",
+      "name": "Deal.Default"
+    }
+  ],
+  "deployment_actions": 0,
+  "findings": [
+    {
+      "code": "missing_dependency",
+      "component": "layout:Deal.Default",
+      "dependency": "field:Deal.Unknown"
+    }
+  ],
+  "mode": "dry_run_only",
+  "ready_for_release": false,
+  "target_manifest_sha256": "acca1abc1b37f14bb96e988ed0f917981c87cc35d97885a958d2bd0e258f626c"
+}

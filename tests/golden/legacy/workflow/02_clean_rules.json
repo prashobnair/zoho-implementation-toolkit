@@ -1,0 +1,27 @@
+{
+  "external_actions": 0,
+  "findings": [],
+  "mode": "simulation_only",
+  "state": {
+    "id": "x",
+    "owner": "fictional-team",
+    "stage": "qualified"
+  },
+  "trace": [
+    {
+      "action": "assign_owner",
+      "rule": "owner",
+      "value": "fictional-team"
+    },
+    {
+      "action": "set_stage",
+      "rule": "stage",
+      "value": "qualified"
+    },
+    {
+      "action": "queue_followup",
+      "rule": "follow",
+      "value": "day-2"
+    }
+  ]
+}

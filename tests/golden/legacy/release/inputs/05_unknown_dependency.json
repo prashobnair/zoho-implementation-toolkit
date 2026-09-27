@@ -1,0 +1,77 @@
+{
+  "after": [
+    {
+      "kind": "field",
+      "name": "Deal.External_Ref",
+      "type": "text"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref",
+        "field:Deal.Unknown"
+      ],
+      "kind": "layout",
+      "name": "Deal.Default"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref"
+      ],
+      "enabled": true,
+      "kind": "validation",
+      "name": "Deal.Require_Ref"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref"
+      ],
+      "kind": "function",
+      "name": "Post_Deal",
+      "version": "v1"
+    },
+    {
+      "depends_on": [
+        "function:Post_Deal"
+      ],
+      "kind": "webhook",
+      "name": "Deal_Changed"
+    }
+  ],
+  "before": [
+    {
+      "kind": "field",
+      "name": "Deal.External_Ref",
+      "type": "text"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref"
+      ],
+      "kind": "layout",
+      "name": "Deal.Default"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref"
+      ],
+      "enabled": true,
+      "kind": "validation",
+      "name": "Deal.Require_Ref"
+    },
+    {
+      "depends_on": [
+        "field:Deal.External_Ref"
+      ],
+      "kind": "function",
+      "name": "Post_Deal",
+      "version": "v1"
+    },
+    {
+      "depends_on": [
+        "function:Post_Deal"
+      ],
+      "kind": "webhook",
+      "name": "Deal_Changed"
+    }
+  ]
+}

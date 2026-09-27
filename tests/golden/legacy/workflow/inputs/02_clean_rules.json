@@ -1,0 +1,27 @@
+{
+  "initial_event": "deal_created",
+  "record": {
+    "id": "x",
+    "stage": "new"
+  },
+  "rules": [
+    {
+      "action": "assign_owner",
+      "event": "deal_created",
+      "id": "owner",
+      "value": "fictional-team"
+    },
+    {
+      "action": "set_stage",
+      "event": "deal_created",
+      "id": "stage",
+      "value": "qualified"
+    },
+    {
+      "action": "queue_followup",
+      "event": "stage_changed",
+      "id": "follow",
+      "value": "day-2"
+    }
+  ]
+}

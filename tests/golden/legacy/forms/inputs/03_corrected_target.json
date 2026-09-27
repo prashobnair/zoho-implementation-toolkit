@@ -1,0 +1,116 @@
+{
+  "cases": [
+    {
+      "answers": {
+        "details": "Fictional audit",
+        "name": "Fictional Co",
+        "service": "audit"
+      },
+      "name": "audit_complete"
+    },
+    {
+      "answers": {
+        "name": "Fictional Co",
+        "rate": 200,
+        "seats": 3,
+        "service": "delivery"
+      },
+      "name": "delivery_calculation"
+    },
+    {
+      "answers": {
+        "name": "Fictional Co",
+        "service": "audit"
+      },
+      "name": "audit_missing_details"
+    }
+  ],
+  "source_fields": [
+    {
+      "name": "name",
+      "required": true,
+      "type": "text"
+    },
+    {
+      "name": "service",
+      "options": [
+        "audit",
+        "delivery"
+      ],
+      "required": true,
+      "type": "select"
+    },
+    {
+      "name": "seats",
+      "type": "number"
+    },
+    {
+      "name": "rate",
+      "type": "number"
+    },
+    {
+      "name": "estimate",
+      "operation": "multiply",
+      "sources": [
+        "seats",
+        "rate"
+      ],
+      "type": "calculated",
+      "visible_if": {
+        "service": "delivery"
+      }
+    },
+    {
+      "name": "details",
+      "required": true,
+      "type": "text",
+      "visible_if": {
+        "service": "audit"
+      }
+    }
+  ],
+  "target_fields": [
+    {
+      "name": "name",
+      "required": true,
+      "type": "text"
+    },
+    {
+      "name": "service",
+      "options": [
+        "audit",
+        "delivery"
+      ],
+      "required": true,
+      "type": "select"
+    },
+    {
+      "name": "seats",
+      "type": "number"
+    },
+    {
+      "name": "rate",
+      "type": "number"
+    },
+    {
+      "name": "estimate",
+      "operation": "multiply",
+      "sources": [
+        "seats",
+        "rate"
+      ],
+      "type": "calculated",
+      "visible_if": {
+        "service": "delivery"
+      }
+    },
+    {
+      "name": "details",
+      "required": true,
+      "type": "text",
+      "visible_if": {
+        "service": "audit"
+      }
+    }
+  ]
+}

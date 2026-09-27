@@ -1,0 +1,13 @@
+{
+  "created_invoices": 0,
+  "deal_count": 1,
+  "findings": [
+    {
+      "code": "cross_entity_invoice",
+      "deal": "d-1"
+    }
+  ],
+  "invoice_count": 1,
+  "mode": "dry_run_only",
+  "ready_for_sync": false
+}

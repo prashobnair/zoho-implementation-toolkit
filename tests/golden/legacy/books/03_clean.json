@@ -1,0 +1,8 @@
+{
+  "created_invoices": 0,
+  "deal_count": 1,
+  "findings": [],
+  "invoice_count": 1,
+  "mode": "dry_run_only",
+  "ready_for_sync": true
+}
