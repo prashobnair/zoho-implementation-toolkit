@@ -1,0 +1,35 @@
+[importlinter]
+root_package = zohokit
+
+[importlinter:contract:1]
+name = TK-ARCH-3: modules must not import each other
+type = independence
+modules =
+    zohokit.modules.books
+    zohokit.modules.forms
+    zohokit.modules.lead_routing
+    zohokit.modules.metrics
+    zohokit.modules.migration
+    zohokit.modules.release
+    zohokit.modules.timeline
+    zohokit.modules.workflow
+
+[importlinter:contract:2]
+name = pure core: core imports no other in-package modules
+type = forbidden
+source_modules =
+    zohokit.core
+forbidden_modules =
+    zohokit.modules.books
+    zohokit.modules.forms
+    zohokit.modules.lead_routing
+    zohokit.modules.metrics
+    zohokit.modules.migration
+    zohokit.modules.release
+    zohokit.modules.timeline
+    zohokit.modules.workflow
+    zohokit.cli
+    zohokit.reports
+    zohokit.connectors
+    zohokit.ai
+    zohokit.api
