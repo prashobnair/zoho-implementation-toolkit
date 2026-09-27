@@ -1,0 +1,48 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-release-readiness-audit/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/release/01_examples.json",
+    "input": "legacy/zoho-release-readiness-audit/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-release-readiness-audit/examples.json",
+      "--strict"
+    ],
+    "exit_code": 2,
+    "golden": "tests/golden/legacy/release/02_examples_strict.json",
+    "input": "legacy/zoho-release-readiness-audit/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/release/inputs/03_no_change.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/release/03_no_change.json",
+    "input": "tests/golden/legacy/release/inputs/03_no_change.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/release/inputs/04_added_workflow.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/release/04_added_workflow.json",
+    "input": "tests/golden/legacy/release/inputs/04_added_workflow.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/release/inputs/05_unknown_dependency.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/release/05_unknown_dependency.json",
+    "input": "tests/golden/legacy/release/inputs/05_unknown_dependency.json"
+  }
+]

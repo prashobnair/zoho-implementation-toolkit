@@ -1,0 +1,64 @@
+{
+  "initial_event": "stage_changed",
+  "record": {
+    "id": "deal-demo-2",
+    "owner": null,
+    "stage": "qualified"
+  },
+  "rules": [
+    {
+      "action": "assign_owner",
+      "event": "deal_created",
+      "id": "assign-new",
+      "value": "",
+      "when": {
+        "stage": "new"
+      }
+    },
+    {
+      "action": "set_stage",
+      "event": "deal_created",
+      "id": "advance",
+      "value": "qualified",
+      "when": {
+        "stage": "new"
+      }
+    },
+    {
+      "action": "queue_followup",
+      "event": "stage_changed",
+      "id": "followup-a",
+      "value": "day-2",
+      "when": {
+        "stage": "qualified"
+      }
+    },
+    {
+      "action": "queue_followup",
+      "event": "stage_changed",
+      "id": "followup-b",
+      "value": "day-2",
+      "when": {
+        "stage": "qualified"
+      }
+    },
+    {
+      "action": "set_stage",
+      "event": "stage_changed",
+      "id": "toggle-back",
+      "value": "new",
+      "when": {
+        "stage": "qualified"
+      }
+    },
+    {
+      "action": "set_stage",
+      "event": "stage_changed",
+      "id": "toggle-forward",
+      "value": "qualified",
+      "when": {
+        "stage": "new"
+      }
+    }
+  ]
+}

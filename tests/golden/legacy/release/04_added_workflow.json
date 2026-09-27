@@ -1,0 +1,19 @@
+{
+  "changes": [
+    {
+      "change": "added",
+      "kind": "workflow",
+      "name": "Deal.Notify"
+    }
+  ],
+  "deployment_actions": 0,
+  "findings": [
+    {
+      "code": "behavior_regression_review",
+      "component": "workflow:Deal.Notify"
+    }
+  ],
+  "mode": "dry_run_only",
+  "ready_for_release": false,
+  "target_manifest_sha256": "76aa312c7761811dcae98231215fe9a95a0d3874e26f68ba92166b77fd27fea9"
+}

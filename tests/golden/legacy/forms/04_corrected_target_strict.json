@@ -1,0 +1,79 @@
+{
+  "all_pass": true,
+  "cases": [
+    {
+      "case": "audit_complete",
+      "pass": true,
+      "source": {
+        "issues": [],
+        "output": {
+          "details": "Fictional audit",
+          "name": "Fictional Co",
+          "service": "audit"
+        }
+      },
+      "target": {
+        "issues": [],
+        "output": {
+          "details": "Fictional audit",
+          "name": "Fictional Co",
+          "service": "audit"
+        }
+      }
+    },
+    {
+      "case": "delivery_calculation",
+      "pass": true,
+      "source": {
+        "issues": [],
+        "output": {
+          "estimate": "600",
+          "name": "Fictional Co",
+          "rate": "200",
+          "seats": "3",
+          "service": "delivery"
+        }
+      },
+      "target": {
+        "issues": [],
+        "output": {
+          "estimate": "600",
+          "name": "Fictional Co",
+          "rate": "200",
+          "seats": "3",
+          "service": "delivery"
+        }
+      }
+    },
+    {
+      "case": "audit_missing_details",
+      "pass": true,
+      "source": {
+        "issues": [
+          {
+            "code": "required_missing",
+            "field": "details"
+          }
+        ],
+        "output": {
+          "name": "Fictional Co",
+          "service": "audit"
+        }
+      },
+      "target": {
+        "issues": [
+          {
+            "code": "required_missing",
+            "field": "details"
+          }
+        ],
+        "output": {
+          "name": "Fictional Co",
+          "service": "audit"
+        }
+      }
+    }
+  ],
+  "form_submissions": 0,
+  "mode": "offline_simulation"
+}

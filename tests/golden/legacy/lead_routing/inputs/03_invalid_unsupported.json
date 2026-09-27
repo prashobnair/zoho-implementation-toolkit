@@ -1,0 +1,20 @@
+{
+  "leads": [
+    {
+      "budget_confirmed": true,
+      "channel": "whatsapp",
+      "consent": true,
+      "id": "invalid",
+      "intent": "sales",
+      "phone": "123"
+    },
+    {
+      "budget_confirmed": true,
+      "channel": "email",
+      "consent": true,
+      "id": "unsupported",
+      "intent": "sales",
+      "phone": "+919888888888"
+    }
+  ]
+}

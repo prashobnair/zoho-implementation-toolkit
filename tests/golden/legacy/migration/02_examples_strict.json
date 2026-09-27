@@ -1,0 +1,68 @@
+{
+  "import_order": [
+    "organizations",
+    "people",
+    "deals",
+    "activities"
+  ],
+  "issues": [
+    {
+      "code": "possible_duplicate",
+      "detail": "Email matches source person p-1",
+      "entity": "people",
+      "severity": "review",
+      "source_id": "p-2"
+    },
+    {
+      "code": "orphan_organization",
+      "detail": "Organization ID not present",
+      "entity": "people",
+      "severity": "error",
+      "source_id": "p-3"
+    },
+    {
+      "code": "orphan_person",
+      "detail": "Person ID not present",
+      "entity": "deals",
+      "severity": "error",
+      "source_id": "d-2"
+    },
+    {
+      "code": "unmapped_stage",
+      "detail": "No approved target stage mapping",
+      "entity": "deals",
+      "severity": "error",
+      "source_id": "d-2"
+    }
+  ],
+  "mode": "dry_run_only",
+  "ready_for_import": false,
+  "rollback_manifest": {
+    "action": "No rollback executed; validate target IDs and inverse dependencies in a pilot first",
+    "precondition": "Keep original export and a dated target backup before any real import",
+    "source_ids": {
+      "activities": [
+        "a-1"
+      ],
+      "deals": [
+        "d-1",
+        "d-2"
+      ],
+      "organizations": [
+        "o-1"
+      ],
+      "people": [
+        "p-1",
+        "p-2",
+        "p-3"
+      ]
+    }
+  },
+  "source_counts": {
+    "activities": 1,
+    "deals": 2,
+    "organizations": 1,
+    "people": 3
+  },
+  "target_preview_counts": null
+}

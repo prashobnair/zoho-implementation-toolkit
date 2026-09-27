@@ -1,0 +1,52 @@
+{
+  "changes": [
+    {
+      "change": "removed",
+      "kind": "field",
+      "name": "Deal.External_Ref"
+    },
+    {
+      "change": "changed",
+      "kind": "function",
+      "name": "Post_Deal"
+    },
+    {
+      "change": "changed",
+      "kind": "validation",
+      "name": "Deal.Require_Ref"
+    }
+  ],
+  "deployment_actions": 0,
+  "findings": [
+    {
+      "code": "behavior_regression_review",
+      "component": "function:Post_Deal"
+    },
+    {
+      "code": "behavior_regression_review",
+      "component": "validation:Deal.Require_Ref"
+    },
+    {
+      "code": "missing_dependency",
+      "component": "function:Post_Deal",
+      "dependency": "field:Deal.External_Ref"
+    },
+    {
+      "code": "missing_dependency",
+      "component": "layout:Deal.Default",
+      "dependency": "field:Deal.External_Ref"
+    },
+    {
+      "code": "missing_dependency",
+      "component": "validation:Deal.Require_Ref",
+      "dependency": "field:Deal.External_Ref"
+    },
+    {
+      "code": "removal_review",
+      "component": "field:Deal.External_Ref"
+    }
+  ],
+  "mode": "dry_run_only",
+  "ready_for_release": false,
+  "target_manifest_sha256": "0e1aabe67b67f9ed5dd92d5a8cdfac90c74c63a68baeb196c3af5726f18bb6bc"
+}

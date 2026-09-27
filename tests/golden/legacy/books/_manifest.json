@@ -1,0 +1,58 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-books-sync-reconciler/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/books/01_examples.json",
+    "input": "legacy/zoho-books-sync-reconciler/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-books-sync-reconciler/examples.json",
+      "--strict"
+    ],
+    "exit_code": 2,
+    "golden": "tests/golden/legacy/books/02_examples_strict.json",
+    "input": "legacy/zoho-books-sync-reconciler/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/books/inputs/03_clean.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/books/03_clean.json",
+    "input": "tests/golden/legacy/books/inputs/03_clean.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/books/inputs/04_clean_strict.json",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/books/04_clean_strict.json",
+    "input": "tests/golden/legacy/books/inputs/04_clean_strict.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/books/inputs/05_cross_entity.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/books/05_cross_entity.json",
+    "input": "tests/golden/legacy/books/inputs/05_cross_entity.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/books/inputs/06_orphan_invoice.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/books/06_orphan_invoice.json",
+    "input": "tests/golden/legacy/books/inputs/06_orphan_invoice.json"
+  }
+]

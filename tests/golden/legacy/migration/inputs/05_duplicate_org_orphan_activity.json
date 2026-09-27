@@ -1,0 +1,56 @@
+{
+  "activities": [
+    {
+      "deal_id": "missing",
+      "id": "a-1",
+      "summary": "Fictional call"
+    }
+  ],
+  "deals": [
+    {
+      "id": "d-1",
+      "person_id": "p-1",
+      "stage": "qualified",
+      "value": 1200
+    },
+    {
+      "id": "d-2",
+      "person_id": "p-9",
+      "stage": "mystery",
+      "value": 500
+    }
+  ],
+  "organizations": [
+    {
+      "id": "o-1",
+      "name": "Fictional Northstar Bakery"
+    },
+    {
+      "id": "o-1",
+      "name": "Fictional Northstar Bakery"
+    }
+  ],
+  "people": [
+    {
+      "email": "alex@example.invalid",
+      "id": "p-1",
+      "name": "Alex Demo",
+      "organization_id": "o-1"
+    },
+    {
+      "email": " ALEX@example.invalid ",
+      "id": "p-2",
+      "name": "Alex Dup",
+      "organization_id": "o-1"
+    },
+    {
+      "email": "jo@example.invalid",
+      "id": "p-3",
+      "name": "Jo Demo",
+      "organization_id": "o-missing"
+    }
+  ],
+  "stage_mapping": {
+    "qualified": "Qualification"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "changes": [],
+  "deployment_actions": 0,
+  "findings": [],
+  "mode": "dry_run_only",
+  "ready_for_release": true,
+  "target_manifest_sha256": "c16bde32202cceed9510a86cec2b9b39f38f94c2875fdceba543a0660d30164f"
+}

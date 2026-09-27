@@ -1,0 +1,41 @@
+{
+  "import_order": [
+    "organizations",
+    "people",
+    "deals",
+    "activities"
+  ],
+  "issues": [],
+  "mode": "dry_run_only",
+  "ready_for_import": true,
+  "rollback_manifest": {
+    "action": "No rollback executed; validate target IDs and inverse dependencies in a pilot first",
+    "precondition": "Keep original export and a dated target backup before any real import",
+    "source_ids": {
+      "activities": [
+        "a-1"
+      ],
+      "deals": [
+        "d-1"
+      ],
+      "organizations": [
+        "o-1"
+      ],
+      "people": [
+        "p-1"
+      ]
+    }
+  },
+  "source_counts": {
+    "activities": 1,
+    "deals": 1,
+    "organizations": 1,
+    "people": 1
+  },
+  "target_preview_counts": {
+    "activities": 1,
+    "deals": 1,
+    "organizations": 1,
+    "people": 1
+  }
+}

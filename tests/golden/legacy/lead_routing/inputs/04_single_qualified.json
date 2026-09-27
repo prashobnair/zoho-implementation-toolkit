@@ -1,0 +1,12 @@
+{
+  "leads": [
+    {
+      "budget_confirmed": true,
+      "channel": "whatsapp",
+      "consent": true,
+      "id": "lead-1",
+      "intent": "sales",
+      "phone": "+91 90000 00001"
+    }
+  ]
+}

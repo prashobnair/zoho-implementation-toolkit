@@ -1,0 +1,24 @@
+{
+  "as_of": "2026-09-26T12:00:00+00:00",
+  "audience": "operations",
+  "dashboard": false,
+  "findings": [
+    {
+      "code": "stale_snapshot",
+      "source": "books"
+    },
+    {
+      "code": "currency_mismatch",
+      "source": "i-2"
+    },
+    {
+      "code": "invalid_utilization",
+      "source": "people"
+    }
+  ],
+  "metrics": {
+    "booked_utilization_percent": null,
+    "won_accounts": 1,
+    "won_deals": 1
+  }
+}

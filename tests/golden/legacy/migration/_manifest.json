@@ -1,0 +1,49 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-crm-migration-auditor/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/migration/01_examples.json",
+    "input": "legacy/zoho-crm-migration-auditor/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-crm-migration-auditor/examples.json",
+      "--strict"
+    ],
+    "exit_code": 2,
+    "golden": "tests/golden/legacy/migration/02_examples_strict.json",
+    "input": "legacy/zoho-crm-migration-auditor/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/migration/inputs/03_clean.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/migration/03_clean.json",
+    "input": "tests/golden/legacy/migration/inputs/03_clean.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/migration/inputs/04_clean_strict.json",
+      "--strict"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/migration/04_clean_strict.json",
+    "input": "tests/golden/legacy/migration/inputs/04_clean_strict.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/migration/inputs/05_duplicate_org_orphan_activity.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/migration/05_duplicate_org_orphan_activity.json",
+    "input": "tests/golden/legacy/migration/inputs/05_duplicate_org_orphan_activity.json"
+  }
+]

@@ -1,0 +1,49 @@
+{
+  "audience": "internal",
+  "conflicts": [
+    {
+      "code": "conflicting_claims",
+      "event_ids": [
+        "call-1",
+        "email-1"
+      ],
+      "key": "launch_date"
+    }
+  ],
+  "source_count": 4,
+  "timeline": [
+    {
+      "at": "2026-01-05T04:30:00+00:00",
+      "id": "call-1",
+      "source_id": "fictional-call-1",
+      "summary": "Fictional kickoff call",
+      "type": "call",
+      "visibility": "client"
+    },
+    {
+      "at": "2026-01-06T09:00:00+00:00",
+      "id": "email-1",
+      "source_id": "fictional-email-1",
+      "summary": "Internal email reference only; no message content",
+      "type": "email_reference",
+      "visibility": "internal"
+    },
+    {
+      "at": "2026-01-07T10:30:00+00:00",
+      "id": "deal-1",
+      "source_id": "fictional-deal-1",
+      "summary": "Fictional agreement signed",
+      "type": "deal",
+      "visibility": "client"
+    },
+    {
+      "at": "2026-01-08T10:00:00+00:00",
+      "id": "milestone-1",
+      "source_id": "fictional-project-1",
+      "summary": "Internal delivery review",
+      "type": "milestone",
+      "visibility": "internal"
+    }
+  ],
+  "visible_count": 4
+}

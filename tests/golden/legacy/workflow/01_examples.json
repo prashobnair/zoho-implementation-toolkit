@@ -1,0 +1,45 @@
+{
+  "external_actions": 0,
+  "findings": [
+    {
+      "code": "missing_owner",
+      "rule": "assign-new"
+    },
+    {
+      "code": "duplicate_followup",
+      "rule": "followup-b"
+    },
+    {
+      "code": "cycle_detected",
+      "event": "stage_changed"
+    }
+  ],
+  "mode": "simulation_only",
+  "state": {
+    "id": "deal-demo-1",
+    "owner": null,
+    "stage": "qualified"
+  },
+  "trace": [
+    {
+      "action": "set_stage",
+      "rule": "advance",
+      "value": "qualified"
+    },
+    {
+      "action": "queue_followup",
+      "rule": "followup-a",
+      "value": "day-2"
+    },
+    {
+      "action": "set_stage",
+      "rule": "toggle-back",
+      "value": "new"
+    },
+    {
+      "action": "set_stage",
+      "rule": "toggle-forward",
+      "value": "qualified"
+    }
+  ]
+}

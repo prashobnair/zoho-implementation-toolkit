@@ -1,0 +1,38 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-workflow-rule-testbench/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/workflow/01_examples.json",
+    "input": "legacy/zoho-workflow-rule-testbench/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/workflow/inputs/02_clean_rules.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/workflow/02_clean_rules.json",
+    "input": "tests/golden/legacy/workflow/inputs/02_clean_rules.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/workflow/inputs/03_qualified_record.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/workflow/03_qualified_record.json",
+    "input": "tests/golden/legacy/workflow/inputs/03_qualified_record.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/workflow/inputs/04_rule_subset.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/workflow/04_rule_subset.json",
+    "input": "tests/golden/legacy/workflow/inputs/04_rule_subset.json"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "external_actions": 0,
+  "findings": [
+    {
+      "code": "duplicate_followup",
+      "rule": "followup-b"
+    },
+    {
+      "code": "cycle_detected",
+      "event": "stage_changed"
+    }
+  ],
+  "mode": "simulation_only",
+  "state": {
+    "id": "deal-demo-2",
+    "owner": null,
+    "stage": "qualified"
+  },
+  "trace": [
+    {
+      "action": "queue_followup",
+      "rule": "followup-a",
+      "value": "day-2"
+    },
+    {
+      "action": "set_stage",
+      "rule": "toggle-back",
+      "value": "new"
+    },
+    {
+      "action": "set_stage",
+      "rule": "toggle-forward",
+      "value": "qualified"
+    }
+  ]
+}

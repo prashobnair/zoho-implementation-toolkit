@@ -1,0 +1,27 @@
+{
+  "counts": {
+    "duplicate": 0,
+    "qualified": 0,
+    "review": 2
+  },
+  "decisions": [
+    {
+      "duplicate_of": null,
+      "lead_id": "invalid",
+      "phone": null,
+      "reason": "invalid_or_missing_e164",
+      "route": "human_queue",
+      "status": "review"
+    },
+    {
+      "duplicate_of": null,
+      "lead_id": "unsupported",
+      "phone": "+919888888888",
+      "reason": "unsupported_channel",
+      "route": "human_queue",
+      "status": "review"
+    }
+  ],
+  "mode": "simulation_only",
+  "outbound_messages": 0
+}

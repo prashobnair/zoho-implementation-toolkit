@@ -1,0 +1,53 @@
+[
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-analytics-metrics-contracts/examples.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/metrics/01_finance.json",
+    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-analytics-metrics-contracts/examples.json",
+      "--audience",
+      "sales"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/metrics/02_sales.json",
+    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "legacy/zoho-analytics-metrics-contracts/examples.json",
+      "--audience",
+      "operations"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/metrics/03_operations.json",
+    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/metrics/inputs/04_orphan_deal.json"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/metrics/04_orphan_deal.json",
+    "input": "tests/golden/legacy/metrics/inputs/04_orphan_deal.json"
+  },
+  {
+    "argv": [
+      "cli.py",
+      "tests/golden/legacy/metrics/inputs/05_invalid_utilization.json",
+      "--audience",
+      "operations"
+    ],
+    "exit_code": 0,
+    "golden": "tests/golden/legacy/metrics/05_invalid_utilization.json",
+    "input": "tests/golden/legacy/metrics/inputs/05_invalid_utilization.json"
+  }
+]
