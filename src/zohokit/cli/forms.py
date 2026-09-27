@@ -1,0 +1,35 @@
+"""``zohokit forms parity`` (TK-MIG-4)."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated
+
+import typer
+
+from zohokit.cli.common import emit, fresh_context, load_input, parse_model
+from zohokit.modules.forms.engine import run
+from zohokit.modules.forms.models import FormsInput
+
+app = typer.Typer(help="Prove a rebuilt form behaves like the original.")
+
+
+@app.command()
+def parity(
+    fixture: Annotated[Path, typer.Argument(help="JSON with source/target fields and cases.")],
+    input_format: Annotated[
+        str | None, typer.Option("--input-format", help="Only legacy-v1.")
+    ] = None,
+    strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when cases differ.")] = False,
+    format_name: Annotated[
+        str, typer.Option("--format", help="json|table|markdown|html.")
+    ] = "json",
+    out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
+) -> None:
+    """Compare source and target form outputs over the answer cases."""
+    data = load_input(fixture, "forms", input_format)
+    report = run(parse_model(FormsInput, data), ctx=fresh_context())
+    emit(report, format_name, out, strict=strict)
+
+
+__all__: list[str] = ["app"]

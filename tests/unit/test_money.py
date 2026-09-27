@@ -75,6 +75,35 @@ def test_parse_rejects_bool() -> None:
         parse(False)
 
 
+def test_parse_allows_ascii_digits_only() -> None:
+    assert parse("123") == Decimal("123")
+    assert parse("+12.50") == Decimal("12.50")
+    assert parse(".5", allow_negative=True) == Decimal("0.5")
+    for bad in (
+        "١٢٣",
+        "1_000",
+        "1 000",
+        "12a",
+        "0x10",
+        "--5",
+        "5..0",
+        "",
+        ".",
+        "+",
+        "NaN",
+        "Infinity",
+    ):
+        with pytest.raises(MoneyError):
+            parse(bad)
+
+
+def test_parse_normalizes_negative_zero() -> None:
+    assert parse("-0") == Decimal("0")
+    assert parse("-0").is_signed() is False
+    assert parse("-0.00") == Decimal("0.00")
+    assert parse(Decimal("-0.00")) == Decimal("0.00")
+
+
 @given(st.integers(min_value=0, max_value=10_000_000))
 def test_parse_paise_roundtrip(paise: int) -> None:
     amount = Decimal(paise) / Decimal(100)

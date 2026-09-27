@@ -11,6 +11,8 @@ import pycountry
 DEFAULT_MAX_DP = 2
 
 _THOUSANDS_RE = re.compile(r"^\d{1,3}(,\d{3})+(\.\d+)?$")
+_NUMERIC_RE = re.compile(r"^[+-]?([0-9]*\.?[0-9]+|[0-9]+\.)$")
+_NON_FINITE_RE = re.compile(r"^[+-]?(inf|infinity|nan)$", re.IGNORECASE)
 
 
 class MoneyError(ValueError):
@@ -59,10 +61,11 @@ def parse(
 ) -> Decimal:
     """Parse an amount into ``Decimal``.
 
-    Rules: no floats (they cannot represent money exactly) and no bools,
-    commas only as strict thousands grouping, no exponent notation, at most
-    ``max_dp`` decimal places, finite, non-negative unless ``allow_negative``
-    is set. The result is never in exponent form.
+    Rules: no floats and no bools, ASCII digits only (no Unicode digits,
+    no underscores), commas only as strict thousands grouping, no exponent
+    notation, at most ``max_dp`` decimal places, finite, non-negative
+    unless ``allow_negative`` is set. The result is never in exponent form
+    and negative zero normalizes to zero.
     """
     if isinstance(value, float):
         raise MoneyError(f"float amounts are rejected, got {value!r}")
@@ -80,6 +83,10 @@ def parse(
             text = text.replace(",", "")
         if "e" in text.casefold():
             raise MoneyError(f"exponent notation is rejected: {value!r}")
+        if _NON_FINITE_RE.match(text) is not None:
+            raise MoneyError(f"non-finite amount {value!r}")
+        if _NUMERIC_RE.match(text) is None:
+            raise MoneyError(f"invalid amount {value!r}")
         try:
             amount = Decimal(text)
         except InvalidOperation as exc:
@@ -93,4 +100,5 @@ def parse(
         raise MoneyError(f"amount {value!r} exceeds {max_dp} decimal places")
     if amount < 0 and not allow_negative:
         raise MoneyError(f"negative amount {value!r} requires allow_negative=True")
-    return Decimal(format(amount, "f"))
+    plain = Decimal(format(amount, "f"))
+    return plain if not plain.is_zero() else abs(plain)
