@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, InvalidOperation
 from enum import StrEnum
 
 import pycountry
 
 DEFAULT_MAX_DP = 2
+
+_THOUSANDS_RE = re.compile(r"^\d{1,3}(,\d{3})+(\.\d+)?$")
 
 
 class MoneyError(ValueError):
@@ -56,18 +59,27 @@ def parse(
 ) -> Decimal:
     """Parse an amount into ``Decimal``.
 
-    Rules: no floats (they cannot represent money exactly), at most
-    ``max_dp`` decimal places, finite, and non-negative unless
-    ``allow_negative`` is set.
+    Rules: no floats (they cannot represent money exactly) and no bools,
+    commas only as strict thousands grouping, no exponent notation, at most
+    ``max_dp`` decimal places, finite, non-negative unless ``allow_negative``
+    is set. The result is never in exponent form.
     """
     if isinstance(value, float):
         raise MoneyError(f"float amounts are rejected, got {value!r}")
+    if isinstance(value, bool):
+        raise MoneyError(f"bool amounts are rejected, got {value!r}")
     if isinstance(value, Decimal):
         amount = value
     elif isinstance(value, int):
         amount = Decimal(value)
     else:
-        text = value.strip().replace(",", "")
+        text = value.strip()
+        if "," in text:
+            if _THOUSANDS_RE.match(text) is None:
+                raise MoneyError(f"comma must be strict thousands grouping: {value!r}")
+            text = text.replace(",", "")
+        if "e" in text.casefold():
+            raise MoneyError(f"exponent notation is rejected: {value!r}")
         try:
             amount = Decimal(text)
         except InvalidOperation as exc:
@@ -81,4 +93,4 @@ def parse(
         raise MoneyError(f"amount {value!r} exceeds {max_dp} decimal places")
     if amount < 0 and not allow_negative:
         raise MoneyError(f"negative amount {value!r} requires allow_negative=True")
-    return amount
+    return Decimal(format(amount, "f"))

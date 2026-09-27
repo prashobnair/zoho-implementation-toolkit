@@ -156,6 +156,11 @@ def render_table(report: Report) -> str:
     return str(console.export_text())
 
 
+def _md_cell(value: object) -> str:
+    """Escape a Markdown table cell: backslashes, pipes; collapse newlines."""
+    return str(value).replace("\\", "\\\\").replace("|", "\\|").replace("\n", "<br>")
+
+
 def render_markdown(report: Report) -> str:
     """Render the report as Markdown."""
     dumped = _dump(report)
@@ -172,8 +177,9 @@ def render_markdown(report: Report) -> str:
     ]
     for finding in dumped["findings"]:
         lines.append(
-            f"| {finding['severity']} | {finding['entity']}/{finding['entity_id']} "
-            f"| `{finding['code']}` | {finding['message']} |"
+            f"| {_md_cell(finding['severity'])} | "
+            f"{_md_cell(finding['entity'])}/{_md_cell(finding['entity_id'])} "
+            f"| `{_md_cell(finding['code'])}` | {_md_cell(finding['message'])} |"
         )
     return "\n".join(lines) + "\n"
 

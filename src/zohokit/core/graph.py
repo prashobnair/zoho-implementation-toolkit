@@ -15,6 +15,14 @@ class CycleError(ValueError):
         self.cycle = cycle
 
 
+def _canonical_cycle(cycle: list[str]) -> list[str]:
+    """Rotate a closed cycle so the smallest node comes first."""
+    core = cycle[:-1]
+    pivot = core.index(min(core))
+    rotated = core[pivot:] + core[:pivot]
+    return [*rotated, rotated[0]]
+
+
 class DependencyGraph:
     """A small deterministic dependency graph over named components."""
 
@@ -44,7 +52,11 @@ class DependencyGraph:
         return {dep for dep in referenced if dep not in self._explicit and dep not in provided}
 
     def cycles(self, *, limit: int = MAX_CYCLES) -> list[list[str]]:
-        """Find elementary cycles (capped at ``limit``)."""
+        """Find elementary cycles (capped at ``limit``).
+
+        Each cycle is canonicalized: rotated so the smallest node comes
+        first, so rotations of one cycle collapse to a single entry.
+        """
         found: list[list[str]] = []
         seen: set[tuple[str, ...]] = set()
 
@@ -53,10 +65,9 @@ class DependencyGraph:
                 return
             for dep in sorted(self._edges.get(current, ())):
                 if dep == start:
-                    cycle = [*stack, start]
-                    key = tuple(cycle)
-                    if key not in seen:
-                        seen.add(key)
+                    cycle = _canonical_cycle([*stack, start])
+                    if tuple(cycle) not in seen:
+                        seen.add(tuple(cycle))
                         found.append(cycle)
                 elif dep not in stack:
                     visit(start, dep, [*stack, dep])
