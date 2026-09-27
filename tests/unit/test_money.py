@@ -8,7 +8,14 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from zohokit.core.money import MoneyError, parse
+from zohokit.core.money import (
+    CurrencyError,
+    MoneyError,
+    RoundingPolicy,
+    parse,
+    quantize_money,
+    validate_currency,
+)
 
 
 def test_parse_valid_amounts() -> None:
@@ -49,3 +56,35 @@ def test_parse_paise_roundtrip(paise: int) -> None:
 def test_sum_of_parsed_never_touches_float(paise_values: list[int]) -> None:
     total = sum((parse(p) / Decimal(100) for p in paise_values), Decimal(0))
     assert total == sum((Decimal(p) / Decimal(100) for p in paise_values), Decimal(0))
+
+
+def test_quantize_policies() -> None:
+    assert quantize_money(Decimal("2.665"), policy=RoundingPolicy.HALF_UP) == Decimal("2.67")
+    assert quantize_money(Decimal("2.665"), policy=RoundingPolicy.HALF_EVEN) == Decimal("2.66")
+    assert quantize_money(Decimal("10"), places=0) == Decimal("10")
+    with pytest.raises(MoneyError):
+        quantize_money(Decimal("1.00"), places=-1)
+
+
+def test_validate_currency() -> None:
+    assert validate_currency("usd") == "USD"
+    assert validate_currency("INR") == "INR"
+    with pytest.raises(CurrencyError):
+        validate_currency("ZZZ")
+
+
+@given(
+    st.decimals(
+        min_value=Decimal("-1000000"),
+        max_value=Decimal("1000000"),
+        allow_nan=False,
+        allow_infinity=False,
+    ),
+    st.integers(min_value=0, max_value=4),
+    st.sampled_from([RoundingPolicy.HALF_UP, RoundingPolicy.HALF_EVEN]),
+)
+def test_quantize_never_exceeds_places(
+    amount: Decimal, places: int, policy: RoundingPolicy
+) -> None:
+    result = quantize_money(amount, places=places, policy=policy)
+    assert -result.as_tuple().exponent <= places

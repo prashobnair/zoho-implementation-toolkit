@@ -1,0 +1,185 @@
+# serializer version: 1
+# name: test_render_html_golden
+  '''
+  <!DOCTYPE html>
+  <html lang="en" data-theme="auto">
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zohokit migration report</title>
+  <style>
+  :root { --bg: #ffffff; --fg: #1a1a1a; --muted: #5b5b5b; --line: #d8d8d8;
+          --error: #b42318; --review: #935705; --warning: #6b5900; --info: #175cd3; }
+  [data-theme="dark"] { --bg: #161616; --fg: #e8e8e8; --muted: #a8a8a8; --line: #3d3d3d;
+          --error: #f97066; --review: #fdb022; --warning: #eaaa08; --info: #84adff; }
+  @media (prefers-color-scheme: dark) { [data-theme="auto"] { --bg: #161616; --fg: #e8e8e8;
+          --muted: #a8a8a8; --line: #3d3d3d; --error: #f97066; --review: #fdb022;
+          --warning: #eaaa08; --info: #84adff; } }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif;
+         margin: 2rem auto; max-width: 72rem; padding: 0 1rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 0.4rem 0.6rem; text-align: left;
+           vertical-align: top; }
+  .banner { border: 2px solid var(--line); padding: 0.8rem 1rem; margin-bottom: 1rem; }
+  .ready { border-color: var(--info); } .not-ready { border-color: var(--error); }
+  .severity-error { color: var(--error); font-weight: bold; }
+  .severity-review { color: var(--review); font-weight: bold; }
+  .severity-warning { color: var(--warning); } .severity-info { color: var(--info); }
+  .filters { margin: 1rem 0; display: flex; gap: 1rem; flex-wrap: wrap; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  @media print { .filters, #theme-toggle { display: none; } }
+  </style>
+  </head>
+  <body>
+  <h1>zohokit migration report</h1>
+  <div class="banner not-ready">
+    NOT READY &mdash;
+    1 error, 1 review,
+    0 warning, 0 info
+    (run run-0001, schema 2)
+  </div>
+  <div class="filters">
+    <label>Severity:
+      <select id="severity-filter">
+        <option value="">all</option>
+        <option value="error">error</option>
+        <option value="review">review</option>
+        <option value="warning">warning</option>
+        <option value="info">info</option>
+      </select>
+    </label>
+    <label>Code:
+      <select id="code-filter">
+        <option value="">all</option>
+        <option value="orphan_person">orphan_person</option><option value="possible_duplicate">possible_duplicate</option>
+      </select>
+    </label>
+    <button id="theme-toggle" type="button">toggle light/dark</button>
+    <span id="visible-count"></span>
+  </div>
+  <table>
+    <thead><tr><th>Severity</th><th>Entity</th><th>Code</th><th>Message</th><th>Remediation</th><th>Evidence</th></tr></thead>
+    <tbody>
+    
+      <tr data-severity="error" data-code="orphan_person">
+        <td class="severity-error">error</td>
+        <td>deals/d-2</td>
+        <td>orphan_person</td>
+        <td>Deal references a person ID that is not present in the export.</td>
+        <td><em>Add the person to the export or remove the deal.</em></td>
+        <td>
+          
+          <details><summary>evidence</summary><pre>{&#34;person_id&#34;:&#34;p-9&#34;}</pre></details>
+          
+        </td>
+      </tr>
+    
+      <tr data-severity="review" data-code="possible_duplicate">
+        <td class="severity-review">review</td>
+        <td>people/p-2</td>
+        <td>possible_duplicate</td>
+        <td>Two people share a normalized email.</td>
+        <td></td>
+        <td>
+          &mdash;
+        </td>
+      </tr>
+    
+    </tbody>
+  </table>
+  <script>
+  (function () {
+    var root = document.documentElement;
+    try {
+      var saved = localStorage.getItem("zohokit-theme");
+      if (saved === "light" || saved === "dark") { root.setAttribute("data-theme", saved); }
+    } catch (e) {}
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("zohokit-theme", next); } catch (e) {}
+    });
+    var severity = document.getElementById("severity-filter");
+    var code = document.getElementById("code-filter");
+    var count = document.getElementById("visible-count");
+    function apply() {
+      var shown = 0;
+      document.querySelectorAll("tbody tr").forEach(function (row) {
+        var ok = (!severity.value || row.dataset.severity === severity.value)
+          && (!code.value || row.dataset.code === code.value);
+        row.style.display = ok ? "" : "none";
+        if (ok) { shown += 1; }
+      });
+      count.textContent = shown + " of 2 findings shown";
+    }
+    severity.addEventListener("change", apply);
+    code.addEventListener("change", apply);
+    apply();
+  })();
+  </script>
+  </body>
+  </html>
+  '''
+# ---
+# name: test_render_json_snapshot
+  '''
+  {
+    "schema_version": "2",
+    "tool": "zohokit",
+    "tool_version": "0.0.0",
+    "module": "migration",
+    "run_id": "run-0001",
+    "started_at": "2026-09-27T06:30:00Z",
+    "finished_at": "2026-09-27T06:30:00Z",
+    "mode": "offline",
+    "source": {
+      "kind": "fixture",
+      "dc": "in",
+      "org_fingerprint": "abc123"
+    },
+    "inputs_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "ready": false,
+    "summary": {
+      "error": 1,
+      "review": 1,
+      "warning": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "d161a984ca0465baa5631ae7",
+        "module": "migration",
+        "code": "orphan_person",
+        "severity": "error",
+        "entity": "deals",
+        "entity_id": "d-2",
+        "message": "Deal references a person ID that is not present in the export.",
+        "evidence": {
+          "person_id": "p-9"
+        },
+        "remediation": "Add the person to the export or remove the deal.",
+        "docs_url": ""
+      },
+      {
+        "id": "ccfebfd2911816370bcc027a",
+        "module": "migration",
+        "code": "possible_duplicate",
+        "severity": "review",
+        "entity": "people",
+        "entity_id": "p-2",
+        "message": "Two people share a normalized email.",
+        "evidence": {},
+        "remediation": "",
+        "docs_url": ""
+      }
+    ],
+    "artifacts": {
+      "html": "reports/migration.html"
+    },
+    "side_effects": {
+      "external_writes": 0,
+      "messages_sent": 0
+    }
+  }
+  '''
+# ---

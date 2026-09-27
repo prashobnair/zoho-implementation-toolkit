@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from zohokit.core.findings import Finding, Report, Severity, sort_findings
+from zohokit.core.findings import (
+    Finding,
+    Report,
+    ReportSource,
+    Severity,
+    SideEffects,
+    sort_findings,
+)
 from zohokit.core.ids import finding_id
 
 
@@ -48,3 +55,27 @@ def test_report_build_derives_summary_and_sorts() -> None:
     assert report.summary.review == 0
     assert report.findings[0].severity is Severity.ERROR
     assert report.ready is False
+
+
+def test_report_carries_full_envelope() -> None:
+    now = datetime(2026, 9, 27, tzinfo=UTC)
+    report = Report.build(
+        module="migration",
+        run_id="run-2",
+        started_at=now,
+        finished_at=now,
+        findings=[],
+        ready=True,
+        mode="offline",
+        source=ReportSource(kind="fixture", dc="in", org_fingerprint="abc123"),
+        inputs_sha256="0" * 64,
+        artifacts={"html": "reports/migration.html"},
+        side_effects=SideEffects(),
+    )
+    assert report.schema_version == "2"
+    assert report.tool == "zohokit"
+    assert report.source.org_fingerprint == "abc123"
+    assert report.inputs_sha256 == "0" * 64
+    assert report.artifacts == {"html": "reports/migration.html"}
+    assert report.side_effects.external_writes == 0
+    assert report.side_effects.messages_sent == 0

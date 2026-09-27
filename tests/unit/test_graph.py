@@ -39,3 +39,13 @@ def test_disconnected_components_all_appear() -> None:
     graph.add("b")
     graph.add("a")
     assert graph.topo_order() == ["a", "b"]
+
+
+def test_cycles_are_capped() -> None:
+    graph = DependencyGraph()
+    nodes = [f"n-{index}" for index in range(6)]
+    for left in nodes:
+        for right in nodes:
+            if left != right:
+                graph.add(left, depends_on=[right])
+    assert len(graph.cycles(limit=3)) == 3
