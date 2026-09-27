@@ -1,0 +1,16 @@
+site_name: zoho-implementation-toolkit
+site_description: An implementation engineer's safety kit for Zoho.
+theme:
+  name: material
+nav:
+  - Overview: index.md
+  - Modules: modules/index.md
+  - Finding codes: finding-codes.md
+  - API contracts: API_CONTRACTS.md
+  - Threat model: THREAT_MODEL.md
+  - Decisions:
+      - ADR 0001: adr/0001-tooling-and-layout.md
+      - ADR 0002: adr/0002-get-only-guard.md
+      - ADR 0003: adr/0003-coql-disabled.md
+  - Changelog: changelog.md
+strict: true
