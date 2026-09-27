@@ -143,7 +143,7 @@ def analyze(inputs: WorkflowInput) -> Analysis:
 
 
 def _message(item: dict[str, Any]) -> str:
-    text = item["code"]
+    text: str = item["code"]
     if "rule" in item:
         text += f" (rule {item['rule']})"
     if "event" in item:

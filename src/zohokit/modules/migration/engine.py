@@ -157,7 +157,10 @@ def analyze(inputs: MigrationInput) -> Analysis:
         "rollback_manifest": {
             "precondition": "Keep original export and a dated target backup before any real import",
             "source_ids": {entity: sorted(ids[entity]) for entity in entities},
-            "action": "No rollback executed; validate target IDs and inverse dependencies in a pilot first",
+            "action": (
+                "No rollback executed; validate target IDs "
+                "and inverse dependencies in a pilot first"
+            ),
         },
     }
     findings = tuple(

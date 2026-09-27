@@ -30,7 +30,11 @@ def _validate_schema(fields: Any) -> set[str]:
         raise ValueError("fields must be a list")
     names: set[str] = set()
     for field in fields:
-        if not isinstance(field, dict) or not isinstance(field.get("name"), str) or not field["name"]:
+        if (
+            not isinstance(field, dict)
+            or not isinstance(field.get("name"), str)
+            or not field["name"]
+        ):
             raise ValueError("Every field needs a name")
         if field["name"] in names:
             raise ValueError("Duplicate field name")
@@ -120,7 +124,9 @@ def _evaluate(
                 discriminator=str(position),
             )
         )
-    for position, name in enumerate(sorted(key for key in answers if key in hidden)):
+    for position, name in enumerate(
+        field["name"] for field in fields if field["name"] in hidden and field["name"] in answers
+    ):
         new_findings.append(
             Finding.create(
                 module="forms",

@@ -66,9 +66,7 @@ def analyze(inputs: ReleaseInput) -> Analysis:
             continue
         changes.append({"kind": kind, "name": name, "change": change})
         if kind in SENSITIVE:
-            findings.append(
-                {"code": "behavior_regression_review", "component": f"{kind}:{name}"}
-            )
+            findings.append({"code": "behavior_regression_review", "component": f"{kind}:{name}"})
         if change == "removed":
             findings.append({"code": "removal_review", "component": f"{kind}:{name}"})
     existing = {f"{kind}:{name}" for kind, name in new}

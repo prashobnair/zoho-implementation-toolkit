@@ -15,3 +15,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI pipeline per `specs/01` §3.3 (lint, test, contract, ai-evals, demo, security, docker, pages).
 - Legacy golden outputs for all 8 modules under `tests/golden/legacy/` (TK-MIG-2).
 - Shared core v1: full finding/report envelope, stable identities, money/time/graph/plan utilities, JSON/table/Markdown/HTML renderers, exit codes (TK-CORE-1, 2, 4, 5, 6, 7, TK-CORE-8 partial).
+- Ported release, migration, workflow and forms with WP-06 golden parity (TK-MIG-3, TK-MIG-4; TK-FIX-1, TK-FIX-5, TK-FIX-7).
+- Intentional parity differences (TK-FIX-1): release `target_manifest_sha256` is now order-free, e.g. `01_examples.json` changed `0e1aabe6…` → `ca3d3e6e…`; all other release goldens likewise. No forms golden changed (TK-FIX-5 only affects chained visibility, absent from fixtures).
