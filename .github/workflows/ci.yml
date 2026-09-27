@@ -93,7 +93,7 @@ jobs:
       - run: uv sync --locked --group dev
       - run: uv run pip-audit
       - run: uv run bandit -r src
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
