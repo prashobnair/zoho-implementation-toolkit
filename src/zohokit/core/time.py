@@ -28,9 +28,14 @@ def parse(value: str) -> datetime:
     return parsed.astimezone(UTC)
 
 
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+
+
 def from_epoch_ms(value: int) -> datetime:
-    """Build an aware UTC datetime from epoch milliseconds."""
-    return datetime.fromtimestamp(value / 1000, tz=UTC)
+    """Build an aware UTC datetime from epoch milliseconds (exact arithmetic)."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise InvalidTimeError(f"epoch milliseconds must be an int, got {value!r}")
+    return _EPOCH + timedelta(milliseconds=value)
 
 
 def window(spec: str, now: datetime) -> tuple[datetime, datetime]:

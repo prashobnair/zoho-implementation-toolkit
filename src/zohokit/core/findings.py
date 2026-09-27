@@ -7,14 +7,19 @@ deterministic for the same input.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from zohokit.core.ids import finding_id
 
 SCHEMA_VERSION = "2"
 TOOL_NAME = "zohokit"
+
+_FINDING_ID_RE = re.compile(r"^[0-9a-f]{24}$")
 
 
 class Severity(StrEnum):
@@ -50,6 +55,43 @@ class Finding(BaseModel):
     remediation: str = ""
     docs_url: str = ""
 
+    @field_validator("id")
+    @classmethod
+    def _check_id(cls, value: str) -> str:
+        """Require a 24-char lowercase hex stable identity (TK-CORE-2)."""
+        if _FINDING_ID_RE.match(value) is None:
+            raise ValueError(f"finding id must be 24 lowercase hex chars, got {value!r}")
+        return value
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        module: str,
+        code: str,
+        severity: Severity,
+        entity: str,
+        entity_id: str,
+        message: str,
+        evidence: dict[str, Any] | None = None,
+        remediation: str = "",
+        docs_url: str = "",
+        discriminator: str = "",
+    ) -> Finding:
+        """Build a finding with its stable identity computed (TK-CORE-2)."""
+        return cls(
+            id=finding_id(module, code, entity, entity_id, discriminator),
+            module=module,
+            code=code,
+            severity=severity,
+            entity=entity,
+            entity_id=entity_id,
+            message=message,
+            evidence=evidence or {},
+            remediation=remediation,
+            docs_url=docs_url,
+        )
+
     def sort_key(self) -> tuple[int, str, str, str, str]:
         """Deterministic ordering key for report rendering."""
         return (
@@ -77,6 +119,25 @@ class ReportSummary(BaseModel):
     info: int = 0
 
 
+class ReportSource(BaseModel):
+    """Where the audited data came from (STD §3.5). Never raw org IDs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["fixture", "zoho"] = "fixture"
+    dc: str = "in"
+    org_fingerprint: str = ""
+
+
+class SideEffects(BaseModel):
+    """Count of real-world side effects (always zero for audits)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    external_writes: int = 0
+    messages_sent: int = 0
+
+
 class Report(BaseModel):
     """Versioned report envelope per STD §3.5."""
 
@@ -89,10 +150,14 @@ class Report(BaseModel):
     run_id: str
     started_at: datetime
     finished_at: datetime
-    mode: str = "offline"
+    mode: Literal["offline", "live_read"] = "offline"
+    source: ReportSource = Field(default_factory=ReportSource)
+    inputs_sha256: str = ""
     ready: bool
     summary: ReportSummary
     findings: list[Finding] = Field(default_factory=list)
+    artifacts: dict[str, str] = Field(default_factory=dict)
+    side_effects: SideEffects = Field(default_factory=SideEffects)
 
     @classmethod
     def build(
@@ -104,7 +169,11 @@ class Report(BaseModel):
         finished_at: datetime,
         findings: list[Finding],
         ready: bool,
-        mode: str = "offline",
+        mode: Literal["offline", "live_read"] = "offline",
+        source: ReportSource | None = None,
+        inputs_sha256: str = "",
+        artifacts: dict[str, str] | None = None,
+        side_effects: SideEffects | None = None,
     ) -> Report:
         """Build a report with findings sorted and the summary derived."""
         ordered = sort_findings(findings)
@@ -120,7 +189,11 @@ class Report(BaseModel):
             started_at=started_at,
             finished_at=finished_at,
             mode=mode,
+            source=source or ReportSource(),
+            inputs_sha256=inputs_sha256,
             ready=ready,
             summary=summary,
             findings=ordered,
+            artifacts=artifacts or {},
+            side_effects=side_effects or SideEffects(),
         )

@@ -1,7 +1,8 @@
 """Stable identities and fingerprints (TK-CORE-2, TK-FIX-1).
 
-Identities hash ``(module, code, entity, entity_id, discriminator)`` and never
-include mutable values, so re-running a report keeps finding IDs stable.
+Identities hash the canonical JSON of
+``[module, code, entity, entity_id, discriminator]`` and never include
+mutable values, so re-running a report keeps finding IDs stable.
 Fingerprints sort components by ``(kind, name)`` first, so list order can
 never change the hash.
 """
@@ -28,7 +29,7 @@ def finding_id(
     discriminator: str = "",
 ) -> str:
     """Return the stable 24-char finding identity."""
-    payload = "\n".join([module, code, entity, entity_id, discriminator])
+    payload = canonical_json([module, code, entity, entity_id, discriminator])
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:FINDING_ID_LENGTH]
 
 
