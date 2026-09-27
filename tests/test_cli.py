@@ -100,3 +100,38 @@ def test_unknown_format_rejected() -> None:
 def test_missing_file_exit_1() -> None:
     result = runner.invoke(app, ["migration", "audit", str(LEGACY / "nope.json")])
     assert result.exit_code == 1
+
+
+def test_books_reconcile_and_strict() -> None:
+    fixture = str(LEGACY / "zoho-books-sync-reconciler" / "examples.json")
+    assert runner.invoke(app, ["books", "reconcile", fixture]).exit_code == 0
+    strict = runner.invoke(app, ["books", "reconcile", fixture, "--strict"])
+    assert strict.exit_code == 2
+    assert json.loads(strict.output)["ready"] is False
+
+
+def test_metrics_check_audiences() -> None:
+    fixture = str(LEGACY / "zoho-analytics-metrics-contracts" / "examples.json")
+    finance = runner.invoke(app, ["metrics", "check", fixture])
+    assert finance.exit_code == 0
+    sales = runner.invoke(app, ["metrics", "check", fixture, "--audience", "sales"])
+    assert sales.exit_code == 0
+    assert json.loads(finance.output)["run_id"] != json.loads(sales.output)["run_id"]
+    bad = runner.invoke(app, ["metrics", "check", fixture, "--audience", "executive"])
+    assert bad.exit_code == 1
+
+
+def test_timeline_compose_client() -> None:
+    fixture = str(LEGACY / "zoho-client-timeline-composer" / "examples.json")
+    result = runner.invoke(app, ["timeline", "compose", fixture, "--audience", "client"])
+    assert result.exit_code == 0
+    assert "2026-02-15" not in result.output
+
+
+def test_lead_routing_route_and_region() -> None:
+    fixture = str(LEGACY / "zoho-lead-routing-lab" / "examples.json")
+    result = runner.invoke(app, ["lead-routing", "route", fixture])
+    assert result.exit_code == 0
+    assert json.loads(result.output)["module"] == "lead_routing"
+    regional = runner.invoke(app, ["lead-routing", "route", fixture, "--default-region", "IN"])
+    assert regional.exit_code == 0
