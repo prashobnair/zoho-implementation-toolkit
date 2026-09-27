@@ -39,6 +39,16 @@ def test_evidence_values_cannot_change_identity() -> None:
     assert "evidence" not in inspect.signature(finding_id).parameters
 
 
+def test_finding_id_exact_value() -> None:
+    assert finding_id("migration", "orphan_person", "deals", "d-2") == "c0800b41f6fb8d7ead02b9a3"
+
+
+def test_newline_parts_do_not_collide() -> None:
+    """Regression: newline-joined parts collided; canonical JSON cannot."""
+    assert finding_id("m", "c", "a\nb", "x") == "74c7dbced760e022159168dc"
+    assert finding_id("m", "c", "a", "b\nx") == "43df888d072100cb426689cc"
+
+
 def test_fingerprint_is_order_independent() -> None:
     components = [
         {"kind": "workflow", "name": "assign-owner"},

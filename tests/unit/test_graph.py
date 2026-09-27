@@ -16,14 +16,39 @@ def test_topo_order_diamond_is_deterministic() -> None:
     assert graph.topo_order() == ["extract", "migrate", "validate", "deploy"]
 
 
-def test_self_loop_and_cycle_reported() -> None:
+def test_two_cycle_collapses_rotations() -> None:
     graph = DependencyGraph()
     graph.add("a", depends_on=["b"])
     graph.add("b", depends_on=["a"])
-    cycles = graph.cycles()
-    assert len(cycles) >= 1
+    assert graph.cycles() == [["a", "b", "a"]]
     with pytest.raises(CycleError):
         graph.topo_order()
+
+
+def test_self_loop_exact() -> None:
+    graph = DependencyGraph()
+    graph.add("a", depends_on=["a"])
+    assert graph.cycles() == [["a", "a"]]
+    with pytest.raises(CycleError):
+        graph.topo_order()
+
+
+def test_diamond_has_no_cycles() -> None:
+    graph = DependencyGraph()
+    graph.add("deploy", depends_on=["migrate", "validate"])
+    graph.add("migrate", depends_on=["extract"])
+    graph.add("validate", depends_on=["extract"])
+    graph.add("extract")
+    assert graph.cycles() == []
+
+
+def test_disconnected_cycles_listed_exactly() -> None:
+    graph = DependencyGraph()
+    graph.add("c", depends_on=["d"])
+    graph.add("d", depends_on=["c"])
+    graph.add("a", depends_on=["b"])
+    graph.add("b", depends_on=["a"])
+    assert graph.cycles() == [["a", "b", "a"], ["c", "d", "c"]]
 
 
 def test_missing_reports_undeclared_only() -> None:
@@ -48,4 +73,8 @@ def test_cycles_are_capped() -> None:
         for right in nodes:
             if left != right:
                 graph.add(left, depends_on=[right])
-    assert len(graph.cycles(limit=3)) == 3
+    assert graph.cycles(limit=3) == [
+        ["n-0", "n-1", "n-0"],
+        ["n-0", "n-1", "n-2", "n-0"],
+        ["n-0", "n-1", "n-2", "n-3", "n-0"],
+    ]

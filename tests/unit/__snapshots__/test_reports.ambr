@@ -147,7 +147,7 @@
     },
     "findings": [
       {
-        "id": "d161a984ca0465baa5631ae7",
+        "id": "c0800b41f6fb8d7ead02b9a3",
         "module": "migration",
         "code": "orphan_person",
         "severity": "error",
@@ -161,7 +161,7 @@
         "docs_url": ""
       },
       {
-        "id": "ccfebfd2911816370bcc027a",
+        "id": "453026ec923bb0de67b0a89f",
         "module": "migration",
         "code": "possible_duplicate",
         "severity": "review",

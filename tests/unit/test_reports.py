@@ -110,3 +110,26 @@ def test_render_markdown_structure() -> None:
     assert "NOT READY" in markdown
     assert "| Severity | Entity | Code | Message |" in markdown
     assert "`orphan_person`" in markdown
+
+
+def test_render_markdown_escapes_cells() -> None:
+    report = sample_report()
+    tricky = Finding(
+        id=finding_id("migration", "x", "deals", "d-1"),
+        module="migration",
+        code="x",
+        severity=Severity.INFO,
+        entity="deals",
+        entity_id="d-1",
+        message="a|b\nc",
+    )
+    rebuilt = Report.build(
+        module="migration",
+        run_id="run-0001",
+        started_at=report.started_at,
+        finished_at=report.finished_at,
+        findings=[tricky],
+        ready=True,
+    )
+    row = [line for line in render_markdown(rebuilt).splitlines() if "`x`" in line]
+    assert row == ["| info | deals/d-1 | `x` | a\\|b<br>c |"]

@@ -26,6 +26,16 @@ def test_from_epoch_ms() -> None:
     assert from_epoch_ms(0) == datetime(1970, 1, 1, tzinfo=UTC)
 
 
+def test_from_epoch_ms_rejects_bool_and_non_int() -> None:
+    for bad in (True, False, 1.5, "1000", None):
+        with pytest.raises(InvalidTimeError):
+            from_epoch_ms(bad)  # type: ignore[arg-type]
+
+
+def test_from_epoch_ms_exact_negative() -> None:
+    assert from_epoch_ms(-1000) == datetime(1969, 12, 31, 23, 59, 59, tzinfo=UTC)
+
+
 def test_window_30d() -> None:
     now = datetime(2026, 9, 27, tzinfo=UTC)
     start, end = window("30d", now)

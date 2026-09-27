@@ -46,6 +46,35 @@ def test_parse_rejects_garbage() -> None:
         parse("not-money")
 
 
+def test_parse_strict_thousands_grouping() -> None:
+    assert parse("1,234.50") == Decimal("1234.50")
+    assert parse("12,345,678") == Decimal("12345678")
+    assert parse("1,234") == Decimal("1234")
+    for bad in ("1,50", "1,2,3", "1234,567", ",123", "1,2345", "12,34,567"):
+        with pytest.raises(MoneyError):
+            parse(bad)
+
+
+def test_parse_rejects_exponent_notation() -> None:
+    for bad in ("1e3", "1E3", "2.5E-2", "1E+3"):
+        with pytest.raises(MoneyError):
+            parse(bad)
+
+
+def test_parse_never_returns_exponent_form() -> None:
+    assert parse(Decimal("1E+3")) == Decimal("1000")
+    assert parse(Decimal("1E+3")).as_tuple().exponent == 0
+    assert parse("1000").as_tuple().exponent == 0
+    assert parse("4.20") == Decimal("4.20")
+
+
+def test_parse_rejects_bool() -> None:
+    with pytest.raises(MoneyError):
+        parse(True)
+    with pytest.raises(MoneyError):
+        parse(False)
+
+
 @given(st.integers(min_value=0, max_value=10_000_000))
 def test_parse_paise_roundtrip(paise: int) -> None:
     amount = Decimal(paise) / Decimal(100)
