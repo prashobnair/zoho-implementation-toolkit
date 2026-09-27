@@ -20,7 +20,9 @@ classifiers = [
 ]
 dependencies = [
   "httpx>=0.27",
+  "jinja2>=3.1",
   "phonenumbers>=9.0",
+  "pycountry>=23.0",
   "pydantic>=2.7",
   "rich>=13.7",
   "typer>=0.12",
@@ -44,6 +46,7 @@ dev = [
   "pytest-cov>=5.0",
   "pytest-socket>=0.7",
   "ruff>=0.4",
+  "syrupy>=4.0",
 ]
 docs = [
   "mkdocs-material>=9.5",
@@ -75,7 +78,7 @@ warn_return_any = true
 exclude = ["legacy/"]
 
 [[tool.mypy.overrides]]
-module = "phonenumbers.*"
+module = ["phonenumbers.*", "pycountry.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

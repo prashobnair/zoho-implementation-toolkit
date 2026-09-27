@@ -77,6 +77,25 @@ class ReportSummary(BaseModel):
     info: int = 0
 
 
+class ReportSource(BaseModel):
+    """Where the audited data came from (STD §3.5). Never raw org IDs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: str = "fixture"
+    dc: str = "in"
+    org_fingerprint: str = ""
+
+
+class SideEffects(BaseModel):
+    """Count of real-world side effects (always zero for audits)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    external_writes: int = 0
+    messages_sent: int = 0
+
+
 class Report(BaseModel):
     """Versioned report envelope per STD §3.5."""
 
@@ -90,9 +109,13 @@ class Report(BaseModel):
     started_at: datetime
     finished_at: datetime
     mode: str = "offline"
+    source: ReportSource = Field(default_factory=ReportSource)
+    inputs_sha256: str = ""
     ready: bool
     summary: ReportSummary
     findings: list[Finding] = Field(default_factory=list)
+    artifacts: dict[str, str] = Field(default_factory=dict)
+    side_effects: SideEffects = Field(default_factory=SideEffects)
 
     @classmethod
     def build(
@@ -105,6 +128,10 @@ class Report(BaseModel):
         findings: list[Finding],
         ready: bool,
         mode: str = "offline",
+        source: ReportSource | None = None,
+        inputs_sha256: str = "",
+        artifacts: dict[str, str] | None = None,
+        side_effects: SideEffects | None = None,
     ) -> Report:
         """Build a report with findings sorted and the summary derived."""
         ordered = sort_findings(findings)
@@ -120,7 +147,11 @@ class Report(BaseModel):
             started_at=started_at,
             finished_at=finished_at,
             mode=mode,
+            source=source or ReportSource(),
+            inputs_sha256=inputs_sha256,
             ready=ready,
             summary=summary,
             findings=ordered,
+            artifacts=artifacts or {},
+            side_effects=side_effects or SideEffects(),
         )
