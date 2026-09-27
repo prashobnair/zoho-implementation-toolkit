@@ -24,7 +24,11 @@ from zohokit.modules.lead_routing.report import build_report
 
 CHANNELS = {"whatsapp", "instagram", "forms"}
 
-_STATUS_SEVERITY = {"qualified": Severity.INFO, "review": Severity.REVIEW, "duplicate": Severity.REVIEW}
+_STATUS_SEVERITY = {
+    "qualified": Severity.INFO,
+    "review": Severity.REVIEW,
+    "duplicate": Severity.REVIEW,
+}
 
 
 @dataclass(frozen=True)
@@ -81,28 +85,42 @@ def analyze(inputs: LeadRoutingInput, *, default_region: str | None = None) -> A
         channel = item.get("channel")
         phone, inferred = _normalize_detail(item.get("phone"), default_region=default_region)
         if channel not in CHANNELS:
-            decisions.append(Decision(lead_id, "review", "human_queue", "unsupported_channel", phone))
+            decisions.append(
+                Decision(lead_id, "review", "human_queue", "unsupported_channel", phone)
+            )
         elif not phone:
-            decisions.append(Decision(lead_id, "review", "human_queue", "invalid_or_missing_e164", None))
+            decisions.append(
+                Decision(lead_id, "review", "human_queue", "invalid_or_missing_e164", None)
+            )
         elif phone in seen_phones:
             decisions.append(
-                Decision(lead_id, "duplicate", None, "phone_candidate_match", phone, seen_phones[phone])
+                Decision(
+                    lead_id, "duplicate", None, "phone_candidate_match", phone, seen_phones[phone]
+                )
             )
         else:
             # Reserve the valid phone even when later qualification needs review.
             seen_phones[phone] = lead_id
             if item.get("consent") is not True:
-                decisions.append(Decision(lead_id, "review", "human_queue", "consent_not_verified", phone))
+                decisions.append(
+                    Decision(lead_id, "review", "human_queue", "consent_not_verified", phone)
+                )
             elif item.get("intent") == "sales" and item.get("budget_confirmed") is True:
                 decisions.append(
                     Decision(lead_id, "qualified", "sales_queue", "qualified_sales_inquiry", phone)
                 )
             elif item.get("intent") in {"support", "unknown"}:
-                decisions.append(Decision(lead_id, "review", "human_queue", "needs_human_triage", phone))
+                decisions.append(
+                    Decision(lead_id, "review", "human_queue", "needs_human_triage", phone)
+                )
             elif item.get("intent") == "sales":
-                decisions.append(Decision(lead_id, "review", "human_queue", "budget_unconfirmed", phone))
+                decisions.append(
+                    Decision(lead_id, "review", "human_queue", "budget_unconfirmed", phone)
+                )
             else:
-                decisions.append(Decision(lead_id, "review", "human_queue", "unrecognized_intent", phone))
+                decisions.append(
+                    Decision(lead_id, "review", "human_queue", "unrecognized_intent", phone)
+                )
         if inferred and phone is not None:
             new_findings.append(
                 Finding.create(
@@ -149,9 +167,9 @@ def run(inputs: LeadRoutingInput, *, ctx: RunContext, default_region: str | None
     """Route the leads: ``run(inputs, *, ctx) -> Report`` (TK-ARCH-1)."""
     analysis = analyze(inputs, default_region=default_region)
     digest = hashlib.sha256(
-        canonical_json(
-            {**inputs.model_dump(mode="json"), "default_region": default_region}
-        ).encode("utf-8")
+        canonical_json({**inputs.model_dump(mode="json"), "default_region": default_region}).encode(
+            "utf-8"
+        )
     ).hexdigest()
     return build_report(analysis, ctx=ctx, inputs_sha256=digest)
 

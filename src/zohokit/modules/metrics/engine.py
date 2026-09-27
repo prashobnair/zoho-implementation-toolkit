@@ -152,8 +152,8 @@ def analyze(inputs: MetricsInput, *, audience: str = "finance") -> Analysis:
         valid_staff.append((available, booked))
     utilization = None
     if data["staff"]:
-        total = sum(available for available, _ in valid_staff)
-        used = sum(booked for _, booked in valid_staff)
+        total: Decimal = sum((available for available, _ in valid_staff), Decimal(0))
+        used: Decimal = sum((booked for _, booked in valid_staff), Decimal(0))
         if total <= 0 or used < 0 or used > total:
             record("invalid_utilization", "people")
         else:

@@ -13,7 +13,7 @@ import copy
 import hashlib
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -49,12 +49,19 @@ def normalize_claim_value(value: str, claim_type: str | None) -> str:
     text = value.strip()
     if claim_type == "date":
         try:
-            return parse_time_core(text).isoformat()
-        except (InvalidTimeError, AttributeError):
+            return parse_time_core(text).date().isoformat()
+        except InvalidTimeError:
+            pass
+        try:
+            return date.fromisoformat(text).isoformat()
+        except ValueError:
             return text.casefold()
     if claim_type == "number":
         try:
-            return format(Decimal(text.replace(",", "")), "f").rstrip("0").rstrip(".") or "0"
+            normalized = format(Decimal(text.replace(",", "")), "f")
+            if "." in normalized:
+                normalized = normalized.rstrip("0").rstrip(".")
+            return normalized
         except InvalidOperation:
             return text.casefold()
     if claim_type == "money":

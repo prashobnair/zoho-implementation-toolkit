@@ -17,7 +17,8 @@ from typing import Any
 from zohokit.core.context import RunContext
 from zohokit.core.findings import Finding, Report, Severity
 from zohokit.core.ids import canonical_json
-from zohokit.core.money import MoneyError, parse as parse_amount
+from zohokit.core.money import MoneyError
+from zohokit.core.money import parse as parse_amount
 from zohokit.modules import Analysis
 from zohokit.modules.books.models import BooksInput
 from zohokit.modules.books.report import build_report
