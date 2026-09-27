@@ -34,7 +34,7 @@ jobs:
       - run: uv sync --locked --group dev
       - run: uv run pytest -m "not eval and not bench and not e2e" --cov=zohokit --cov-report=xml --cov-fail-under=80
       - run: uv run coverage report --include='src/zohokit/core/*' --fail-under=90
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.python-version }}
           path: coverage.xml
