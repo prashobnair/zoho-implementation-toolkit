@@ -22,6 +22,10 @@ LEGACY_MARKERS: dict[str, set[str]] = {
     "release": {"before", "after"},
     "workflow": {"rules", "record"},
     "forms": {"source_fields", "target_fields", "cases"},
+    "books": {"entities", "deals", "invoices"},
+    "metrics": {"accounts", "deals", "invoices", "staff"},
+    "timeline": {"events"},
+    "lead_routing": {"leads"},
 }
 
 _RENDERERS = {
