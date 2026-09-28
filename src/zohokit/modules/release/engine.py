@@ -100,9 +100,9 @@ def analyze(inputs: ReleaseInput) -> Analysis:
             entity_id=item["component"],
             message=_message(item),
             evidence={"legacy_finding": item},
-            discriminator=str(position),
+            discriminator=item["component"] + "\0" + str(item.get("dependency", "")),
         )
-        for position, item in enumerate(findings)
+        for item in findings
     )
     return Analysis(findings=created, legacy=legacy, ready=ready)
 

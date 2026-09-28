@@ -55,10 +55,8 @@ def analyze(inputs: BooksInput) -> Analysis:
         key = str(deal.get("id", ""))
         deals_by_key[key].append(deal)
     new_findings: list[Finding] = []
-    position = 0
 
-    def record(code: str, deal: str, evidence: dict[str, Any]) -> None:
-        nonlocal position
+    def record(code: str, deal: str, evidence: dict[str, Any], discriminator: str) -> None:
         findings.append({"deal": deal, "code": code})
         new_findings.append(
             Finding.create(
@@ -69,20 +67,29 @@ def analyze(inputs: BooksInput) -> Analysis:
                 entity_id=deal,
                 message=f"{code} on deal {deal or '<missing>'}",
                 evidence=evidence,
-                discriminator=str(position),
+                discriminator=discriminator,
             )
         )
-        position += 1
 
     for key, rows in sorted(deals_by_key.items()):
         if not key or len(rows) != 1:
-            record("duplicate_or_missing_deal_id", key, {"legacy_finding": {"deal": key}})
+            record(
+                "duplicate_or_missing_deal_id",
+                key,
+                {"legacy_finding": {"deal": key}},
+                key,
+            )
             continue
         deal = rows[0]
         tenant = str(deal.get("entity", ""))
         currency = str(deal.get("currency", ""))
         if tenant not in entities or currency != entities.get(tenant):
-            record("entity_currency_mismatch", key, {"legacy_finding": {"deal": key}})
+            record(
+                "entity_currency_mismatch",
+                key,
+                {"legacy_finding": {"deal": key}},
+                key,
+            )
         try:
             expected: Decimal | None = _parse_row_amount(deal.get("net_amount"))
         except MoneyError:
@@ -90,36 +97,69 @@ def analyze(inputs: BooksInput) -> Analysis:
                 "invalid_amount",
                 key,
                 {"row": "deal", "value": deal.get("net_amount")},
+                key,
             )
             expected = None
         matches = invoices_by_key.get(key, [])
         if not matches:
-            record("missing_invoice", key, {"legacy_finding": {"deal": key}})
+            record("missing_invoice", key, {"legacy_finding": {"deal": key}}, key)
         if len(matches) > 1:
-            record("duplicate_invoice_reference", key, {"legacy_finding": {"deal": key}})
+            record("duplicate_invoice_reference", key, {"legacy_finding": {"deal": key}}, key)
         for inv in matches:
+            invoice_id = str(inv.get("id", ""))
             if str(inv.get("entity", "")) != tenant:
-                record("cross_entity_invoice", key, {"legacy_finding": {"deal": key}})
+                record(
+                    "cross_entity_invoice",
+                    key,
+                    {"legacy_finding": {"deal": key}, "invoice_id": invoice_id},
+                    invoice_id,
+                )
             if str(inv.get("currency", "")) != currency:
-                record("currency_mismatch", key, {"legacy_finding": {"deal": key}})
+                record(
+                    "currency_mismatch",
+                    key,
+                    {"legacy_finding": {"deal": key}, "invoice_id": invoice_id},
+                    invoice_id,
+                )
             try:
                 actual: Decimal | None = _parse_row_amount(inv.get("net_amount"))
             except MoneyError:
                 record(
                     "invalid_amount",
                     key,
-                    {"row": "invoice", "value": inv.get("net_amount")},
+                    {"row": "invoice", "value": inv.get("net_amount"), "invoice_id": invoice_id},
+                    invoice_id,
                 )
                 actual = None
             if expected is not None and actual is not None and actual != expected:
-                record("net_amount_mismatch", key, {"legacy_finding": {"deal": key}})
+                record(
+                    "net_amount_mismatch",
+                    key,
+                    {"legacy_finding": {"deal": key}, "invoice_id": invoice_id},
+                    invoice_id,
+                )
             if inv.get("tax_reviewed") is not True:
-                record("tax_not_reviewed", key, {"legacy_finding": {"deal": key}})
+                record(
+                    "tax_not_reviewed",
+                    key,
+                    {"legacy_finding": {"deal": key}, "invoice_id": invoice_id},
+                    invoice_id,
+                )
             if inv.get("sync_state") == "failed":
-                record("sync_failed", key, {"legacy_finding": {"deal": key}})
+                record(
+                    "sync_failed",
+                    key,
+                    {"legacy_finding": {"deal": key}, "invoice_id": invoice_id},
+                    invoice_id,
+                )
     for key in sorted(invoices_by_key):
         if key not in deals_by_key:
-            record("orphan_invoice_reference", key, {"legacy_finding": {"deal": key}})
+            record(
+                "orphan_invoice_reference",
+                key,
+                {"legacy_finding": {"deal": key}},
+                key,
+            )
     findings.sort(key=lambda item: (item["deal"], item["code"]))
     new_findings.sort(key=lambda finding: (finding.entity_id, finding.code))
     ready = not findings

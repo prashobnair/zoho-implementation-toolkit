@@ -60,11 +60,9 @@ def analyze(inputs: MetricsInput, *, audience: str = "finance") -> Analysis:
         accounts[key] = row
     findings: list[dict[str, Any]] = []
     new_findings: list[Finding] = []
-    position = 0
     excluded_rows = 0
 
     def record(code: str, source: Any, extra: dict[str, Any] | None = None) -> None:
-        nonlocal position
         entry = {"code": code, "source": source}
         findings.append(entry)
         evidence: dict[str, Any] = {"legacy_finding": entry}
@@ -79,10 +77,9 @@ def analyze(inputs: MetricsInput, *, audience: str = "finance") -> Analysis:
                 entity_id=str(source),
                 message=f"{code}: {source}",
                 evidence=evidence,
-                discriminator=str(position),
+                discriminator=f"{code}\0{source}",
             )
         )
-        position += 1
 
     for name in ("crm", "books", "people"):
         updated = _instant((data.get("updated_at") or {}).get(name))

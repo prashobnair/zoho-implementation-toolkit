@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 from zohokit.core.findings import Severity
 from zohokit.modules.forms.engine import analyze
 from zohokit.modules.forms.models import FormsInput
@@ -64,10 +67,10 @@ def test_visibility_cycle_is_error() -> None:
     ]
     errors = [finding for finding in analysis.findings if finding.code == "visibility_cycle"]
     assert [(finding.severity, finding.entity_id) for finding in errors] == [
-        (Severity.ERROR, "source:a"),
-        (Severity.ERROR, "source:b"),
-        (Severity.ERROR, "target:a"),
-        (Severity.ERROR, "target:b"),
+        (Severity.ERROR, "case-1:source:a"),
+        (Severity.ERROR, "case-1:source:b"),
+        (Severity.ERROR, "case-1:target:a"),
+        (Severity.ERROR, "case-1:target:b"),
     ]
     assert legacy["all_pass"] is True  # both sides equally empty
     assert analysis.ready is False  # error findings block
@@ -91,3 +94,53 @@ def test_examples_mismatch_parity_shape() -> None:
     assert failing["pass"] is False
     assert failing["source"]["output"]["estimate"] == "600"
     assert failing["target"]["output"]["estimate"] == "203"
+
+
+def test_corrected_target_has_issues_but_matches() -> None:
+    """all_pass with remaining issues: matching outputs, report not ready."""
+    data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
+    data["target_fields"][4]["operation"] = "multiply"
+    analysis = analyze(FormsInput.model_validate(data))
+    assert to_legacy_dict(analysis)["all_pass"] is True
+    assert analysis.ready is False
+    assert {finding.code for finding in analysis.findings} == {"required_missing"}
+
+
+def _examples_input() -> FormsInput:
+    data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
+    return FormsInput.model_validate(data)
+
+
+def _ids(inputs: FormsInput) -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_case_shuffle(data: st.DataObject) -> None:
+    inputs = _examples_input()
+    order = data.draw(st.permutations(range(len(inputs.cases))))
+    shuffled = FormsInput(
+        source_fields=inputs.source_fields,
+        target_fields=inputs.target_fields,
+        cases=[inputs.cases[index] for index in order],
+    )
+    assert _ids(shuffled) == _ids(inputs)
+
+
+@given(st.text(min_size=1, max_size=12))
+def test_ids_stable_when_case_added(extra: str) -> None:
+    inputs = _examples_input()
+    names = {str(case.get("name", "")) for case in inputs.cases}
+    assume(extra and extra not in names)
+    before = set(_ids(inputs))
+    extended = FormsInput(
+        source_fields=inputs.source_fields,
+        target_fields=inputs.target_fields,
+        cases=[*inputs.cases, {"name": extra, "answers": {}}],
+    )
+    assert before <= set(_ids(extended))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples_input())
+    assert len(ids) == len(set(ids))

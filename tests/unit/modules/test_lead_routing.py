@@ -6,6 +6,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 from zohokit.core.context import RunContext
 from zohokit.core.findings import Severity
 from zohokit.modules.lead_routing.engine import analyze, normalize_phone, run
@@ -86,3 +89,46 @@ def test_frozen_clock_byte_identical() -> None:
     assert render_json(run(inputs, ctx=RunContext(now=now))) == render_json(
         run(inputs, ctx=RunContext(now=now))
     )
+
+
+def _ids(inputs: LeadRoutingInput) -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_lead_shuffle(data: st.DataObject) -> None:
+    """Shuffle the duplicate-free subset: survivor choice is first-seen by design."""
+    inputs = _examples()
+    slim = [lead for lead in inputs.leads if lead["id"] != "lead-2"]
+    order = data.draw(st.permutations(range(len(slim))))
+    first = _ids(LeadRoutingInput(leads=slim))
+    second = _ids(LeadRoutingInput(leads=[slim[index] for index in order]))
+    assert first == second
+
+
+@given(st.text(min_size=1, max_size=8))
+def test_ids_stable_when_lead_added(extra: str) -> None:
+    inputs = _examples()
+    ids = {lead.get("id") for lead in inputs.leads}
+    fresh = extra.strip()
+    assume(fresh and fresh not in ids)
+    before = set(_ids(inputs))
+    extended = LeadRoutingInput(
+        leads=[
+            *inputs.leads,
+            {
+                "id": fresh,
+                "channel": "email",
+                "phone": "+919000000009",
+                "consent": True,
+                "intent": "sales",
+                "budget_confirmed": True,
+            },
+        ]
+    )
+    assert before <= set(_ids(extended))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples())
+    assert len(ids) == len(set(ids)) == 5

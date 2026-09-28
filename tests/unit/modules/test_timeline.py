@@ -6,6 +6,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 from zohokit.core.context import RunContext
 from zohokit.modules.timeline.engine import (
     analyze,
@@ -118,3 +121,48 @@ def test_frozen_clock_byte_identical() -> None:
     assert render_json(run(inputs, ctx=RunContext(now=now))) == render_json(
         run(inputs, ctx=RunContext(now=now))
     )
+
+
+def _examples_input() -> TimelineInput:
+    path = ROOT / "legacy" / "zoho-client-timeline-composer" / "examples.json"
+    return TimelineInput.model_validate(json.loads(path.read_text()))
+
+
+def _ids(inputs: TimelineInput) -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_event_shuffle(data: st.DataObject) -> None:
+    inputs = _examples_input()
+    order = data.draw(st.permutations(range(len(inputs.events))))
+    shuffled = TimelineInput(events=[inputs.events[index] for index in order])
+    assert _ids(shuffled) == _ids(inputs)
+
+
+@given(st.text(min_size=1, max_size=8))
+def test_ids_stable_when_event_added(extra: str) -> None:
+    inputs = _examples_input()
+    ids = {event.get("id") for event in inputs.events}
+    fresh = extra.strip()
+    assume(fresh and fresh not in ids)
+    before = set(_ids(inputs))
+    extended = TimelineInput(
+        events=[
+            *inputs.events,
+            {
+                "id": fresh,
+                "type": "call",
+                "at": "2026-02-01T10:00:00Z",
+                "source_id": "source-extra",
+                "visibility": "client",
+                "summary": "Extra call without claims",
+            },
+        ]
+    )
+    assert before <= set(_ids(extended))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples_input())
+    assert len(ids) == len(set(ids)) == 1

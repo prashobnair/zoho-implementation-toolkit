@@ -64,7 +64,7 @@ PORTS: dict[str, dict[str, Any]] = {
         "model": FormsInput,
         "analyze": analyze_forms,
         "to_legacy": legacy_forms,
-        "ready_key": "all_pass",
+        "ready_key": None,
     },
     "books": {
         "model": BooksInput,

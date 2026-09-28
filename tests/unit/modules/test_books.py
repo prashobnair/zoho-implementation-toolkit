@@ -6,6 +6,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 from zohokit.core.context import RunContext
 from zohokit.core.findings import Severity
 from zohokit.modules.books.engine import analyze, run
@@ -93,7 +96,7 @@ def test_bad_invoice_amount_skips_only_its_comparison() -> None:
     analysis = analyze(inputs)
     assert to_legacy_dict(analysis)["findings"] == [{"deal": "d-2", "code": "invalid_amount"}]
     (finding,) = [item for item in analysis.findings if item.code == "invalid_amount"]
-    assert finding.evidence == {"row": "invoice", "value": "abc"}
+    assert finding.evidence == {"row": "invoice", "value": "abc", "invoice_id": "i-2"}
 
 
 def test_non_string_amount_is_invalid() -> None:
@@ -109,3 +112,51 @@ def test_frozen_clock_byte_identical() -> None:
     assert render_json(run(inputs, ctx=RunContext(now=now))) == render_json(
         run(inputs, ctx=RunContext(now=now))
     )
+
+
+def _ids(inputs: BooksInput) -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_row_shuffle(data: st.DataObject) -> None:
+    inputs = _examples()
+    deals = [inputs.deals[index] for index in data.draw(st.permutations(range(len(inputs.deals))))]
+    invoices = [
+        inputs.invoices[index] for index in data.draw(st.permutations(range(len(inputs.invoices))))
+    ]
+    shuffled = BooksInput(entities=dict(inputs.entities), deals=deals, invoices=invoices)
+    assert _ids(shuffled) == _ids(inputs)
+
+
+@given(st.text(min_size=1, max_size=8))
+def test_ids_stable_when_rows_added(extra: str) -> None:
+    inputs = _examples()
+    deal_ids = {deal.get("id") for deal in inputs.deals}
+    assume(extra and extra not in deal_ids)
+    before = set(_ids(inputs))
+    extended = BooksInput(
+        entities=dict(inputs.entities),
+        deals=[
+            *inputs.deals,
+            {"id": extra, "entity": "fictional-india", "currency": "INR", "net_amount": "10.00"},
+        ],
+        invoices=[
+            *inputs.invoices,
+            {
+                "id": "i-9",
+                "deal_ref": extra,
+                "entity": "fictional-india",
+                "currency": "INR",
+                "net_amount": "10.00",
+                "tax_reviewed": True,
+                "sync_state": "ok",
+            },
+        ],
+    )
+    assert before <= set(_ids(extended))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples())
+    assert len(ids) == len(set(ids))

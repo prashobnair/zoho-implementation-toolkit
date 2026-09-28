@@ -19,3 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Intentional parity differences (TK-FIX-1): release `target_manifest_sha256` is now order-free, e.g. `01_examples.json` changed `0e1aabe6…` → `ca3d3e6e…`; all other release goldens likewise. No forms golden changed (TK-FIX-5 only affects chained visibility, absent from fixtures).
 - Ported books, metrics, timeline and lead_routing with WP-06 golden parity (TK-MIG-3, TK-MIG-4; TK-FIX-2, TK-FIX-3, TK-FIX-4, TK-FIX-6).
 - Intentional parity differences: `metrics/05_invalid_utilization.json` gains `invalid_staff_row` for s-1 and drops `invalid_utilization` (valid rows now aggregate to 50.00%) via TK-FIX-4; all other books/metrics/timeline/lead_routing goldens byte-equal.
+- Stable finding identities: discriminators now come from identifying input data (row IDs, field/case names, components), never positions; forms surfaces legacy case issues as findings (TK-CORE-2).

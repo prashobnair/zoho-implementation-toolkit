@@ -7,6 +7,9 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
+from hypothesis import assume, given
+from hypothesis import strategies as st
+
 from zohokit.core.context import RunContext
 from zohokit.core.findings import Severity
 from zohokit.modules.metrics.engine import analyze, run
@@ -92,3 +95,35 @@ def test_frozen_clock_byte_identical() -> None:
     assert render_json(run(inputs, ctx=RunContext(now=now))) == render_json(
         run(inputs, ctx=RunContext(now=now))
     )
+
+
+def _ids(inputs: MetricsInput, audience: str = "finance") -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs, audience=audience).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_row_shuffle(data: st.DataObject) -> None:
+    base = _data()
+    payload = {
+        key: [rows[index] for index in data.draw(st.permutations(range(len(rows))))]
+        for key, rows in base.items()
+        if isinstance(rows, list)
+    }
+    payload.update({key: value for key, value in base.items() if not isinstance(value, list)})
+    first = _ids(MetricsInput.model_validate(base))
+    second = _ids(MetricsInput.model_validate(payload))
+    assert first == second
+
+
+@given(st.text(min_size=1, max_size=8))
+def test_ids_stable_when_account_added(extra: str) -> None:
+    base = _data()
+    assume(extra and extra not in {row.get("id") for row in base["accounts"]})
+    before = set(_ids(MetricsInput.model_validate(base)))
+    base["accounts"].append({"id": extra, "segment": "SMB"})
+    assert before <= set(_ids(MetricsInput.model_validate(base)))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples())
+    assert len(ids) == len(set(ids))

@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from hypothesis import given
+from hypothesis import strategies as st
+
 from zohokit.modules.workflow.engine import analyze
 from zohokit.modules.workflow.models import WorkflowInput
 
@@ -55,3 +58,46 @@ def test_step_limit_surfaced() -> None:
     inputs.max_steps = 2
     analysis = analyze(inputs)
     assert any(finding.code == "step_limit" for finding in analysis.findings)
+
+
+def _ids(inputs: WorkflowInput) -> list[str]:
+    return sorted(finding.id for finding in analyze(inputs).findings)
+
+
+@given(st.data())
+def test_ids_stable_under_record_key_shuffle(data: st.DataObject) -> None:
+    """Record key order is not identifying: shuffled keys keep every ID."""
+    inputs = _examples()
+    keys = list(inputs.record.keys())
+    order = data.draw(st.permutations(range(len(keys))))
+    shuffled = WorkflowInput(
+        rules=inputs.rules,
+        record={keys[index]: inputs.record[keys[index]] for index in order},
+        initial_event=inputs.initial_event,
+    )
+    assert _ids(shuffled) == _ids(inputs)
+
+
+def test_ids_stable_when_rule_added() -> None:
+    inputs = _examples()
+    before = set(_ids(inputs))
+    extended = WorkflowInput(
+        rules=[
+            *inputs.rules,
+            {
+                "id": "never",
+                "event": "followup_due",
+                "when": {"stage": "no-such-stage"},
+                "action": "assign_owner",
+                "value": "nobody",
+            },
+        ],
+        record=dict(inputs.record),
+        initial_event=inputs.initial_event,
+    )
+    assert before <= set(_ids(extended))
+
+
+def test_ids_unique() -> None:
+    ids = _ids(_examples())
+    assert len(ids) == len(set(ids)) == 3

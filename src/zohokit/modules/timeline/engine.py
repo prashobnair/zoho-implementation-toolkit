@@ -137,9 +137,9 @@ def analyze(inputs: TimelineInput, *, audience: str = "internal") -> Analysis:
             message=f"Conflicting claims for {conflict['key']!r}: "
             + ", ".join(conflict["event_ids"]),
             evidence={"legacy_conflict": conflict},
-            discriminator=str(position),
+            discriminator=conflict["key"],
         )
-        for position, conflict in enumerate(conflicts)
+        for conflict in conflicts
     )
     return Analysis(findings=created, legacy=legacy, ready=ready)
 

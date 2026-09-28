@@ -111,20 +111,7 @@ def _evaluate(
     hidden = {name for name, shown in visible.items() if not shown}
     effective = {key: value for key, value in answers.items() if key not in hidden}
     new_findings: list[Finding] = []
-    for position, name in enumerate(sorted(cyclic)):
-        new_findings.append(
-            Finding.create(
-                module="forms",
-                code="visibility_cycle",
-                severity=Severity.ERROR,
-                entity="schema",
-                entity_id=f"{side}:{name}",
-                message=f"Field {name!r} is in a visible_if cycle and is treated as hidden.",
-                evidence={"field": name},
-                discriminator=str(position),
-            )
-        )
-    for position, name in enumerate(
+    for name in (
         field["name"] for field in fields if field["name"] in hidden and field["name"] in answers
     ):
         new_findings.append(
@@ -136,7 +123,7 @@ def _evaluate(
                 entity_id=f"{case}:{side}:{name}",
                 message=f"Answer for hidden field {name!r} was ignored.",
                 evidence={"field": name},
-                discriminator=str(position),
+                discriminator=f"{case}:{side}:{name}",
             )
         )
     output: dict[str, Any] = {}
@@ -212,6 +199,22 @@ def _compare_legacy(
         right, right_new = _evaluate(target, case["answers"], side="target", case=case_name)
         new_findings.extend(left_new)
         new_findings.extend(right_new)
+        for side, evaluated in (("source", left), ("target", right)):
+            for issue in evaluated["issues"]:
+                field_name = str(issue["field"])
+                new_findings.append(
+                    Finding.create(
+                        module="forms",
+                        code=str(issue["code"]),
+                        severity=Severity.ERROR,
+                        entity="case",
+                        entity_id=f"{case_name}:{side}:{field_name}",
+                        message=f"{issue['code']} on field {field_name!r} "
+                        f"in case {case_name!r} ({side}).",
+                        evidence={"legacy_issue": issue},
+                        discriminator=f"{case_name}:{side}:{field_name}:{issue['code']}",
+                    )
+                )
         results.append(
             {"case": case.get("name", ""), "pass": left == right, "source": left, "target": right}
         )

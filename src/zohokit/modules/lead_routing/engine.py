@@ -74,7 +74,6 @@ def analyze(inputs: LeadRoutingInput, *, default_region: str | None = None) -> A
     seen_phones: dict[str, str] = {}
     decisions: list[Decision] = []
     new_findings: list[Finding] = []
-    position = 0
     for item in leads:
         if not isinstance(item, dict):
             raise ValueError("Each lead must be an object")
@@ -131,10 +130,9 @@ def analyze(inputs: LeadRoutingInput, *, default_region: str | None = None) -> A
                     entity_id=lead_id,
                     message=f"Region for {lead_id} was inferred from the explicit default.",
                     evidence={"default_region": default_region},
-                    discriminator=str(position),
+                    discriminator=lead_id,
                 )
             )
-            position += 1
     created = tuple(
         Finding.create(
             module="lead_routing",
@@ -144,9 +142,9 @@ def analyze(inputs: LeadRoutingInput, *, default_region: str | None = None) -> A
             entity_id=decision.lead_id,
             message=f"{decision.reason}: {decision.lead_id}",
             evidence={"legacy_decision": asdict(decision)},
-            discriminator=str(position + index),
+            discriminator=f"{decision.lead_id}\0{decision.reason}",
         )
-        for index, decision in enumerate(decisions)
+        for decision in decisions
     )
     all_findings = tuple(sorted(new_findings + list(created), key=lambda f: (f.entity_id, f.code)))
     counts = {
