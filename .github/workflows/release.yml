@@ -40,6 +40,6 @@ jobs:
       - run: zip -r schemas.zip schemas
       - run: |
           TAG="${{ needs.release-please.outputs.tag_name }}"
-          gh release upload "$TAG" dist/* sample-report.html schemas.zip --clobber
+          gh release upload "$TAG" dist/*.whl dist/*.tar.gz sample-report.html schemas.zip --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
