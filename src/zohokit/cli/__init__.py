@@ -5,9 +5,13 @@ from __future__ import annotations
 import typer
 
 from zohokit import __version__
+from zohokit.cli import books as books_cli
 from zohokit.cli import forms as forms_cli
+from zohokit.cli import lead_routing as lead_routing_cli
+from zohokit.cli import metrics as metrics_cli
 from zohokit.cli import migration as migration_cli
 from zohokit.cli import release as release_cli
+from zohokit.cli import timeline as timeline_cli
 from zohokit.cli import workflow as workflow_cli
 from zohokit.modules import MODULES
 
@@ -18,6 +22,10 @@ app.add_typer(migration_cli.app, name="migration")
 app.add_typer(release_cli.app, name="release")
 app.add_typer(workflow_cli.app, name="workflow")
 app.add_typer(forms_cli.app, name="forms")
+app.add_typer(books_cli.app, name="books")
+app.add_typer(metrics_cli.app, name="metrics")
+app.add_typer(timeline_cli.app, name="timeline")
+app.add_typer(lead_routing_cli.app, name="lead-routing")
 
 
 @app.command()

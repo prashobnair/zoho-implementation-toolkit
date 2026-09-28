@@ -172,9 +172,9 @@ def analyze(inputs: MigrationInput) -> Analysis:
             entity_id=issue["source_id"],
             message=issue["detail"],
             evidence={"legacy_issue": issue},
-            discriminator=str(position),
+            discriminator=f"{issue['entity']}\0{issue['source_id']}\0{issue['code']}",
         )
-        for position, issue in enumerate(issues)
+        for issue in issues
     )
     return Analysis(findings=findings, legacy=legacy, ready=ready)
 

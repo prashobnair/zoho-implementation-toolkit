@@ -110,12 +110,12 @@ def _simulate(
     }
 
 
-def _entity_id(item: dict[str, Any], position: int) -> str:
+def _entity_id(item: dict[str, Any]) -> str:
     if isinstance(item.get("rule"), str):
         return str(item["rule"])
     if isinstance(item.get("event"), str):
         return str(item["event"])
-    return f"step-{position}"
+    return str(item["code"])
 
 
 def analyze(inputs: WorkflowInput) -> Analysis:
@@ -132,12 +132,12 @@ def analyze(inputs: WorkflowInput) -> Analysis:
             code=item["code"],
             severity=Severity.ERROR,
             entity="trace",
-            entity_id=_entity_id(item, position),
+            entity_id=_entity_id(item),
             message=_message(item),
             evidence={"legacy_finding": item},
-            discriminator=str(position),
+            discriminator=str(item.get("rule", item.get("event", ""))),
         )
-        for position, item in enumerate(legacy["findings"])
+        for item in legacy["findings"]
     )
     return Analysis(findings=created, legacy=legacy, ready=not created)
 

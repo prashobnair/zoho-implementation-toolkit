@@ -19,7 +19,7 @@ def test_import_contracts() -> None:
 def test_engines_read_no_wall_clock() -> None:
     """TK-ARCH-1: engines take a RunContext; no datetime.now() in engine.py."""
     engines = sorted(SRC.glob("*/engine.py"))
-    assert len(engines) == 4
+    assert len(engines) == 8
     for engine in engines:
         source = engine.read_text(encoding="utf-8")
         assert "datetime.now" not in source, engine
