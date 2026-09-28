@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> MigrationInput:
-    path = ROOT / "legacy" / "zoho-crm-migration-auditor" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "migration" / "inputs" / "examples.json"
     return MigrationInput.model_validate(json.loads(path.read_text()))
 
 
@@ -70,7 +70,7 @@ def test_frozen_clock_byte_identical() -> None:
 
 def _ordered_sample() -> dict[str, Any]:
     """Findings without first-seen survivors: safe for shuffle properties."""
-    path = ROOT / "legacy" / "zoho-crm-migration-auditor" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "migration" / "inputs" / "examples.json"
     base: dict[str, Any] = json.loads(path.read_text())
     base["people"] = [base["people"][0], base["people"][2]]
     return base

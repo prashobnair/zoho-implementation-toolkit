@@ -12,7 +12,18 @@ from zohokit.cli import app
 from zohokit.modules import MODULES
 
 ROOT = Path(__file__).resolve().parent.parent
-LEGACY = ROOT / "legacy"
+GOLDEN_INPUTS = ROOT / "tests" / "golden" / "legacy"
+
+_FIXTURES = {
+    "zoho-crm-migration-auditor": GOLDEN_INPUTS / "migration" / "inputs" / "examples.json",
+    "zoho-release-readiness-audit": GOLDEN_INPUTS / "release" / "inputs" / "examples.json",
+    "zoho-workflow-rule-testbench": GOLDEN_INPUTS / "workflow" / "inputs" / "examples.json",
+    "zoho-forms-parity-checker": GOLDEN_INPUTS / "forms" / "inputs" / "examples.json",
+    "zoho-books-sync-reconciler": GOLDEN_INPUTS / "books" / "inputs" / "examples.json",
+    "zoho-analytics-metrics-contracts": GOLDEN_INPUTS / "metrics" / "inputs" / "examples.json",
+    "zoho-client-timeline-composer": GOLDEN_INPUTS / "timeline" / "inputs" / "examples.json",
+    "zoho-lead-routing-lab": GOLDEN_INPUTS / "lead_routing" / "inputs" / "examples.json",
+}
 
 runner = CliRunner()
 
@@ -32,7 +43,7 @@ def test_modules_list_shows_all_eight() -> None:
 
 
 def _fixture(name: str) -> str:
-    return str(LEGACY / name / "examples.json")
+    return str(_FIXTURES[name])
 
 
 def test_migration_audit_autodetects() -> None:
@@ -98,12 +109,12 @@ def test_unknown_format_rejected() -> None:
 
 
 def test_missing_file_exit_1() -> None:
-    result = runner.invoke(app, ["migration", "audit", str(LEGACY / "nope.json")])
+    result = runner.invoke(app, ["migration", "audit", str(GOLDEN_INPUTS / "nope.json")])
     assert result.exit_code == 1
 
 
 def test_books_reconcile_and_strict() -> None:
-    fixture = str(LEGACY / "zoho-books-sync-reconciler" / "examples.json")
+    fixture = _fixture("zoho-books-sync-reconciler")
     assert runner.invoke(app, ["books", "reconcile", fixture]).exit_code == 0
     strict = runner.invoke(app, ["books", "reconcile", fixture, "--strict"])
     assert strict.exit_code == 2
@@ -111,7 +122,7 @@ def test_books_reconcile_and_strict() -> None:
 
 
 def test_metrics_check_audiences() -> None:
-    fixture = str(LEGACY / "zoho-analytics-metrics-contracts" / "examples.json")
+    fixture = _fixture("zoho-analytics-metrics-contracts")
     finance = runner.invoke(app, ["metrics", "check", fixture])
     assert finance.exit_code == 0
     sales = runner.invoke(app, ["metrics", "check", fixture, "--audience", "sales"])
@@ -122,14 +133,14 @@ def test_metrics_check_audiences() -> None:
 
 
 def test_timeline_compose_client() -> None:
-    fixture = str(LEGACY / "zoho-client-timeline-composer" / "examples.json")
+    fixture = _fixture("zoho-client-timeline-composer")
     result = runner.invoke(app, ["timeline", "compose", fixture, "--audience", "client"])
     assert result.exit_code == 0
     assert "2026-02-15" not in result.output
 
 
 def test_lead_routing_route_and_region() -> None:
-    fixture = str(LEGACY / "zoho-lead-routing-lab" / "examples.json")
+    fixture = _fixture("zoho-lead-routing-lab")
     result = runner.invoke(app, ["lead-routing", "route", fixture])
     assert result.exit_code == 0
     assert json.loads(result.output)["module"] == "lead_routing"

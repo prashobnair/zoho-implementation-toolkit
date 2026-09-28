@@ -72,8 +72,6 @@ packages = ["src/zohokit"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-# legacy/ is a frozen history import (TK-MIG-1), removed after parity (TK-MIG-5).
-exclude = ["legacy"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "RUF"]
@@ -84,8 +82,6 @@ strict = true
 show_error_codes = true
 warn_unused_ignores = true
 warn_return_any = true
-# legacy/ is a frozen history import (TK-MIG-1), removed after parity (TK-MIG-5).
-exclude = ["legacy/"]
 
 [[tool.mypy.overrides]]
 module = ["phonenumbers.*", "pycountry.*"]

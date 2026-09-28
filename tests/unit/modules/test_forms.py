@@ -15,6 +15,7 @@ from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.forms.report import to_legacy_dict
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
+EXAMPLES = ROOT / "tests" / "golden" / "legacy" / "forms" / "inputs" / "examples.json"
 
 CHAINED_FIELDS = [
     {"name": "mode", "type": "select", "options": ["x", "y"]},
@@ -83,7 +84,7 @@ def test_invalid_reference_preserved() -> None:
 
 
 def test_examples_mismatch_parity_shape() -> None:
-    data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
+    data = json.loads(EXAMPLES.read_text())
     analysis = analyze(FormsInput.model_validate(data))
     assert analysis.ready is False
     failing = to_legacy_dict(analysis)["cases"][1]
@@ -110,7 +111,7 @@ def test_examples_mismatch_parity_shape() -> None:
 
 def test_corrected_target_has_issues_but_matches() -> None:
     """all_pass with remaining issues: matching outputs, agreed issues are info."""
-    data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
+    data = json.loads(EXAMPLES.read_text())
     data["target_fields"][4]["operation"] = "multiply"
     analysis = analyze(FormsInput.model_validate(data))
     assert to_legacy_dict(analysis)["all_pass"] is True
@@ -139,7 +140,7 @@ def test_one_sided_difference_blocks() -> None:
 
 
 def _examples_input() -> FormsInput:
-    data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
+    data = json.loads(EXAMPLES.read_text())
     return FormsInput.model_validate(data)
 
 

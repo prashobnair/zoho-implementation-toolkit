@@ -2,11 +2,11 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-lead-routing-lab/examples.json"
+      "tests/golden/legacy/lead_routing/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/lead_routing/01_examples.json",
-    "input": "legacy/zoho-lead-routing-lab/examples.json"
+    "input": "tests/golden/legacy/lead_routing/inputs/examples.json"
   },
   {
     "argv": [

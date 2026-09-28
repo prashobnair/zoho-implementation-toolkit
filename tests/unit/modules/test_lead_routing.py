@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> LeadRoutingInput:
-    path = ROOT / "legacy" / "zoho-lead-routing-lab" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "lead_routing" / "inputs" / "examples.json"
     return LeadRoutingInput.model_validate(json.loads(path.read_text()))
 
 

@@ -2,21 +2,21 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-books-sync-reconciler/examples.json"
+      "tests/golden/legacy/books/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/books/01_examples.json",
-    "input": "legacy/zoho-books-sync-reconciler/examples.json"
+    "input": "tests/golden/legacy/books/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-books-sync-reconciler/examples.json",
+      "tests/golden/legacy/books/inputs/examples.json",
       "--strict"
     ],
     "exit_code": 2,
     "golden": "tests/golden/legacy/books/02_examples_strict.json",
-    "input": "legacy/zoho-books-sync-reconciler/examples.json"
+    "input": "tests/golden/legacy/books/inputs/examples.json"
   },
   {
     "argv": [

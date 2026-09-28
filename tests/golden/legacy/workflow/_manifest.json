@@ -2,11 +2,11 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-workflow-rule-testbench/examples.json"
+      "tests/golden/legacy/workflow/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/workflow/01_examples.json",
-    "input": "legacy/zoho-workflow-rule-testbench/examples.json"
+    "input": "tests/golden/legacy/workflow/inputs/examples.json"
   },
   {
     "argv": [
