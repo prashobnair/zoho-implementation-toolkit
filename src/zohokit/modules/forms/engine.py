@@ -217,6 +217,47 @@ def _grade_case_issues(
     return graded
 
 
+def _grade_output_differences(
+    case_name: str,
+    left_output: dict[str, Any],
+    right_output: dict[str, Any],
+) -> list[Finding]:
+    """Emit one ``parity_mismatch`` error per field whose outputs differ.
+
+    Issue grading alone cannot explain a ``ready=false`` report when both
+    sides evaluate cleanly but compute different values (for example the
+    ``delivery_calculation`` case: ``estimate`` ``600`` vs ``203``). Each
+    finding carries both values in the evidence; identity is stable on
+    ``(case name, field)`` with no positional discriminator.
+    """
+    graded: list[Finding] = []
+    for field_name in sorted(set(left_output) | set(right_output)):
+        source_value = left_output.get(field_name)
+        target_value = right_output.get(field_name)
+        if source_value == target_value:
+            continue
+        graded.append(
+            Finding.create(
+                module="forms",
+                code="parity_mismatch",
+                severity=Severity.ERROR,
+                entity="case",
+                entity_id=f"{case_name}:{field_name}",
+                message=f"Output differs for field {field_name!r} "
+                f"in case {case_name!r} "
+                f"(source {source_value!r} vs target {target_value!r}).",
+                evidence={
+                    "case": case_name,
+                    "field": field_name,
+                    "source": source_value,
+                    "target": target_value,
+                },
+                discriminator=f"{case_name}:{field_name}",
+            )
+        )
+    return graded
+
+
 def _ref(condition: dict[str, Any]) -> Any:
     """The single referenced field of a visibility condition."""
     return next(iter(condition.items()))[0]
@@ -241,6 +282,7 @@ def _compare_legacy(
         new_findings.extend(left_new)
         new_findings.extend(right_new)
         new_findings.extend(_grade_case_issues(case_name, left["issues"], right["issues"]))
+        new_findings.extend(_grade_output_differences(case_name, left["output"], right["output"]))
         results.append(
             {"case": case.get("name", ""), "pass": left == right, "source": left, "target": right}
         )
