@@ -20,6 +20,7 @@ An implementation engineer's safety kit for Zoho: one CLI, one report format, on
 - Composes client-safe timelines with contradiction review.
 - Routes inbound leads to queues (consent, duplicates) without sending anything.
 - Proves a rebuilt form matches the original on every supplied case.
+- Emits one versioned report envelope (JSON/table/Markdown/HTML) with stable finding IDs, a readiness flag and strict exit codes; every input/output model ships a versioned JSON Schema under `schemas/`.
 
 ## Quickstart (offline, 60 seconds)
 
