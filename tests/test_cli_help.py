@@ -24,13 +24,6 @@ def _normalize(text: str) -> str:
     return _ANSI_RE.sub("", text).translate(_BOX_MAP)
 
 
-@pytest.fixture(autouse=True)
-def _fixed_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin help width: Rich reads COLUMNS at render time."""
-    monkeypatch.setenv("COLUMNS", "80")
-    monkeypatch.delenv("TERM_PROGRAM", raising=False)
-
-
 MODULE_COMMANDS: list[list[str]] = [
     ["migration", "--help"],
     ["release", "--help"],
