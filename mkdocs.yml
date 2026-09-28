@@ -1,5 +1,6 @@
 site_name: zoho-implementation-toolkit
 site_description: An implementation engineer's safety kit for Zoho.
+site_url: https://prashobnair.github.io/zoho-implementation-toolkit/
 theme:
   name: material
 nav:
