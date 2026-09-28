@@ -29,5 +29,3 @@
 ### Documentation
 
 * readme, changelog, contributing, security, conduct, mkdocs skeleton, adrs ([2853547](https://github.com/prashobnair/zoho-implementation-toolkit/commit/2853547f091509a8be7fdbe603226cdb7f990136))
-
-## Changelog

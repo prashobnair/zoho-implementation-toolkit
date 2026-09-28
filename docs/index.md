@@ -8,3 +8,6 @@ Start with the [module guides](modules/index.md), the
 [finding codes](finding-codes.md), and the
 [threat model](THREAT_MODEL.md). Every run is offline and read-only; live
 reads against a real org arrive in a later release.
+
+See a [sample HTML report](sample-report.html): a migration audit of a
+fictional export, exactly as `zohokit --format html` renders it.
