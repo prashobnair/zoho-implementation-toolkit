@@ -1,6 +1,6 @@
 """Report renderers: JSON, rich table, Markdown, HTML (TK-CORE-8).
 
-SARIF, JUnit and XLSX renderers land with later work packages. The HTML
+SARIF, JUnit and XLSX renderers land with later releases. The HTML
 report is a single self-contained file: inline CSS/JS only, so it works
 offline and from a file:// URL.
 """

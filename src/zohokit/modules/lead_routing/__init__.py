@@ -1,4 +1,4 @@
-"""Lead routing lab (ported WP-09, TK-MIG-3)."""
+"""Lead routing lab (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

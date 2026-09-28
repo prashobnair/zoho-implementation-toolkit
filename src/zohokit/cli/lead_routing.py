@@ -7,7 +7,19 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fresh_context, load_input, parse_model, resolve_runtime
+from zohokit.cli.common import (
+    AiAfter,
+    BaselineAfter,
+    LiveAfter,
+    MaxApiCallsAfter,
+    ProfileAfter,
+    emit,
+    fresh_context,
+    load_input,
+    parse_model,
+    reject_future_flags,
+    resolve_runtime,
+)
 from zohokit.modules.lead_routing.engine import run
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 
@@ -28,8 +40,14 @@ def route(
         str, typer.Option("--format", help="json|table|markdown|html.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    ai: AiAfter = False,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Route leads to queues; never merges, never sends."""
+    reject_future_flags(live, profile, ai, baseline, max_api_calls)
     data = load_input(fixture, "lead_routing", input_format)
     report = run(
         parse_model(LeadRoutingInput, data), ctx=fresh_context(), default_region=default_region

@@ -71,3 +71,38 @@ def test_completion_script_available() -> None:
     assert result.exit_code == 0
     assert "COMP_WORDS" in result.output
     assert "complete -o default" in result.output
+
+
+def test_live_after_subcommand_fails_loudly() -> None:
+    """Same message and exit code as the before-subcommand form."""
+    result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--live"])
+    assert result.exit_code == 1
+    assert result.output == (
+        "Input error: Live reads are not available until v0.2.0. This run touched no network.\n"
+    )
+
+
+def test_profile_after_subcommand_fails_loudly() -> None:
+    result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--profile", "dev-in"])
+    assert result.exit_code == 1
+    assert result.output == "Input error: Profiles are not available until v0.2.0.\n"
+
+
+def test_ai_after_subcommand_fails_loudly() -> None:
+    result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--ai"])
+    assert result.exit_code == 1
+    assert result.output == "Input error: AI assistance is not available until v0.3.0.\n"
+
+
+def test_baseline_after_subcommand_fails_loudly() -> None:
+    result = runner.invoke(
+        app, ["migration", "audit", MIGRATION_FIXTURE, "--baseline", ".zohokit-baseline.json"]
+    )
+    assert result.exit_code == 1
+    assert result.output == "Input error: Baseline suppression is not available until v0.2.0.\n"
+
+
+def test_max_api_calls_after_subcommand_fails_loudly() -> None:
+    result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--max-api-calls", "10"])
+    assert result.exit_code == 1
+    assert result.output == "Input error: API call budgets are not available until v0.2.0.\n"

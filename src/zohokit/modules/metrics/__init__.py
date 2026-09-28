@@ -1,4 +1,4 @@
-"""Metrics contracts (ported WP-09, TK-MIG-3)."""
+"""Metrics contracts (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

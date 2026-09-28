@@ -1,4 +1,7 @@
-"""Live reads against a real org land in WP-12 (TK-CONN). Offline port only."""
+"""Live reads against a real org land with the connector foundation (TK-CONN).
+
+Planned for v0.2.0; offline port only.
+"""
 
 from __future__ import annotations
 

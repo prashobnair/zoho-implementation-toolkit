@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from typer._click import exceptions as _click_exceptions
 
 from zohokit import __version__
 from zohokit.cli import books as books_cli
@@ -16,9 +17,28 @@ from zohokit.cli import migration as migration_cli
 from zohokit.cli import release as release_cli
 from zohokit.cli import timeline as timeline_cli
 from zohokit.cli import workflow as workflow_cli
-from zohokit.cli.common import GlobalOptions, check_unavailable_globals, set_global_options
+from zohokit.cli.common import (
+    AiAfter,
+    BaselineAfter,
+    GlobalOptions,
+    LiveAfter,
+    MaxApiCallsAfter,
+    ProfileAfter,
+    check_unavailable_globals,
+    reject_future_flags,
+    set_global_options,
+)
 from zohokit.modules import MODULES
 from zohokit.modules.plugins import discover_module_apps
+
+# STD §3.5: input/usage errors (unknown option, missing argument, bad
+# value) exit 1. The framework default is 2, which would be
+# indistinguishable from "blocked release" (--strict exit 2), so a CI
+# gate could not tell a typo from a blocked release. Applied at import
+# time so every entry point (console script, CliRunner) shares the
+# contract. ``typer.Exit(code=2)`` from --strict blocking findings is a
+# different class and is unaffected, as is ``--help`` (exit 0).
+_click_exceptions.UsageError.exit_code = 1
 
 
 def available_modules() -> list[str]:
@@ -87,13 +107,27 @@ def create_app() -> typer.Typer:
         check_unavailable_globals(options)
 
     @root.command()
-    def version() -> None:
+    def version(
+        live: LiveAfter = False,
+        profile: ProfileAfter = None,
+        ai: AiAfter = False,
+        baseline: BaselineAfter = None,
+        max_api_calls: MaxApiCallsAfter = None,
+    ) -> None:
         """Print the package version."""
+        reject_future_flags(live, profile, ai, baseline, max_api_calls)
         typer.echo(__version__)
 
     @modules_app.command("list")
-    def modules_list() -> None:
+    def modules_list(
+        live: LiveAfter = False,
+        profile: ProfileAfter = None,
+        ai: AiAfter = False,
+        baseline: BaselineAfter = None,
+        max_api_calls: MaxApiCallsAfter = None,
+    ) -> None:
         """List the available toolkit modules, including plugins."""
+        reject_future_flags(live, profile, ai, baseline, max_api_calls)
         for name in available_modules():
             typer.echo(name)
 

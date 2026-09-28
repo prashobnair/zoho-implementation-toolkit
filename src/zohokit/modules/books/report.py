@@ -25,7 +25,7 @@ def build_report(analysis: Analysis, *, ctx: RunContext, inputs_sha256: str) -> 
 
 
 def to_legacy_dict(analysis: Analysis) -> dict[str, Any]:
-    """Reproduce the legacy reconciliation dict for WP-06 golden parity."""
+    """Reproduce the legacy reconciliation dict for legacy parity-golden comparison."""
     return copy.deepcopy(analysis.legacy)
 
 
