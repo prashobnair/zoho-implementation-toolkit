@@ -9,6 +9,7 @@ from hypothesis import assume, given
 from hypothesis import strategies as st
 
 from zohokit.core.findings import Severity
+from zohokit.core.ids import finding_id
 from zohokit.modules.forms.engine import analyze
 from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.forms.report import to_legacy_dict
@@ -89,6 +90,22 @@ def test_examples_mismatch_parity_shape() -> None:
     assert failing["pass"] is False
     assert failing["source"]["output"]["estimate"] == "600"
     assert failing["target"]["output"]["estimate"] == "203"
+    (mismatch,) = [finding for finding in analysis.findings if finding.code == "parity_mismatch"]
+    assert mismatch.severity is Severity.ERROR
+    assert mismatch.entity_id == "delivery_calculation:estimate"
+    assert mismatch.id == finding_id(
+        "forms",
+        "parity_mismatch",
+        "case",
+        "delivery_calculation:estimate",
+        "delivery_calculation:estimate",
+    )
+    assert mismatch.evidence == {
+        "case": "delivery_calculation",
+        "field": "estimate",
+        "source": "600",
+        "target": "203",
+    }
 
 
 def test_corrected_target_has_issues_but_matches() -> None:

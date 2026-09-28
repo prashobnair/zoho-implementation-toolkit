@@ -15,3 +15,4 @@ difference blocks.
 | `invalid_visibility_reference` | info/error | `visible_if` references an unknown field or the field itself. |
 | `visibility_cycle` | info/error | Fields reference each other in a `visible_if` cycle; hidden (TK-FIX-5). |
 | `answer_for_hidden_field` | info | An answer for a hidden field was ignored (TK-FIX-5). |
+| `parity_mismatch` | error | A case's source and target outputs differ for a field; evidence carries both values. |
