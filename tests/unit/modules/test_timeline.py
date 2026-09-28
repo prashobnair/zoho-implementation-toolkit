@@ -100,7 +100,7 @@ def test_typed_number_equal_no_conflict() -> None:
 
 
 def test_examples_conflict_exact() -> None:
-    path = ROOT / "legacy" / "zoho-client-timeline-composer" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "timeline" / "inputs" / "examples.json"
     inputs = TimelineInput.model_validate(json.loads(path.read_text()))
     analysis = analyze(inputs)
     assert to_legacy_dict(analysis)["conflicts"] == [
@@ -115,7 +115,7 @@ def test_examples_conflict_exact() -> None:
 
 
 def test_frozen_clock_byte_identical() -> None:
-    path = ROOT / "legacy" / "zoho-client-timeline-composer" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "timeline" / "inputs" / "examples.json"
     inputs = TimelineInput.model_validate(json.loads(path.read_text()))
     now = datetime(2026, 9, 27, 12, tzinfo=UTC)
     assert render_json(run(inputs, ctx=RunContext(now=now))) == render_json(
@@ -124,7 +124,7 @@ def test_frozen_clock_byte_identical() -> None:
 
 
 def _examples_input() -> TimelineInput:
-    path = ROOT / "legacy" / "zoho-client-timeline-composer" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "timeline" / "inputs" / "examples.json"
     return TimelineInput.model_validate(json.loads(path.read_text()))
 
 

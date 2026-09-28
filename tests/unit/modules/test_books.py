@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> BooksInput:
-    path = ROOT / "legacy" / "zoho-books-sync-reconciler" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "books" / "inputs" / "examples.json"
     return BooksInput.model_validate(json.loads(path.read_text()))
 
 

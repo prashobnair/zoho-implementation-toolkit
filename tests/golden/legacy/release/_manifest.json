@@ -2,21 +2,21 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-release-readiness-audit/examples.json"
+      "tests/golden/legacy/release/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/release/01_examples.json",
-    "input": "legacy/zoho-release-readiness-audit/examples.json"
+    "input": "tests/golden/legacy/release/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-release-readiness-audit/examples.json",
+      "tests/golden/legacy/release/inputs/examples.json",
       "--strict"
     ],
     "exit_code": 2,
     "golden": "tests/golden/legacy/release/02_examples_strict.json",
-    "input": "legacy/zoho-release-readiness-audit/examples.json"
+    "input": "tests/golden/legacy/release/inputs/examples.json"
   },
   {
     "argv": [

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> ReleaseInput:
-    path = ROOT / "legacy" / "zoho-release-readiness-audit" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "release" / "inputs" / "examples.json"
     return ReleaseInput.model_validate(json.loads(path.read_text()))
 
 

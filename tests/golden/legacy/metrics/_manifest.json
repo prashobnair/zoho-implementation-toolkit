@@ -2,33 +2,33 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-analytics-metrics-contracts/examples.json"
+      "tests/golden/legacy/metrics/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/metrics/01_finance.json",
-    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+    "input": "tests/golden/legacy/metrics/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-analytics-metrics-contracts/examples.json",
+      "tests/golden/legacy/metrics/inputs/examples.json",
       "--audience",
       "sales"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/metrics/02_sales.json",
-    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+    "input": "tests/golden/legacy/metrics/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-analytics-metrics-contracts/examples.json",
+      "tests/golden/legacy/metrics/inputs/examples.json",
       "--audience",
       "operations"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/metrics/03_operations.json",
-    "input": "legacy/zoho-analytics-metrics-contracts/examples.json"
+    "input": "tests/golden/legacy/metrics/inputs/examples.json"
   },
   {
     "argv": [

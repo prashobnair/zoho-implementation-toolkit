@@ -2,21 +2,21 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-crm-migration-auditor/examples.json"
+      "tests/golden/legacy/migration/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/migration/01_examples.json",
-    "input": "legacy/zoho-crm-migration-auditor/examples.json"
+    "input": "tests/golden/legacy/migration/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-crm-migration-auditor/examples.json",
+      "tests/golden/legacy/migration/inputs/examples.json",
       "--strict"
     ],
     "exit_code": 2,
     "golden": "tests/golden/legacy/migration/02_examples_strict.json",
-    "input": "legacy/zoho-crm-migration-auditor/examples.json"
+    "input": "tests/golden/legacy/migration/inputs/examples.json"
   },
   {
     "argv": [

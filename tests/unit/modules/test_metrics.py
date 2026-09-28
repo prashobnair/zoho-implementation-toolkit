@@ -21,12 +21,12 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> MetricsInput:
-    path = ROOT / "legacy" / "zoho-analytics-metrics-contracts" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "metrics" / "inputs" / "examples.json"
     return MetricsInput.model_validate(json.loads(path.read_text()))
 
 
 def _data() -> dict:
-    path = ROOT / "legacy" / "zoho-analytics-metrics-contracts" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "metrics" / "inputs" / "examples.json"
     return json.loads(path.read_text())
 
 

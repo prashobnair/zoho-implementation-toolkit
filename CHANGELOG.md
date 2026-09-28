@@ -44,3 +44,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin registry (TK-ARCH-4): third-party modules register via the `zohokit.modules` entry-point group and appear in `zohokit modules list`.
 - JSON Schemas (TK-ARCH-5): `schemas/<module>/input.v1.json` and `report.v1.json` via `make schemas`; CI fails when stale.
 - Docs (TK-MIG-7): one page per module plus a full finding-code index; `mkdocs build --strict` green (Pages deploy stays off).
+- Removed `legacy/` copies after parity (TK-MIG-5): golden inputs now live under `tests/golden/legacy/<m>/inputs/`; golden outputs byte-identical.

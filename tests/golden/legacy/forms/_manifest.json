@@ -2,21 +2,21 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-forms-parity-checker/examples.json"
+      "tests/golden/legacy/forms/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/forms/01_examples.json",
-    "input": "legacy/zoho-forms-parity-checker/examples.json"
+    "input": "tests/golden/legacy/forms/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-forms-parity-checker/examples.json",
+      "tests/golden/legacy/forms/inputs/examples.json",
       "--strict"
     ],
     "exit_code": 2,
     "golden": "tests/golden/legacy/forms/02_examples_strict.json",
-    "input": "legacy/zoho-forms-parity-checker/examples.json"
+    "input": "tests/golden/legacy/forms/inputs/examples.json"
   },
   {
     "argv": [

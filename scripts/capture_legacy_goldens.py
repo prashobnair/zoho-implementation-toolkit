@@ -2,8 +2,12 @@
 
 Runs each legacy CLI on its ``examples.json`` plus the input variations from
 its tests, and stores stdout in ``tests/golden/legacy/<module>/``. Variation
-inputs are committed under ``inputs/`` so WP-08/09 parity tests can rerun
-them; ``_manifest.json`` records the argv and exit code of every golden.
+inputs are committed under ``inputs/`` so parity tests can rerun them;
+``_manifest.json`` records the argv and exit code of every golden.
+
+NOTE: ``legacy/`` was removed after parity (history preserved in git). This
+script only runs from a pre-removal checkout, e.g.
+``git worktree add /tmp/pre-removal <sha-before-removal>`` and run it there.
 
 Usage: ``uv run python scripts/capture_legacy_goldens.py`` (repo root).
 Every case runs twice; differing bytes fail the capture (goldens must be

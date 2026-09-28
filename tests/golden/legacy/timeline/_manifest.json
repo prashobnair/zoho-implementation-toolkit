@@ -2,22 +2,22 @@
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-client-timeline-composer/examples.json"
+      "tests/golden/legacy/timeline/inputs/examples.json"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/timeline/01_internal.json",
-    "input": "legacy/zoho-client-timeline-composer/examples.json"
+    "input": "tests/golden/legacy/timeline/inputs/examples.json"
   },
   {
     "argv": [
       "cli.py",
-      "legacy/zoho-client-timeline-composer/examples.json",
+      "tests/golden/legacy/timeline/inputs/examples.json",
       "--audience",
       "client"
     ],
     "exit_code": 0,
     "golden": "tests/golden/legacy/timeline/02_client.json",
-    "input": "legacy/zoho-client-timeline-composer/examples.json"
+    "input": "tests/golden/legacy/timeline/inputs/examples.json"
   },
   {
     "argv": [

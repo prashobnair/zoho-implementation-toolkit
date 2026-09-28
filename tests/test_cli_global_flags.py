@@ -9,8 +9,9 @@ from typer.testing import CliRunner
 from zohokit.cli import app
 
 ROOT = Path(__file__).resolve().parent.parent
-MIGRATION_FIXTURE = str(ROOT / "legacy" / "zoho-crm-migration-auditor" / "examples.json")
-FORMS_FIXTURE = str(ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json")
+GOLDEN_INPUTS = ROOT / "tests" / "golden" / "legacy"
+MIGRATION_FIXTURE = str(GOLDEN_INPUTS / "migration" / "inputs" / "examples.json")
+FORMS_FIXTURE = str(GOLDEN_INPUTS / "forms" / "inputs" / "examples.json")
 
 runner = CliRunner()
 

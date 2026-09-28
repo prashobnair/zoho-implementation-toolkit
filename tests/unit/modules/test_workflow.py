@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def _examples() -> WorkflowInput:
-    path = ROOT / "legacy" / "zoho-workflow-rule-testbench" / "examples.json"
+    path = ROOT / "tests" / "golden" / "legacy" / "workflow" / "inputs" / "examples.json"
     return WorkflowInput.model_validate(json.loads(path.read_text()))
 
 
