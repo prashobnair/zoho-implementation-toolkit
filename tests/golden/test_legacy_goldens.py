@@ -1,4 +1,4 @@
-"""Guard for the WP-06 exit criterion: 8 golden folders, >=3 files each (TK-MIG-2)."""
+"""Guard for the legacy-import gate: 8 golden folders, >=3 files each (TK-MIG-2)."""
 
 from __future__ import annotations
 

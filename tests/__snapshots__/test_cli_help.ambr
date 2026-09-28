@@ -1,0 +1,182 @@
+# serializer version: 1
+# name: test_module_help_snapshot[argv0]
+  '''
+                                                                                  
+   Usage: root migration [OPTIONS] COMMAND [ARGS]...                              
+                                                                                  
+   Audit a CRM migration source before import.                                    
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ audit  Audit a source export and report what would break on import.          │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv1]
+  '''
+                                                                                  
+   Usage: root release [OPTIONS] COMMAND [ARGS]...                                
+                                                                                  
+   Diff sandbox vs production config manifests.                                   
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ diff  Diff two manifests and report blocking changes.                        │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv2]
+  '''
+                                                                                  
+   Usage: root workflow [OPTIONS] COMMAND [ARGS]...                               
+                                                                                  
+   Trace workflow rules over a record.                                            
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ simulate  Simulate rules against one record and report the trace.            │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv3]
+  '''
+                                                                                  
+   Usage: root forms [OPTIONS] COMMAND [ARGS]...                                  
+                                                                                  
+   Prove a rebuilt form behaves like the original.                                
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ parity  Compare source and target form outputs over the answer cases.        │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv4]
+  '''
+                                                                                  
+   Usage: root books [OPTIONS] COMMAND [ARGS]...                                  
+                                                                                  
+   Reconcile Books invoices against CRM deals.                                    
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ reconcile  Reconcile every deal against its invoices and report mismatches.  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv5]
+  '''
+                                                                                  
+   Usage: root metrics [OPTIONS] COMMAND [ARGS]...                                
+                                                                                  
+   Check metric contracts over CRM/Books/People data.                             
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ check  Evaluate metric contracts for one audience.                           │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv6]
+  '''
+                                                                                  
+   Usage: root timeline [OPTIONS] COMMAND [ARGS]...                               
+                                                                                  
+   Compose a client-safe timeline with contradiction review.                      
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ compose  Compose events chronologically and flag claim contradictions.       │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_module_help_snapshot[argv7]
+  '''
+                                                                                  
+   Usage: root lead-routing [OPTIONS] COMMAND [ARGS]...                           
+                                                                                  
+   Route inbound leads without sending anything.                                  
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --help          Show this message and exit.                                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ route  Route leads to queues; never merges, never sends.                     │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---
+# name: test_root_help_snapshot
+  '''
+                                                                                  
+   Usage: root [OPTIONS] COMMAND [ARGS]...                                        
+                                                                                  
+   An implementation engineer's safety kit for Zoho.                              
+                                                                                  
+  ┌─ Options ────────────────────────────────────────────────────────────────────┐
+  │ --live                              Read from Zoho (not available until      │
+  │                                     v0.2.0).                                 │
+  │ --profile                   <str>   Named auth profile (not available until  │
+  │                                     v0.2.0).                                 │
+  │ --format                    <str>   Default report format for every command. │
+  │ --out                       <path>  Default report file for every command.   │
+  │ --strict                            Exit 2 on blocking findings, every       │
+  │                                     command.                                 │
+  │ --ai                                AI assistance (not available until       │
+  │                                     v0.3.0).                                 │
+  │ --baseline                  <path>  Suppression file (not available until    │
+  │                                     v0.2.0).                                 │
+  │ --max-api-calls             <int>   API call budget (not available until     │
+  │                                     v0.2.0).                                 │
+  │ --install-completion                Install completion for the current       │
+  │                                     shell.                                   │
+  │ --show-completion                   Show completion for the current shell,   │
+  │                                     to copy it or customize the              │
+  │                                     installation.                            │
+  │ --help                              Show this message and exit.              │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  ┌─ Commands ───────────────────────────────────────────────────────────────────┐
+  │ version       Print the package version.                                     │
+  │ modules       Inspect available modules.                                     │
+  │ migration     Audit a CRM migration source before import.                    │
+  │ release       Diff sandbox vs production config manifests.                   │
+  │ workflow      Trace workflow rules over a record.                            │
+  │ forms         Prove a rebuilt form behaves like the original.                │
+  │ books         Reconcile Books invoices against CRM deals.                    │
+  │ metrics       Check metric contracts over CRM/Books/People data.             │
+  │ timeline      Compose a client-safe timeline with contradiction review.      │
+  │ lead-routing  Route inbound leads without sending anything.                  │
+  └──────────────────────────────────────────────────────────────────────────────┘
+  
+  
+  '''
+# ---

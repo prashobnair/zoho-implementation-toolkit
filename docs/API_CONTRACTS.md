@@ -1,7 +1,7 @@
 # API contracts
 
-Verified external endpoints per `specs/01` §4.6 (STD-C1/C2). Populated from
-WP-12 with the connector foundation. Status values: `verified` | `unverified` | `drifted`.
+Verified external endpoints per `specs/01` §4.6 (STD-C1/C2). Populated with
+the connector foundation, planned for v0.2.0. Status values: `verified` | `unverified` | `drifted`.
 
 | Product | Endpoint | Method | Scope | Fields used | Pagination | Doc URL | Verified on | Verified by | Status |
 |---|---|---|---|---|---|---|---|---|---|

@@ -2,7 +2,7 @@
 
 Runs each legacy CLI on its ``examples.json`` plus the input variations from
 its tests, and stores stdout in ``tests/golden/legacy/<module>/``. Variation
-inputs are committed under ``inputs/`` so WP-08/09 parity tests can rerun
+inputs are committed under ``inputs/`` so the port parity tests can rerun
 them; ``_manifest.json`` records the argv and exit code of every golden.
 
 Usage: ``uv run python scripts/capture_legacy_goldens.py`` (repo root).

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 0.1.0 in short (first release)
+
+- One CLI, `zohokit`, over 8 ported Zoho helpers: migration audit, release
+  diff, workflow simulation, forms parity, books reconciliation, metrics
+  checks, timeline composition and lead routing — all offline, all byte-equal
+  to the original tools on 37 captured outputs except documented fixes.
+- One report envelope (JSON/table/Markdown/HTML) with stable finding IDs,
+  a readiness flag and strict exit codes; every input/output model ships a
+  versioned JSON Schema under `schemas/`.
+- Docs site with a page per module and a full finding-code index; unavailable
+  flags (`--live`, `--profile`, `--ai`, `--baseline`, `--max-api-calls`) fail
+  loudly with the release that unlocks them. No live mode, no writes, no
+  sends.
+- Fixed during the port, each with a regression test: order-free release
+  fingerprints; books row-level amount errors; metrics duplicate IDs and
+  staff-hours validation; forms hidden-parent visibility and output-difference
+  (`parity_mismatch`) findings; timeline claim normalization.
+
 ### Added
 
 - WP-05 scaffold: `zohokit` package skeleton, shared-core modules, minimal CLI.
@@ -21,3 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Intentional parity differences: `metrics/05_invalid_utilization.json` gains `invalid_staff_row` for s-1 and drops `invalid_utilization` (valid rows now aggregate to 50.00%) via TK-FIX-4; all other books/metrics/timeline/lead_routing goldens byte-equal.
 - Stable finding identities: discriminators now come from identifying input data (row IDs, field/case names, components), never positions; forms surfaces legacy case issues as findings (TK-CORE-2).
 - Forms parity semantics: case issues identical on source and target are info (not blocking); only a source/target difference blocks; ready follows legacy all_pass. CLI exit codes match legacy on all 37 golden inputs (CLI parity test).
+- Forms output differences now surface as `parity_mismatch` (error) findings, one per differing case/field with both values as evidence; new invariant: a not-ready report always carries an error/review finding.
+- Unified CLI (TK-X-1): global `--live/--profile/--format/--out/--strict/--ai/--baseline/--max-api-calls` on every command; future features fail loudly with their release version; shell completion via `--show-completion`; `--help` snapshots for the root and all 8 modules.
+- Plugin registry (TK-ARCH-4): third-party modules register via the `zohokit.modules` entry-point group and appear in `zohokit modules list`.
+- JSON Schemas (TK-ARCH-5): `schemas/<module>/input.v1.json` and `report.v1.json` via `make schemas`; CI fails when stale.
+- Docs (TK-MIG-7): one page per module plus a full finding-code index; `mkdocs build --strict` green (Pages deploy stays off).

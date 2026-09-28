@@ -1,0 +1,37 @@
+{
+  "additionalProperties": true,
+  "description": "Source and target field lists plus the answer cases to compare.",
+  "properties": {
+    "cases": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Cases",
+      "type": "array"
+    },
+    "source_fields": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Source Fields",
+      "type": "array"
+    },
+    "target_fields": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Target Fields",
+      "type": "array"
+    }
+  },
+  "required": [
+    "source_fields",
+    "target_fields",
+    "cases"
+  ],
+  "title": "FormsInput",
+  "type": "object"
+}

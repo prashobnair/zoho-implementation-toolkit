@@ -1,4 +1,4 @@
-"""Migration preflight (ported WP-08, TK-MIG-3)."""
+"""Migration preflight (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

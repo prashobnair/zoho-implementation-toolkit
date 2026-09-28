@@ -1,7 +1,7 @@
 """Contract-suite harness check: runs with network disabled (STD §3.3).
 
-Full cassette-based contract tests land with the connector foundation
-(WP-12). This test proves the harness itself blocks network access.
+Full cassette-based contract tests land with the connector foundation,
+planned for v0.2.0. This test proves the harness itself blocks network access.
 """
 
 from __future__ import annotations

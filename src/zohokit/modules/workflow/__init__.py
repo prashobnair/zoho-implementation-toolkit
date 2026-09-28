@@ -1,4 +1,4 @@
-"""Workflow lint and simulator (ported WP-08, TK-MIG-3)."""
+"""Workflow lint and simulator (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

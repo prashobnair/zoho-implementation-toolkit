@@ -24,8 +24,8 @@ class Analysis:
     """One engine run: new-style findings plus the legacy result dict.
 
     ``legacy`` is the verbatim port output that ``report.to_legacy_dict()``
-    reproduces for WP-06 golden parity; ``ready`` mirrors the legacy
-    readiness flag.
+    reproduces for legacy parity-golden comparison; ``ready`` mirrors the
+    legacy readiness flag.
     """
 
     findings: tuple[Finding, ...] = ()

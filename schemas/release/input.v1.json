@@ -1,0 +1,28 @@
+{
+  "additionalProperties": true,
+  "description": "Two config manifests: before and after.",
+  "properties": {
+    "after": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "After",
+      "type": "array"
+    },
+    "before": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Before",
+      "type": "array"
+    }
+  },
+  "required": [
+    "before",
+    "after"
+  ],
+  "title": "ReleaseInput",
+  "type": "object"
+}

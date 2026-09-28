@@ -1,0 +1,52 @@
+{
+  "additionalProperties": true,
+  "description": "Offline source export: four entity lists plus the stage mapping.",
+  "properties": {
+    "activities": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Activities",
+      "type": "array"
+    },
+    "deals": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Deals",
+      "type": "array"
+    },
+    "organizations": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Organizations",
+      "type": "array"
+    },
+    "people": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "People",
+      "type": "array"
+    },
+    "stage_mapping": {
+      "additionalProperties": true,
+      "title": "Stage Mapping",
+      "type": "object"
+    }
+  },
+  "required": [
+    "organizations",
+    "people",
+    "deals",
+    "activities",
+    "stage_mapping"
+  ],
+  "title": "MigrationInput",
+  "type": "object"
+}

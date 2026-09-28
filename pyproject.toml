@@ -31,6 +31,16 @@ dependencies = [
 [project.scripts]
 zohokit = "zohokit.cli:main"
 
+[project.entry-points."zohokit.modules"]
+migration = "zohokit.cli.migration:app"
+release = "zohokit.cli.release:app"
+workflow = "zohokit.cli.workflow:app"
+forms = "zohokit.cli.forms:app"
+books = "zohokit.cli.books:app"
+metrics = "zohokit.cli.metrics:app"
+timeline = "zohokit.cli.timeline:app"
+lead-routing = "zohokit.cli.lead_routing:app"
+
 [project.urls]
 Homepage = "https://github.com/prashobnair/zoho-implementation-toolkit"
 Changelog = "https://github.com/prashobnair/zoho-implementation-toolkit/blob/main/CHANGELOG.md"

@@ -1,0 +1,9 @@
+[project]
+name = "zohokit-demo"
+version = "0.0.0"
+description = "Demo third-party module for the zohokit.modules registry (test fixture, never published)."
+requires-python = ">=3.11"
+dependencies = ["typer>=0.12"]
+
+[project.entry-points."zohokit.modules"]
+demo = "zohokit_demo:app"

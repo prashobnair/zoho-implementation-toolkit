@@ -7,7 +7,20 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fail, fresh_context, load_input, parse_model
+from zohokit.cli.common import (
+    AiAfter,
+    BaselineAfter,
+    LiveAfter,
+    MaxApiCallsAfter,
+    ProfileAfter,
+    emit,
+    fail,
+    fresh_context,
+    load_input,
+    parse_model,
+    reject_future_flags,
+    resolve_runtime,
+)
 from zohokit.modules.metrics.engine import run
 from zohokit.modules.metrics.models import MetricsInput
 
@@ -28,13 +41,20 @@ def check(
         str, typer.Option("--format", help="json|table|markdown|html.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    ai: AiAfter = False,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Evaluate metric contracts for one audience."""
+    reject_future_flags(live, profile, ai, baseline, max_api_calls)
     if audience not in {"sales", "finance", "operations"}:
         fail(f"unsupported --audience {audience!r} (sales|finance|operations)")
     data = load_input(fixture, "metrics", input_format)
     report = run(parse_model(MetricsInput, data), ctx=fresh_context(), audience=audience)
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]

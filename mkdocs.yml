@@ -4,7 +4,16 @@ theme:
   name: material
 nav:
   - Overview: index.md
-  - Modules: modules/index.md
+  - Modules:
+      - Overview: modules/index.md
+      - Migration Preflight: modules/migration.md
+      - Release Readiness: modules/release.md
+      - Workflow Lint & Simulator: modules/workflow.md
+      - Forms Parity: modules/forms.md
+      - Books Reconciliation: modules/books.md
+      - Metrics Contracts: modules/metrics.md
+      - Client Timeline Composer: modules/timeline.md
+      - Lead Routing Lab: modules/lead_routing.md
   - Finding codes: finding-codes.md
   - API contracts: API_CONTRACTS.md
   - Threat model: THREAT_MODEL.md

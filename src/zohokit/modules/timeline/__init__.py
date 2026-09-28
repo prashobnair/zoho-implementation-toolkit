@@ -1,4 +1,4 @@
-"""Client timeline composer (ported WP-09, TK-MIG-3)."""
+"""Client timeline composer (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

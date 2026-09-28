@@ -1,8 +1,103 @@
 # Finding codes
 
-Module finding codes (`docs/modules/<m>/codes.md` per `specs/02` §2.1) are
-documented with each module port (WP-08/09). Core codes so far:
+Every finding carries a stable snake_case `code`, documented per module in
+`src/zohokit/modules/<m>/codes.md` and aggregated here. Severity ranks
+`error > review > warning > info`. A run is ready only when no error (and,
+per module, no review) findings remain; `--strict` turns a not-ready run
+into exit code 2.
+
+## migration
 
 | Code | Severity | Meaning |
 |---|---|---|
-| _none yet_ | | Scaffold stage; codes arrive with the ports. |
+| `missing_id` | error | A row has no source ID. |
+| `duplicate_id` | error | A source ID repeats within its entity. |
+| `invalid_email` | error | Email syntax cannot be matched safely. |
+| `possible_duplicate` | review | Normalized email matches another source person. Never auto-merged. |
+| `orphan_organization` | error | Person references an organization ID absent from the export. |
+| `orphan_person` | error | Deal references a person ID absent from the export. |
+| `unmapped_stage` | error | Deal stage has no approved target mapping. |
+| `orphan_deal` | error | Activity references a deal ID absent from the export. |
+
+## release
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `behavior_regression_review` | error | A workflow, validation, function or webhook was added or changed. |
+| `removal_review` | error | A component was removed. |
+| `missing_dependency` | error | A component depends on something absent from the target manifest. |
+
+## workflow
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `cycle_detected` | error | The trace revisited a state signature; simulation stopped. |
+| `step_limit` | error | The rule trace exceeded the step budget. |
+| `missing_owner` | error | An assign-owner action has no usable owner value. |
+| `no_op_stage` | error | A set-stage action targets the stage already set. |
+| `duplicate_followup` | error | The same follow-up would fire twice for one record. |
+
+## forms
+
+Case issues are **info** when source and target handle them identically,
+**error** when only one side has them. Only a source/target difference blocks.
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `required_missing` | info/error | A visible required field has no answer. |
+| `invalid_choice` | info/error | A select answer is not one of the options. |
+| `invalid_number` | info/error | A number/calculated field cannot be computed. |
+| `invalid_calculation_sources` | info/error | A calculated field lacks exactly two known sources. |
+| `invalid_visibility_reference` | info/error | `visible_if` references an unknown field or the field itself. |
+| `visibility_cycle` | info/error | Fields reference each other in a `visible_if` cycle; treated as hidden. |
+| `answer_for_hidden_field` | info | An answer for a hidden field was ignored. |
+| `parity_mismatch` | error | A case's source and target outputs differ for a field; evidence carries both values. |
+
+## books
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `duplicate_or_missing_deal_id` | error | A deal ID is empty or repeats. |
+| `entity_currency_mismatch` | error | The deal entity is unknown or its currency differs. |
+| `invalid_amount` | error | A malformed amount; that row's amount comparisons skipped. |
+| `missing_invoice` | error | A deal has no invoice. |
+| `duplicate_invoice_reference` | error | Several invoices reference one deal. |
+| `cross_entity_invoice` | error | An invoice sits in the wrong legal entity. |
+| `currency_mismatch` | error | Invoice currency differs from the deal currency. |
+| `net_amount_mismatch` | error | Invoice net differs from the deal net. |
+| `tax_not_reviewed` | error | The invoice tax was not reviewed. |
+| `sync_failed` | error | The invoice sync state is failed. |
+| `orphan_invoice_reference` | error | An invoice references no known deal. |
+
+## metrics
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `future_snapshot` | error | A source timestamp is newer than `as_of`. |
+| `stale_snapshot` | error | A source timestamp is older than the 24h freshness SLA. |
+| `orphan_deal` | error | A deal references an unknown account. |
+| `orphan_invoice` | error | An invoice references an unknown account. |
+| `currency_mismatch` | error | An invoice is not in the report currency. |
+| `duplicate_id` | error | A deal/invoice ID repeats; excluded from aggregates. |
+| `invalid_staff_row` | error | A staff row breaks hours validation. |
+| `invalid_utilization` | error | Aggregate utilization is impossible. |
+
+## timeline
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `conflicting_claims` | error | Differing normalized values share a normalized claim key. |
+
+## lead_routing
+
+| Code | Severity | Meaning |
+|---|---|---|
+| `qualified_sales_inquiry` | info | Sales intent with confirmed budget and consent. |
+| `consent_not_verified` | review | Consent is not granted; human queue. |
+| `needs_human_triage` | review | Support/unknown intent; human queue. |
+| `budget_unconfirmed` | review | Sales intent without confirmed budget; human queue. |
+| `unrecognized_intent` | review | Intent is none of the known values; human queue. |
+| `unsupported_channel` | review | Channel is not a known inbound channel; human queue. |
+| `invalid_or_missing_e164` | review | No usable E.164 phone; human queue. |
+| `phone_candidate_match` | review | E.164 matches an earlier lead; never merged. |
+| `inferred_region` | info | Region came from the explicit `--default-region`. |

@@ -1,4 +1,4 @@
-"""AI provider interface and guardrails (foundation lands WP-16)."""
+"""AI provider interface and guardrails (foundation, planned for v0.3.0)."""
 
 from __future__ import annotations
 

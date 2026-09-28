@@ -13,7 +13,7 @@ class RunContext:
 
     ``now`` is the run timestamp (callers pass a frozen clock in tests);
     ``mode`` mirrors the report envelope. AI provider and call budget
-    arrive with later work packages.
+    arrive with later releases.
     """
 
     now: datetime

@@ -1,0 +1,58 @@
+{
+  "additionalProperties": true,
+  "description": "CRM/Books/People tables plus freshness markers.",
+  "properties": {
+    "accounts": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Accounts",
+      "type": "array"
+    },
+    "as_of": {
+      "title": "As Of"
+    },
+    "currency": {
+      "default": null,
+      "title": "Currency"
+    },
+    "deals": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Deals",
+      "type": "array"
+    },
+    "invoices": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Invoices",
+      "type": "array"
+    },
+    "staff": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Staff",
+      "type": "array"
+    },
+    "updated_at": {
+      "default": null,
+      "title": "Updated At"
+    }
+  },
+  "required": [
+    "as_of",
+    "accounts",
+    "deals",
+    "invoices",
+    "staff"
+  ],
+  "title": "MetricsInput",
+  "type": "object"
+}

@@ -1,0 +1,19 @@
+{
+  "additionalProperties": true,
+  "description": "Account events with provenance, visibility and optional claims.",
+  "properties": {
+    "events": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Events",
+      "type": "array"
+    }
+  },
+  "required": [
+    "events"
+  ],
+  "title": "TimelineInput",
+  "type": "object"
+}
