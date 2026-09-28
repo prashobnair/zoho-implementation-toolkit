@@ -62,6 +62,8 @@ findings, stable identities, money/time/graph/plan utilities and exit codes.
 Connectors and the CLI are thin adapters. Third-party modules register through
 the `zohokit.modules` entry-point group and appear in `zohokit modules list`.
 
+Differences from the original zoho-* tools: see docs/legacy-parity.md.
+
 ## Engineering decisions
 
 | Decision | Why | Trade-off |
