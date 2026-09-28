@@ -1,4 +1,4 @@
-"""CLI exit-code parity: every WP-06 golden input through the zohokit CLI.
+"""CLI exit-code parity: every legacy parity-golden input through the zohokit CLI.
 
 For each manifest entry, run the matching ``zohokit <module> <command>``
 with the manifest's extra args and assert the exit code equals the legacy

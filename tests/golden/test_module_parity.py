@@ -1,4 +1,4 @@
-"""WP-06 golden parity: report.to_legacy_dict() vs every golden file (TK-MIG-3).
+"""Legacy parity-golden comparison: report.to_legacy_dict() vs every golden file (TK-MIG-3).
 
 The only allowed differences are the intentional fixes, each asserted
 explicitly with its exact new value (never by editing the goldens):
@@ -116,7 +116,7 @@ def _cases() -> list[tuple[str, dict[str, Any]]]:
 
 @pytest.mark.parametrize(("module", "entry"), _cases())
 def test_legacy_parity(module: str, entry: dict[str, Any]) -> None:
-    """to_legacy_dict() equals the WP-06 golden, modulo intentional fixes."""
+    """to_legacy_dict() equals the legacy parity golden, modulo intentional fixes."""
     port = PORTS[module]
     inputs = json.loads((ROOT / entry["input"]).read_text(encoding="utf-8"))
     audience = _argv_audience(entry["argv"])

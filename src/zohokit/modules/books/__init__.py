@@ -1,4 +1,4 @@
-"""Books and CRM reconciliation (ported WP-09, TK-MIG-3)."""
+"""Books and CRM reconciliation (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

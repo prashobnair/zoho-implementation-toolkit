@@ -1,4 +1,4 @@
-"""Forms parity (ported WP-08, TK-MIG-3)."""
+"""Forms parity (ported at parity, TK-MIG-3)."""
 
 from __future__ import annotations
 

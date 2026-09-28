@@ -1,4 +1,4 @@
-"""Non-Zoho source readers: CSV, Pipedrive, HubSpot, Jotform (WP-12+)."""
+"""Non-Zoho source readers: CSV, Pipedrive, HubSpot, Jotform (v0.2.0+)."""
 
 from __future__ import annotations
 
