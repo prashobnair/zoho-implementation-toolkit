@@ -18,6 +18,7 @@ nav:
   - API contracts: API_CONTRACTS.md
   - Threat model: THREAT_MODEL.md
   - Known issues: KNOWN_ISSUES.md
+  - Differences from the original tools: legacy-parity.md
   - Decisions:
       - ADR 0001: adr/0001-tooling-and-layout.md
       - ADR 0002: adr/0002-get-only-guard.md
