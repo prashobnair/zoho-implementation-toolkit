@@ -65,15 +65,10 @@ def test_visibility_cycle_is_error() -> None:
         {"field": "a", "code": "visibility_cycle"},
         {"field": "b", "code": "visibility_cycle"},
     ]
-    errors = [finding for finding in analysis.findings if finding.code == "visibility_cycle"]
-    assert [(finding.severity, finding.entity_id) for finding in errors] == [
-        (Severity.ERROR, "case-1:source:a"),
-        (Severity.ERROR, "case-1:source:b"),
-        (Severity.ERROR, "case-1:target:a"),
-        (Severity.ERROR, "case-1:target:b"),
-    ]
-    assert legacy["all_pass"] is True  # both sides equally empty
-    assert analysis.ready is False  # error findings block
+    assert {finding.code for finding in analysis.findings} == {"visibility_cycle"}
+    assert all(finding.severity is Severity.INFO for finding in analysis.findings)
+    assert legacy["all_pass"] is True  # both sides equally unevaluable
+    assert analysis.ready is True
 
 
 def test_invalid_reference_preserved() -> None:
@@ -97,13 +92,33 @@ def test_examples_mismatch_parity_shape() -> None:
 
 
 def test_corrected_target_has_issues_but_matches() -> None:
-    """all_pass with remaining issues: matching outputs, report not ready."""
+    """all_pass with remaining issues: matching outputs, agreed issues are info."""
     data = json.loads((ROOT / "legacy" / "zoho-forms-parity-checker" / "examples.json").read_text())
     data["target_fields"][4]["operation"] = "multiply"
     analysis = analyze(FormsInput.model_validate(data))
     assert to_legacy_dict(analysis)["all_pass"] is True
-    assert analysis.ready is False
+    assert analysis.ready is True
     assert {finding.code for finding in analysis.findings} == {"required_missing"}
+    assert all(finding.severity is Severity.INFO for finding in analysis.findings)
+
+
+def test_one_sided_difference_blocks() -> None:
+    """An issue on one side only is an error and fails the case."""
+    fields = [{"name": "a", "type": "text", "required": True}]
+    inputs = FormsInput(
+        source_fields=fields,
+        target_fields=[{"name": "a", "type": "text"}],
+        cases=[{"name": "case-1", "answers": {}}],
+    )
+    analysis = analyze(inputs)
+    assert to_legacy_dict(analysis)["all_pass"] is False
+    assert analysis.ready is False
+    (finding,) = analysis.findings
+    assert (finding.code, finding.severity, finding.entity_id) == (
+        "required_missing",
+        Severity.ERROR,
+        "case-1:source:a",
+    )
 
 
 def _examples_input() -> FormsInput:

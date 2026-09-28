@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+from collections import Counter
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -176,6 +177,46 @@ def _evaluate(
     return {"output": output, "issues": issues}, new_findings
 
 
+def _grade_case_issues(
+    case_name: str,
+    left_issues: list[dict[str, Any]],
+    right_issues: list[dict[str, Any]],
+) -> list[Finding]:
+    """Grade one case's issues.
+
+    An issue both sides handle identically is not a parity defect: info.
+    Only a source/target difference blocks: error. Matching is multiset
+    based, so repeated identical issues pair up deterministically.
+    """
+    left_keys = Counter((str(issue["field"]), str(issue["code"])) for issue in left_issues)
+    right_keys = Counter((str(issue["field"]), str(issue["code"])) for issue in right_issues)
+    agreed = dict(left_keys & right_keys)
+    graded: list[Finding] = []
+    for side, evaluated in (("source", left_issues), ("target", right_issues)):
+        remaining = dict(agreed)
+        for issue in evaluated:
+            field_name = str(issue["field"])
+            key = (field_name, str(issue["code"]))
+            severity = Severity.ERROR
+            if remaining.get(key, 0) > 0:
+                remaining[key] -= 1
+                severity = Severity.INFO
+            graded.append(
+                Finding.create(
+                    module="forms",
+                    code=str(issue["code"]),
+                    severity=severity,
+                    entity="case",
+                    entity_id=f"{case_name}:{side}:{field_name}",
+                    message=f"{issue['code']} on field {field_name!r} "
+                    f"in case {case_name!r} ({side}).",
+                    evidence={"legacy_issue": issue},
+                    discriminator=f"{case_name}:{side}:{field_name}:{issue['code']}",
+                )
+            )
+    return graded
+
+
 def _ref(condition: dict[str, Any]) -> Any:
     """The single referenced field of a visibility condition."""
     return next(iter(condition.items()))[0]
@@ -199,22 +240,7 @@ def _compare_legacy(
         right, right_new = _evaluate(target, case["answers"], side="target", case=case_name)
         new_findings.extend(left_new)
         new_findings.extend(right_new)
-        for side, evaluated in (("source", left), ("target", right)):
-            for issue in evaluated["issues"]:
-                field_name = str(issue["field"])
-                new_findings.append(
-                    Finding.create(
-                        module="forms",
-                        code=str(issue["code"]),
-                        severity=Severity.ERROR,
-                        entity="case",
-                        entity_id=f"{case_name}:{side}:{field_name}",
-                        message=f"{issue['code']} on field {field_name!r} "
-                        f"in case {case_name!r} ({side}).",
-                        evidence={"legacy_issue": issue},
-                        discriminator=f"{case_name}:{side}:{field_name}:{issue['code']}",
-                    )
-                )
+        new_findings.extend(_grade_case_issues(case_name, left["issues"], right["issues"]))
         results.append(
             {"case": case.get("name", ""), "pass": left == right, "source": left, "target": right}
         )
@@ -231,10 +257,7 @@ def analyze(inputs: FormsInput) -> Analysis:
     """Compare the form pair; return findings plus the legacy result dict."""
     spec = copy.deepcopy(inputs.model_dump())
     legacy, new_findings = _compare_legacy(spec)
-    ready = bool(legacy["all_pass"]) and not any(
-        finding.severity is Severity.ERROR for finding in new_findings
-    )
-    return Analysis(findings=tuple(new_findings), legacy=legacy, ready=ready)
+    return Analysis(findings=tuple(new_findings), legacy=legacy, ready=bool(legacy["all_pass"]))
 
 
 def run(inputs: FormsInput, *, ctx: RunContext) -> Report:
