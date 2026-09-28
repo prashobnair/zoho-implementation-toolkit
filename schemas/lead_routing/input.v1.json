@@ -1,0 +1,19 @@
+{
+  "additionalProperties": true,
+  "description": "Inbound leads to route, in received order.",
+  "properties": {
+    "leads": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Leads",
+      "type": "array"
+    }
+  },
+  "required": [
+    "leads"
+  ],
+  "title": "LeadRoutingInput",
+  "type": "object"
+}

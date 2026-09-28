@@ -1,0 +1,34 @@
+{
+  "additionalProperties": true,
+  "description": "Two entities' deals plus the invoices claimed against them.",
+  "properties": {
+    "deals": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Deals",
+      "type": "array"
+    },
+    "entities": {
+      "additionalProperties": true,
+      "title": "Entities",
+      "type": "object"
+    },
+    "invoices": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Invoices",
+      "type": "array"
+    }
+  },
+  "required": [
+    "entities",
+    "deals",
+    "invoices"
+  ],
+  "title": "BooksInput",
+  "type": "object"
+}

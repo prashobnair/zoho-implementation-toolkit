@@ -13,7 +13,7 @@ test:
 	uv run pytest
 
 schemas:
-	@echo "JSON Schema export lands with the shared core (WP-07, TK-ARCH-5)."
+	uv run python scripts/export_schemas.py
 
 demo:
 	uv run zohokit version

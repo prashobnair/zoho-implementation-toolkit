@@ -1,0 +1,36 @@
+{
+  "additionalProperties": true,
+  "description": "One record, its rules, and the triggering event.",
+  "properties": {
+    "initial_event": {
+      "default": "deal_created",
+      "title": "Initial Event",
+      "type": "string"
+    },
+    "max_steps": {
+      "default": 20,
+      "minimum": 1,
+      "title": "Max Steps",
+      "type": "integer"
+    },
+    "record": {
+      "additionalProperties": true,
+      "title": "Record",
+      "type": "object"
+    },
+    "rules": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rules",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rules",
+    "record"
+  ],
+  "title": "WorkflowInput",
+  "type": "object"
+}
