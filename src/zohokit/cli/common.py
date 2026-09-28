@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, NoReturn, TypeVar
@@ -40,6 +41,74 @@ def fail(message: str) -> NoReturn:
     """Exit 1 with a usage/input error (STD §3.5)."""
     typer.echo(f"Input error: {message}", err=True)
     raise typer.Exit(code=1)
+
+
+@dataclass(frozen=True)
+class GlobalOptions:
+    """Root-level flags shared by every command (TK-X-1).
+
+    ``live``, ``profile``, ``ai``, ``baseline`` and ``max_api_calls`` name
+    features that do not exist yet; using any of them fails loudly (exit 1)
+    instead of being silently ignored. ``format_name``, ``out`` and
+    ``strict`` act as defaults when the command does not set them.
+    """
+
+    live: bool = False
+    profile: str | None = None
+    format_name: str | None = None
+    out: Path | None = None
+    strict: bool = False
+    ai: bool = False
+    baseline: Path | None = None
+    max_api_calls: int | None = None
+
+
+_GLOBAL = GlobalOptions()
+
+
+def set_global_options(options: GlobalOptions) -> None:
+    """Record the root flags for this invocation (called by the CLI callback)."""
+    global _GLOBAL
+    _GLOBAL = options
+
+
+def check_unavailable_globals(options: GlobalOptions | None = None) -> None:
+    """Fail loudly when a flag names a feature that does not exist yet.
+
+    Runs in the root callback, before any command body, so ``--live`` can
+    never reach a network call: the process exits first.
+    """
+    active = _GLOBAL if options is None else options
+    if active.live:
+        fail("Live reads are not available until v0.2.0. This run touched no network.")
+    if active.profile is not None:
+        fail("Profiles are not available until v0.2.0.")
+    if active.ai:
+        fail("AI assistance is not available until v0.3.0.")
+    if active.baseline is not None:
+        fail("Baseline suppression is not available until v0.2.0.")
+    if active.max_api_calls is not None:
+        fail("API call budgets are not available until v0.2.0.")
+
+
+@dataclass(frozen=True)
+class RuntimeOptions:
+    """Effective per-run rendering options after merging globals."""
+
+    format_name: str
+    out: Path | None
+    strict: bool
+
+
+def resolve_runtime(
+    format_name: str = "json", out: Path | None = None, *, strict: bool = False
+) -> RuntimeOptions:
+    """Merge command-level options over the root ``--format/--out/--strict``."""
+    return RuntimeOptions(
+        format_name=format_name if format_name != "json" else (_GLOBAL.format_name or "json"),
+        out=out or _GLOBAL.out,
+        strict=strict or _GLOBAL.strict,
+    )
 
 
 def load_input(path: Path, module: str, input_format: str | None) -> dict[str, Any]:
@@ -90,4 +159,15 @@ def emit(report: Report, format_name: str, out: Path | None, *, strict: bool) ->
     raise typer.Exit(code=int(resolve(report, strict=strict)))
 
 
-__all__: list[str] = ["emit", "fail", "fresh_context", "load_input", "parse_model"]
+__all__: list[str] = [
+    "GlobalOptions",
+    "RuntimeOptions",
+    "check_unavailable_globals",
+    "emit",
+    "fail",
+    "fresh_context",
+    "load_input",
+    "parse_model",
+    "resolve_runtime",
+    "set_global_options",
+]

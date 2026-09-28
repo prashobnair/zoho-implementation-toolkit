@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fresh_context, load_input, parse_model
+from zohokit.cli.common import emit, fresh_context, load_input, parse_model, resolve_runtime
 from zohokit.modules.lead_routing.engine import run
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 
@@ -34,7 +34,8 @@ def route(
     report = run(
         parse_model(LeadRoutingInput, data), ctx=fresh_context(), default_region=default_region
     )
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]

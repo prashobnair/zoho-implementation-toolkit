@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fresh_context, load_input, parse_model
+from zohokit.cli.common import emit, fresh_context, load_input, parse_model, resolve_runtime
 from zohokit.modules.books.engine import run
 from zohokit.modules.books.models import BooksInput
 
@@ -29,7 +29,8 @@ def reconcile(
     """Reconcile every deal against its invoices and report mismatches."""
     data = load_input(fixture, "books", input_format)
     report = run(parse_model(BooksInput, data), ctx=fresh_context())
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]

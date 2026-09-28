@@ -7,7 +7,14 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fail, fresh_context, load_input, parse_model
+from zohokit.cli.common import (
+    emit,
+    fail,
+    fresh_context,
+    load_input,
+    parse_model,
+    resolve_runtime,
+)
 from zohokit.modules.metrics.engine import run
 from zohokit.modules.metrics.models import MetricsInput
 
@@ -34,7 +41,8 @@ def check(
         fail(f"unsupported --audience {audience!r} (sales|finance|operations)")
     data = load_input(fixture, "metrics", input_format)
     report = run(parse_model(MetricsInput, data), ctx=fresh_context(), audience=audience)
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]

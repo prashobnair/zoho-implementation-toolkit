@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fresh_context, load_input, parse_model
+from zohokit.cli.common import emit, fresh_context, load_input, parse_model, resolve_runtime
 from zohokit.modules.migration.engine import run
 from zohokit.modules.migration.models import MigrationInput
 
@@ -29,7 +29,8 @@ def audit(
     """Audit a source export and report what would break on import."""
     data = load_input(fixture, "migration", input_format)
     report = run(parse_model(MigrationInput, data), ctx=fresh_context())
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]

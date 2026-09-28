@@ -7,7 +7,14 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fail, fresh_context, load_input, parse_model
+from zohokit.cli.common import (
+    emit,
+    fail,
+    fresh_context,
+    load_input,
+    parse_model,
+    resolve_runtime,
+)
 from zohokit.modules.timeline.engine import run
 from zohokit.modules.timeline.models import TimelineInput
 
@@ -32,7 +39,8 @@ def compose(
         fail(f"unsupported --audience {audience!r} (internal|client)")
     data = load_input(fixture, "timeline", input_format)
     report = run(parse_model(TimelineInput, data), ctx=fresh_context(), audience=audience)
-    emit(report, format_name, out, strict=strict)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 
 
 __all__: list[str] = ["app"]
