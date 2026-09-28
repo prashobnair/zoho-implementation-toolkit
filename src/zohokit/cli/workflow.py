@@ -7,7 +7,19 @@ from typing import Annotated
 
 import typer
 
-from zohokit.cli.common import emit, fresh_context, load_input, parse_model, resolve_runtime
+from zohokit.cli.common import (
+    AiAfter,
+    BaselineAfter,
+    LiveAfter,
+    MaxApiCallsAfter,
+    ProfileAfter,
+    emit,
+    fresh_context,
+    load_input,
+    parse_model,
+    reject_future_flags,
+    resolve_runtime,
+)
 from zohokit.modules.workflow.engine import run
 from zohokit.modules.workflow.models import WorkflowInput
 
@@ -25,8 +37,14 @@ def simulate(
         str, typer.Option("--format", help="json|table|markdown|html.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    ai: AiAfter = False,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Simulate rules against one record and report the trace."""
+    reject_future_flags(live, profile, ai, baseline, max_api_calls)
     data = load_input(fixture, "workflow", input_format)
     report = run(parse_model(WorkflowInput, data), ctx=fresh_context())
     runtime = resolve_runtime(format_name, out, strict=strict)

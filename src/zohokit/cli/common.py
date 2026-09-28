@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, NoReturn, TypeVar
+from typing import Annotated, Any, NoReturn, TypeAlias, TypeVar
 
 import typer
 from pydantic import BaseModel, ValidationError
@@ -64,6 +64,55 @@ class GlobalOptions:
 
 
 _GLOBAL = GlobalOptions()
+
+
+# After-subcommand spellings of the not-yet-available root flags (TK-X-1).
+#
+# Click only accepts root options *before* the subcommand, so every leaf
+# command re-declares these five flags with identical help text. Passing
+# any of them after the subcommand fails loudly with the same message and
+# exit code as the before-subcommand form. Each command body must call
+# :func:`reject_future_flags` first, before reading any input.
+LiveAfter: TypeAlias = Annotated[
+    bool, typer.Option("--live", help="Read from Zoho (not available until v0.2.0).")
+]
+ProfileAfter: TypeAlias = Annotated[
+    str | None,
+    typer.Option("--profile", help="Named auth profile (not available until v0.2.0)."),
+]
+AiAfter: TypeAlias = Annotated[
+    bool, typer.Option("--ai", help="AI assistance (not available until v0.3.0).")
+]
+BaselineAfter: TypeAlias = Annotated[
+    Path | None,
+    typer.Option("--baseline", help="Suppression file (not available until v0.2.0)."),
+]
+MaxApiCallsAfter: TypeAlias = Annotated[
+    int | None,
+    typer.Option("--max-api-calls", help="API call budget (not available until v0.2.0)."),
+]
+
+
+def reject_future_flags(
+    live: bool = False,
+    profile: str | None = None,
+    ai: bool = False,
+    baseline: Path | None = None,
+    max_api_calls: int | None = None,
+) -> None:
+    """Fail loudly when an after-subcommand flag names a missing feature.
+
+    Mirrors the root-callback check with the same messages (exit 1).
+    """
+    check_unavailable_globals(
+        GlobalOptions(
+            live=live,
+            profile=profile,
+            ai=ai,
+            baseline=baseline,
+            max_api_calls=max_api_calls,
+        )
+    )
 
 
 def set_global_options(options: GlobalOptions) -> None:
@@ -160,7 +209,12 @@ def emit(report: Report, format_name: str, out: Path | None, *, strict: bool) ->
 
 
 __all__: list[str] = [
+    "AiAfter",
+    "BaselineAfter",
     "GlobalOptions",
+    "LiveAfter",
+    "MaxApiCallsAfter",
+    "ProfileAfter",
     "RuntimeOptions",
     "check_unavailable_globals",
     "emit",
@@ -168,6 +222,7 @@ __all__: list[str] = [
     "fresh_context",
     "load_input",
     "parse_model",
+    "reject_future_flags",
     "resolve_runtime",
     "set_global_options",
 ]
