@@ -15,7 +15,8 @@ READ_TIMEOUT = 30.0
 
 def _default_jitter() -> float:
     """Small random spread so concurrent retries do not march in lockstep."""
-    return random.uniform(0, 0.25)
+    # Retry jitter is not a security decision; a PRNG is exactly right.
+    return random.uniform(0, 0.25)  # nosec B311
 
 
 def _default_sleep(seconds: float) -> None:
