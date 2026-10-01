@@ -31,6 +31,41 @@ def test_planted_phone_and_org_id_fail_scan() -> None:
     assert any("configured org ID" in finding for finding in findings)
 
 
+def test_planted_credential_fails_scan(tmp_path: Path) -> None:
+    cassette_dir = tmp_path / "cassettes"
+    cassette_dir.mkdir()
+    (cassette_dir / "evil.json").write_text(
+        '{"access_token": "1000.aa11bb22.cc33dd44", '
+        '"note": "Bearer eyJhbGciOiJIUzI1NiJ9.e30.abc"},',
+        encoding="utf-8",
+    )
+    offenders = scan_all(tmp_path)
+    assert "cassettes/evil.json" in offenders
+    assert any("credential" in finding for finding in offenders["cassettes/evil.json"])
+
+
+def test_redacted_credentials_pass() -> None:
+    findings = scan_text(
+        '{"access_token": "[redacted-credential]", '
+        '"note": "Zoho-oauthtoken [redacted-credential]"}',
+        [],
+    )
+    assert findings == []
+
+
+def test_recorder_drops_headers_and_refuses_accounts() -> None:
+    from record_cassette import ALLOWED_HEADERS, filter_headers, refuse_accounts_host
+
+    assert ALLOWED_HEADERS == frozenset({"content-type"})
+    filtered = filter_headers(
+        {"Authorization": "Zoho-oauthtoken tok", "Content-Type": "application/json"}
+    )
+    assert filtered == {"content-type": "application/json"}
+    with pytest.raises(PermissionError, match="accounts host"):
+        refuse_accounts_host("https://accounts.zoho.in/oauth/v2/token")
+    refuse_accounts_host("https://www.zohoapis.in/crm/v8/org")
+
+
 def test_redacted_placeholders_pass() -> None:
     findings = scan_text(
         '{"Email": "a***@example.invalid", "Phone": "+91********23", "id": "555000111"}', []

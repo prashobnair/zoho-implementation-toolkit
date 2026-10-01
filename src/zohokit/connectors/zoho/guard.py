@@ -65,6 +65,9 @@ def is_trusted_api_host(host: str) -> bool:
     lowered = host.casefold().rstrip(".")
     if not lowered or "@" in lowered or ":" in lowered or " " in lowered:
         return False
+    if lowered.startswith("accounts."):
+        # Token hosts never carry API calls; auth uses AuthTransport only.
+        return False
     if not _HOST_LABEL_RE.match(lowered):
         return False
     try:

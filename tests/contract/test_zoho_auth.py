@@ -41,7 +41,7 @@ def test_token_exchange_contract() -> None:
         expected_api_base="https://www.zohoapis.in",
     )
     assert isinstance(tokens, TokenResponse)
-    assert tokens.refresh_token == "fake.refresh.token"
+    assert tokens.refresh_token == "[redacted-credential]"
     assert tokens.api_domain == "https://www.zohoapis.in"
 
 

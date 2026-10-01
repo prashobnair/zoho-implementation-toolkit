@@ -1,10 +1,15 @@
-"""Fail on unredacted PII in recorded cassettes (STD-X2).
+"""Fail on unredacted PII or credentials in recorded cassettes (STD-X2).
 
 Scans ``cassettes/**`` and ``tests/contract/cassettes/**`` for:
 - email addresses outside the ``example.invalid`` placeholder domain,
 - phone-like digit runs (real numbers; masked ``+cc*****dd`` forms pass),
 - configured org IDs listed in ``cassettes/known_org_ids.txt`` (one per
-  line; absent file means no org-ID check).
+  line; absent file means no org-ID check),
+- OAuth credential patterns (``Zoho-oauthtoken <tok>``, ``Bearer <tok>``,
+  Zoho ``1000.<hex>.<hex>`` tokens) and credential keys
+  (``access_token``/``refresh_token``/``client_secret``/``client_id``/
+  ``id_token``/``authorization``/``cookie``/``set-cookie``/``x-api-key``)
+  whose value is not ``[redacted-credential]``.
 
 Exit 0 when clean, exit 1 listing every offending file and line.
 
@@ -36,6 +41,27 @@ _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
 _PHONE_RE = re.compile(r"\+?\d[\d\s\-().]{6,}\d")
 _PLACEHOLDER_DOMAIN = "example.invalid"
 
+_ZOHO_OAUTHTOKEN_RE = re.compile(r"Zoho-oauthtoken\s+([^\s,;\"']+)", re.IGNORECASE)
+_BEARER_RE = re.compile(r"Bearer\s+([A-Za-z0-9\-._~+/=]+)", re.IGNORECASE)
+_ZOHO_TOKEN_RE = re.compile(r"\b1000\.[0-9a-fA-F]{2,}\.[0-9a-fA-F]{2,}\b")
+
+_REDACTED_CREDENTIAL = "[redacted-credential]"
+
+_CREDENTIAL_KEYS = (
+    "access_token",
+    "refresh_token",
+    "client_secret",
+    "client_id",
+    "id_token",
+    "authorization",
+    "cookie",
+    "set-cookie",
+    "x-api-key",
+)
+_CREDENTIAL_KEY_RE = re.compile(
+    r"(?i)[\"']?(" + "|".join(re.escape(key) for key in _CREDENTIAL_KEYS) + r")[\"']?\s*[:=]"
+)
+
 
 def load_org_ids(path: Path = ORG_IDS_FILE) -> list[str]:
     """Configured org IDs, one per line; empty when the file is absent."""
@@ -61,6 +87,17 @@ def scan_text(text: str, org_ids: list[str]) -> list[str]:
             if digits.startswith("555"):
                 continue
             findings.append(f"line {lineno}: unredacted phone {match.group(0)!r}")
+        for match in _ZOHO_OAUTHTOKEN_RE.finditer(line):
+            if _REDACTED_CREDENTIAL not in match.group(1):
+                findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
+        for match in _BEARER_RE.finditer(line):
+            if _REDACTED_CREDENTIAL not in match.group(1):
+                findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
+        for match in _ZOHO_TOKEN_RE.finditer(line):
+            findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
+        key_match = _CREDENTIAL_KEY_RE.search(line)
+        if key_match is not None and _REDACTED_CREDENTIAL not in line:
+            findings.append(f"line {lineno}: unredacted credential key {key_match.group(1)!r}")
         for org_id in org_ids:
             if org_id and org_id in line:
                 findings.append(f"line {lineno}: configured org ID {org_id!r}")
