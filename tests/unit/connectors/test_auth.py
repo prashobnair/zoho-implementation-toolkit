@@ -94,14 +94,13 @@ def test_auth_transport_allows_only_token_post(fake_keyring: dict[str, str]) -> 
         ("POST", "http://accounts.zoho.in/oauth/v2/token"),
         ("POST", "https://evil.example.invalid/oauth/v2/token"),
         ("DELETE", "https://accounts.zoho.in/oauth/v2/token"),
+        ("POST", "https://accounts.zoho.in:8443/oauth/v2/token"),
+        ("POST", "https://user@accounts.zoho.in/oauth/v2/token"),
     ],
 )
 def test_auth_transport_refuses_everything_else(method: str, url: str) -> None:
     transport = AuthTransport(_mock(), dc="in")
-    if method == "POST" and "evil" in url:
-        request = httpx.Request(method, url)
-    else:
-        request = httpx.Request(method, url)
+    request = httpx.Request(method, url)
     with pytest.raises(SafetyGuardError):
         transport.handle_request(request)
 

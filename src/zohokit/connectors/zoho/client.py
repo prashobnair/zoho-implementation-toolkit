@@ -18,7 +18,12 @@ import httpx
 
 from zohokit.connectors.zoho.budget import DEFAULT_MAX_API_CALLS, CallBudget
 from zohokit.connectors.zoho.errors import ConnectorError, SafetyGuardError
-from zohokit.connectors.zoho.guard import GetOnlyTransport
+from zohokit.connectors.zoho.guard import (
+    GetOnlyTransport,
+    api_host_from_url,
+    check_request,
+    check_url_allowed,
+)
 from zohokit.connectors.zoho.retry import RetryPolicy, default_timeouts
 
 #: Endpoint call status (STD-C1/C2). Every endpoint in this release is
@@ -56,6 +61,7 @@ class ZohoClient:
     _budget: CallBudget
     _token_provider: Callable[[], str | None] | None
     base_url: str
+    _allowed_hosts: set[str]
 
     def __init__(
         self,
@@ -66,15 +72,44 @@ class ZohoClient:
         retry: RetryPolicy | None = None,
         budget: CallBudget | None = None,
     ) -> None:
+        base_host = httpx.URL(base_url).host or ""
+        self._allowed_hosts = {base_host.casefold()} if base_host else set()
         self._http = httpx.Client(
             base_url=base_url,
-            transport=GetOnlyTransport(transport or httpx.HTTPTransport()),
+            transport=GetOnlyTransport(
+                transport or httpx.HTTPTransport(), allowed_hosts=self._allowed_hosts
+            ),
             timeout=default_timeouts(),
         )
         self._retry = retry or RetryPolicy()
         self._budget = budget or CallBudget(max_calls=DEFAULT_MAX_API_CALLS)
         self._token_provider = token_provider
         self.base_url = base_url.rstrip("/")
+
+    @property
+    def allowed_hosts(self) -> frozenset[str]:
+        """Allowlisted API hosts for this client (lowercased)."""
+        return frozenset(self._allowed_hosts)
+
+    def register_api_domain(self, api_domain: str) -> str:
+        """Allowlist an ``api_domain`` from a token response (validated)."""
+        normalized = api_host_from_url(api_domain)
+        self._allowed_hosts.add(normalized)
+        return normalized
+
+    def _url_allows_credentials(self, url: httpx.URL, method: str) -> bool:
+        if method.upper() not in ("GET", "HEAD"):
+            return False
+        try:
+            check_url_allowed(url, self._allowed_hosts)
+        except SafetyGuardError:
+            return False
+        return True
+
+    def _strip_credentials_unless_allowed(self, request: httpx.Request) -> None:
+        if not self._url_allows_credentials(request.url, request.method):
+            for name in [name for name in request.headers if name.lower() == "authorization"]:
+                del request.headers[name]
 
     def _headers(self) -> dict[str, str]:
         provider = self._token_provider
@@ -92,14 +127,31 @@ class ZohoClient:
         headers: dict[str, str] | None = None,
     ) -> httpx.Request:
         """Build (but do not send) a request for *method* + *path*."""
-        merged = {**self._headers(), **(headers or {})}
-        # httpx ships types, but build_request is typed loosely across
-        # supported versions; pin the return so --strict stays exact.
-        built = self._http.build_request(method, path, params=params, headers=merged)
-        return cast(httpx.Request, built)  # type: ignore[redundant-cast]
+        # Build without credentials first so the target URL is known, then
+        # attach the token only when the method + URL may carry it. Any
+        # caller-supplied Authorization header is likewise dropped unless
+        # the target is allowlisted (defence in depth).
+        caller_auth: tuple[str, str] | None = None
+        user_headers: dict[str, str] = {}
+        for name, value in (headers or {}).items():
+            if name.lower() == "authorization":
+                if caller_auth is None:
+                    caller_auth = (name, value)
+            else:
+                user_headers[name] = value
+        built = self._http.build_request(method, path, params=params, headers=user_headers)
+        request = cast(httpx.Request, built)  # type: ignore[redundant-cast]
+        if self._url_allows_credentials(request.url, method):
+            token_headers = self._headers()
+            if token_headers:
+                request.headers.update(token_headers)
+            elif caller_auth is not None:
+                request.headers[caller_auth[0]] = caller_auth[1]
+        return request
 
     def send(self, request: httpx.Request) -> httpx.Response:
         """Send a pre-built request through the guarded transport (one call)."""
+        self._strip_credentials_unless_allowed(request)
         policy = self._retry
         last_exc: BaseException | None = None
         for attempt in range(1, policy.max_attempts + 1):
@@ -187,6 +239,8 @@ class ZohoClient:
         """Streaming read funnelled through the guarded transport."""
         _check_experimental(endpoint or path, experimental=experimental)
         request = self.build_request(method, path, params=params, headers=headers)
+        self._strip_credentials_unless_allowed(request)
+        check_request(request, self._allowed_hosts)
         if not self._budget.consume():
             raise ConnectorError("API call budget exhausted; partial results are truncated")
         with self._http.stream(
