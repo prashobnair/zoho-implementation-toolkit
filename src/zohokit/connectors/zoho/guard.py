@@ -122,17 +122,11 @@ def check_url_allowed(url: httpx.URL, allowed_hosts: Iterable[str] | None) -> st
     """Raise :class:`SafetyGuardError` unless *url* may carry credentials."""
     if url.scheme != "https":
         raise SafetyGuardError(f"blocked {url}: only https URLs may leave this process")
-    username = ""
-    password = ""
     try:
-        username = url.username or ""
+        has_userinfo = bool(url.username) or bool(url.password)
     except Exception:
-        username = ""
-    try:
-        password = url.password or ""
-    except Exception:
-        password = ""
-    if username or password:
+        has_userinfo = True
+    if has_userinfo:
         raise SafetyGuardError(f"blocked {url}: userinfo in URLs is never allowed")
     host = url.host or ""
     if not host:
