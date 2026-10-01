@@ -47,10 +47,13 @@ def fail(message: str) -> NoReturn:
 class GlobalOptions:
     """Root-level flags shared by every command (TK-X-1).
 
-    ``live``, ``profile``, ``ai``, ``baseline`` and ``max_api_calls`` name
-    features that do not exist yet; using any of them fails loudly (exit 1)
-    instead of being silently ignored. ``format_name``, ``out`` and
-    ``strict`` act as defaults when the command does not set them.
+    ``live``, ``profile`` and ``max_api_calls`` are honored by the
+    ``auth``, ``doctor`` and ``cache`` commands; per-module live reads are
+    not wired yet, so module commands refuse them loudly instead of
+    silently ignoring them. ``ai`` and ``baseline`` name features that do
+    not exist yet; using either fails loudly (exit 1). ``format_name``,
+    ``out`` and ``strict`` act as defaults when the command does not set
+    them.
     """
 
     live: bool = False
@@ -66,19 +69,20 @@ class GlobalOptions:
 _GLOBAL = GlobalOptions()
 
 
-# After-subcommand spellings of the not-yet-available root flags (TK-X-1).
+# After-subcommand spellings of the root flags (TK-X-1).
 #
 # Click only accepts root options *before* the subcommand, so every leaf
-# command re-declares these five flags with identical help text. Passing
-# any of them after the subcommand fails loudly with the same message and
-# exit code as the before-subcommand form. Each command body must call
-# :func:`reject_future_flags` first, before reading any input.
+# command re-declares these flags with identical help text. ``--ai`` and
+# ``--baseline`` name features that do not exist yet and always fail
+# loudly. ``--live``/``--profile``/``--max-api-calls`` are honored by the
+# auth, doctor and cache commands; every other command refuses them loudly
+# (see :func:`reject_unsupported_live`) until its live path is wired.
 LiveAfter: TypeAlias = Annotated[
-    bool, typer.Option("--live", help="Read from Zoho (not available until v0.2.0).")
+    bool, typer.Option("--live", help="Read from Zoho via a named profile.")
 ]
 ProfileAfter: TypeAlias = Annotated[
     str | None,
-    typer.Option("--profile", help="Named auth profile (not available until v0.2.0)."),
+    typer.Option("--profile", help="Named auth profile (see `zohokit auth login`)."),
 ]
 AiAfter: TypeAlias = Annotated[
     bool, typer.Option("--ai", help="AI assistance (not available until v0.3.0).")
@@ -89,16 +93,13 @@ BaselineAfter: TypeAlias = Annotated[
 ]
 MaxApiCallsAfter: TypeAlias = Annotated[
     int | None,
-    typer.Option("--max-api-calls", help="API call budget (not available until v0.2.0)."),
+    typer.Option("--max-api-calls", help="API call budget per run (default 200)."),
 ]
 
 
 def reject_future_flags(
-    live: bool = False,
-    profile: str | None = None,
     ai: bool = False,
     baseline: Path | None = None,
-    max_api_calls: int | None = None,
 ) -> None:
     """Fail loudly when an after-subcommand flag names a missing feature.
 
@@ -106,13 +107,30 @@ def reject_future_flags(
     """
     check_unavailable_globals(
         GlobalOptions(
-            live=live,
-            profile=profile,
             ai=ai,
             baseline=baseline,
-            max_api_calls=max_api_calls,
         )
     )
+
+
+def reject_unsupported_live(
+    module: str,
+    live: bool = False,
+    profile: str | None = None,
+    max_api_calls: int | None = None,
+) -> None:
+    """Refuse live flags on module commands whose live path is not wired yet.
+
+    Checks both the before-subcommand root flags and the after-subcommand
+    spellings, so neither position can slip through silently.
+    """
+    root = _GLOBAL.live or _GLOBAL.profile is not None or _GLOBAL.max_api_calls is not None
+    if root or live or profile is not None or max_api_calls is not None:
+        fail(
+            f"Live reads are not available for `{module}` yet. "
+            "This run touched no network. "
+            "Use `zohokit auth login`, `zohokit doctor` and `zohokit cache` for now."
+        )
 
 
 def set_global_options(options: GlobalOptions) -> None:
@@ -124,20 +142,15 @@ def set_global_options(options: GlobalOptions) -> None:
 def check_unavailable_globals(options: GlobalOptions | None = None) -> None:
     """Fail loudly when a flag names a feature that does not exist yet.
 
-    Runs in the root callback, before any command body, so ``--live`` can
-    never reach a network call: the process exits first.
+    Only ``--ai`` and ``--baseline`` are still gated here: ``--live``,
+    ``--profile`` and ``--max-api-calls`` are honored by the auth, doctor
+    and cache commands, and refused per-command elsewhere.
     """
     active = _GLOBAL if options is None else options
-    if active.live:
-        fail("Live reads are not available until v0.2.0. This run touched no network.")
-    if active.profile is not None:
-        fail("Profiles are not available until v0.2.0.")
     if active.ai:
         fail("AI assistance is not available until v0.3.0.")
     if active.baseline is not None:
         fail("Baseline suppression is not available until v0.2.0.")
-    if active.max_api_calls is not None:
-        fail("API call budgets are not available until v0.2.0.")
 
 
 @dataclass(frozen=True)
@@ -223,6 +236,7 @@ __all__: list[str] = [
     "load_input",
     "parse_model",
     "reject_future_flags",
+    "reject_unsupported_live",
     "resolve_runtime",
     "set_global_options",
 ]

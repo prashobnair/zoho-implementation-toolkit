@@ -19,6 +19,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.metrics.engine import run
@@ -48,7 +49,8 @@ def check(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Evaluate metric contracts for one audience."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("metrics", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     if audience not in {"sales", "finance", "operations"}:
         fail(f"unsupported --audience {audience!r} (sales|finance|operations)")
     data = load_input(fixture, "metrics", input_format)

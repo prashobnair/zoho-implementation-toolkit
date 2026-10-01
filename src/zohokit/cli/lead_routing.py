@@ -18,6 +18,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.lead_routing.engine import run
@@ -47,7 +48,8 @@ def route(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Route leads to queues; never merges, never sends."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("lead-routing", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     data = load_input(fixture, "lead_routing", input_format)
     report = run(
         parse_model(LeadRoutingInput, data), ctx=fresh_context(), default_region=default_region

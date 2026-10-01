@@ -143,10 +143,9 @@
    An implementation engineer's safety kit for Zoho.                              
                                                                                   
   ┌─ Options ────────────────────────────────────────────────────────────────────┐
-  │ --live                              Read from Zoho (not available until      │
-  │                                     v0.2.0).                                 │
-  │ --profile                   <str>   Named auth profile (not available until  │
-  │                                     v0.2.0).                                 │
+  │ --live                              Read from Zoho via a named profile.      │
+  │ --profile                   <str>   Named auth profile (see `zohokit auth    │
+  │                                     login`).                                 │
   │ --format                    <str>   Default report format for every command. │
   │ --out                       <path>  Default report file for every command.   │
   │ --strict                            Exit 2 on blocking findings, every       │
@@ -155,8 +154,7 @@
   │                                     v0.3.0).                                 │
   │ --baseline                  <path>  Suppression file (not available until    │
   │                                     v0.2.0).                                 │
-  │ --max-api-calls             <int>   API call budget (not available until     │
-  │                                     v0.2.0).                                 │
+  │ --max-api-calls             <int>   API call budget per run (default 200).   │
   │ --install-completion                Install completion for the current       │
   │                                     shell.                                   │
   │ --show-completion                   Show completion for the current shell,   │
@@ -175,6 +173,9 @@
   │ metrics       Check metric contracts over CRM/Books/People data.             │
   │ timeline      Compose a client-safe timeline with contradiction review.      │
   │ lead-routing  Route inbound leads without sending anything.                  │
+  │ auth          Connect the toolkit to Zoho (read-only).                       │
+  │ doctor        Check a profile before any live read.                          │
+  │ cache         Manage the on-disk response cache.                             │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   

@@ -19,6 +19,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.timeline.engine import run
@@ -46,7 +47,8 @@ def compose(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Compose events chronologically and flag claim contradictions."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("timeline", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     if audience not in {"internal", "client"}:
         fail(f"unsupported --audience {audience!r} (internal|client)")
     data = load_input(fixture, "timeline", input_format)

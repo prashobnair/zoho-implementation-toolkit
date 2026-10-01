@@ -1,4 +1,9 @@
-"""Global-flag tests: every root flag works, and future flags fail loudly (TK-X-1)."""
+"""Global-flag tests: shared rendering flags work; future flags fail loudly (TK-X-1).
+
+``--live``/``--profile``/``--max-api-calls`` are honored by the auth,
+doctor and cache commands; module commands refuse them loudly (their live
+paths are not wired yet). ``--ai``/``--baseline`` still fail everywhere.
+"""
 
 from __future__ import annotations
 
@@ -13,22 +18,27 @@ GOLDEN_INPUTS = ROOT / "tests" / "golden" / "legacy"
 MIGRATION_FIXTURE = str(GOLDEN_INPUTS / "migration" / "inputs" / "examples.json")
 FORMS_FIXTURE = str(GOLDEN_INPUTS / "forms" / "inputs" / "examples.json")
 
+LIVE_REFUSED = (
+    "Input error: Live reads are not available for `migration` yet. "
+    "This run touched no network. "
+    "Use `zohokit auth login`, `zohokit doctor` and `zohokit cache` for now.\n"
+)
+
 runner = CliRunner()
 
 
-def test_live_fails_loudly_without_touching_network() -> None:
-    """--live exits 1 with a clear message, even before reading the input file."""
+def test_live_refused_on_module_before_any_input() -> None:
+    """--live on a module fails before the (missing) input file is even read."""
     result = runner.invoke(app, ["--live", "migration", "audit", "no-such-file.json"])
     assert result.exit_code == 1
-    assert result.output == (
-        "Input error: Live reads are not available until v0.2.0. This run touched no network.\n"
-    )
+    assert result.output == LIVE_REFUSED
 
 
-def test_profile_fails_loudly() -> None:
+def test_profile_refused_on_module() -> None:
     result = runner.invoke(app, ["--profile", "dev-in", "version"])
     assert result.exit_code == 1
-    assert result.output == "Input error: Profiles are not available until v0.2.0.\n"
+    assert "not available for `version` yet" in result.output
+    assert "touched no network" in result.output
 
 
 def test_ai_fails_loudly() -> None:
@@ -43,10 +53,10 @@ def test_baseline_fails_loudly() -> None:
     assert result.output == "Input error: Baseline suppression is not available until v0.2.0.\n"
 
 
-def test_max_api_calls_fails_loudly() -> None:
+def test_max_api_calls_refused_on_module() -> None:
     result = runner.invoke(app, ["--max-api-calls", "10", "version"])
     assert result.exit_code == 1
-    assert result.output == "Input error: API call budgets are not available until v0.2.0.\n"
+    assert "not available for `version` yet" in result.output
 
 
 def test_global_strict_blocks_like_command_strict() -> None:
@@ -73,19 +83,17 @@ def test_completion_script_available() -> None:
     assert "complete -o default" in result.output
 
 
-def test_live_after_subcommand_fails_loudly() -> None:
-    """Same message and exit code as the before-subcommand form."""
+def test_live_after_subcommand_refused() -> None:
+    """Same refusal from the after-subcommand position."""
     result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--live"])
     assert result.exit_code == 1
-    assert result.output == (
-        "Input error: Live reads are not available until v0.2.0. This run touched no network.\n"
-    )
+    assert result.output == LIVE_REFUSED
 
 
-def test_profile_after_subcommand_fails_loudly() -> None:
+def test_profile_after_subcommand_refused() -> None:
     result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--profile", "dev-in"])
     assert result.exit_code == 1
-    assert result.output == "Input error: Profiles are not available until v0.2.0.\n"
+    assert "not available for `migration` yet" in result.output
 
 
 def test_ai_after_subcommand_fails_loudly() -> None:
@@ -102,7 +110,7 @@ def test_baseline_after_subcommand_fails_loudly() -> None:
     assert result.output == "Input error: Baseline suppression is not available until v0.2.0.\n"
 
 
-def test_max_api_calls_after_subcommand_fails_loudly() -> None:
+def test_max_api_calls_after_subcommand_refused() -> None:
     result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--max-api-calls", "10"])
     assert result.exit_code == 1
-    assert result.output == "Input error: API call budgets are not available until v0.2.0.\n"
+    assert "not available for `migration` yet" in result.output

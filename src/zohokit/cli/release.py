@@ -18,6 +18,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.release.engine import run
@@ -44,7 +45,8 @@ def diff(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Diff two manifests and report blocking changes."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("release", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     data = load_input(fixture, "release", input_format)
     report = run(parse_model(ReleaseInput, data), ctx=fresh_context())
     runtime = resolve_runtime(format_name, out, strict=strict)

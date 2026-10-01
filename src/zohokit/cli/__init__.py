@@ -9,7 +9,10 @@ import typer
 from typer._click import exceptions as _click_exceptions
 
 from zohokit import __version__
+from zohokit.cli import auth as auth_cli
 from zohokit.cli import books as books_cli
+from zohokit.cli import cache as cache_cli
+from zohokit.cli import doctor as doctor_cli
 from zohokit.cli import forms as forms_cli
 from zohokit.cli import lead_routing as lead_routing_cli
 from zohokit.cli import metrics as metrics_cli
@@ -26,6 +29,7 @@ from zohokit.cli.common import (
     ProfileAfter,
     check_unavailable_globals,
     reject_future_flags,
+    reject_unsupported_live,
     set_global_options,
 )
 from zohokit.modules import MODULES
@@ -59,15 +63,18 @@ def create_app() -> typer.Typer:
     root.add_typer(metrics_cli.app, name="metrics")
     root.add_typer(timeline_cli.app, name="timeline")
     root.add_typer(lead_routing_cli.app, name="lead-routing")
+    root.add_typer(auth_cli.app, name="auth")
+    root.add_typer(doctor_cli.app, name="doctor")
+    root.add_typer(cache_cli.app, name="cache")
 
     @root.callback()
     def _global_options(
         live: Annotated[
-            bool, typer.Option("--live", help="Read from Zoho (not available until v0.2.0).")
+            bool, typer.Option("--live", help="Read from Zoho via a named profile.")
         ] = False,
         profile: Annotated[
             str | None,
-            typer.Option("--profile", help="Named auth profile (not available until v0.2.0)."),
+            typer.Option("--profile", help="Named auth profile (see `zohokit auth login`)."),
         ] = None,
         format_name: Annotated[
             str | None,
@@ -89,7 +96,7 @@ def create_app() -> typer.Typer:
         ] = None,
         max_api_calls: Annotated[
             int | None,
-            typer.Option("--max-api-calls", help="API call budget (not available until v0.2.0)."),
+            typer.Option("--max-api-calls", help="API call budget per run (default 200)."),
         ] = None,
     ) -> None:
         """Shared flags. Unavailable features fail loudly, before any command."""
@@ -115,7 +122,8 @@ def create_app() -> typer.Typer:
         max_api_calls: MaxApiCallsAfter = None,
     ) -> None:
         """Print the package version."""
-        reject_future_flags(live, profile, ai, baseline, max_api_calls)
+        reject_unsupported_live("version", live, profile, max_api_calls)
+        reject_future_flags(ai, baseline)
         typer.echo(__version__)
 
     @modules_app.command("list")
@@ -127,7 +135,8 @@ def create_app() -> typer.Typer:
         max_api_calls: MaxApiCallsAfter = None,
     ) -> None:
         """List the available toolkit modules, including plugins."""
-        reject_future_flags(live, profile, ai, baseline, max_api_calls)
+        reject_unsupported_live("modules list", live, profile, max_api_calls)
+        reject_future_flags(ai, baseline)
         for name in available_modules():
             typer.echo(name)
 
