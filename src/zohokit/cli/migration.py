@@ -18,6 +18,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.migration.engine import run
@@ -44,7 +45,8 @@ def audit(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Audit a source export and report what would break on import."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("migration", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     data = load_input(fixture, "migration", input_format)
     report = run(parse_model(MigrationInput, data), ctx=fresh_context())
     runtime = resolve_runtime(format_name, out, strict=strict)

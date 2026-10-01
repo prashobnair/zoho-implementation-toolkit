@@ -1,0 +1,1 @@
+# One org ID per line. The cassette-scan CI job fails if any listed ID appears in cassettes/**.

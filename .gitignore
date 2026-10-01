@@ -23,6 +23,7 @@ site/
 # Reports / local runs
 out/
 .zohokit/
+.scratch/
 *.token
 
 # OS / editor

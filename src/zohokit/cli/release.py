@@ -18,8 +18,10 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
+from zohokit.core.plan import Plan, write_bundle
 from zohokit.modules.release.engine import run
 from zohokit.modules.release.models import ReleaseInput
 
@@ -42,11 +44,25 @@ def diff(
     ai: AiAfter = False,
     baseline: BaselineAfter = None,
     max_api_calls: MaxApiCallsAfter = None,
+    plan_out: Annotated[
+        Path | None, typer.Option("--plan-out", help="Write a signed plan bundle here.")
+    ] = None,
 ) -> None:
     """Diff two manifests and report blocking changes."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("release", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     data = load_input(fixture, "release", input_format)
     report = run(parse_model(ReleaseInput, data), ctx=fresh_context())
+    if plan_out is not None:
+        json_path, _ = write_bundle(
+            Plan(),
+            plan_out,
+            note=(
+                "Offline diff proposes no writes to Zoho. "
+                "A future live promotion would list its calls here for review."
+            ),
+        )
+        typer.echo(f"Wrote {json_path}")
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 

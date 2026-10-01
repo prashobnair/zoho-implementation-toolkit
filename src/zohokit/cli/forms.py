@@ -18,6 +18,7 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
     resolve_runtime,
 )
 from zohokit.modules.forms.engine import run
@@ -44,7 +45,8 @@ def parity(
     max_api_calls: MaxApiCallsAfter = None,
 ) -> None:
     """Compare source and target form outputs over the answer cases."""
-    reject_future_flags(live, profile, ai, baseline, max_api_calls)
+    reject_unsupported_live("forms", live, profile, max_api_calls)
+    reject_future_flags(ai, baseline)
     data = load_input(fixture, "forms", input_format)
     report = run(parse_model(FormsInput, data), ctx=fresh_context())
     runtime = resolve_runtime(format_name, out, strict=strict)
