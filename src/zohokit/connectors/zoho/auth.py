@@ -50,15 +50,29 @@ class AuthTransport(httpx.BaseTransport):
 
     def handle_request(self, request: httpx.Request) -> httpx.Response:
         url = request.url
+        username = ""
+        password = ""
+        try:
+            username = url.username or ""
+        except Exception:
+            username = ""
+        try:
+            password = url.password or ""
+        except Exception:
+            password = ""
         if (
             request.method.upper() != "POST"
             or url.host != self._host
             or url.scheme != "https"
             or url.path != TOKEN_PATH
+            or url.port is not None
+            or username
+            or password
         ):
             raise SafetyGuardError(
                 f"auth transport refused {request.method} {url}: "
-                f"only POST https://{self._host}{TOKEN_PATH} is allowed"
+                f"only POST https://{self._host}{TOKEN_PATH} "
+                "(default port, no userinfo) is allowed"
             )
         return self._inner.handle_request(request)
 
