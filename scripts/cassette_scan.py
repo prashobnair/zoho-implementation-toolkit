@@ -15,7 +15,15 @@ Exit 0 when clean, exit 1 listing every offending file and line.
 
 ``555``-prefixed digit runs are treated as synthetic fixtures (the same
 convention as ``example.invalid`` for mailboxes) and never flagged; real
-org IDs are caught by the configured-ID check instead.
+org IDs are caught by the configured-ID check instead. Opaque
+``sha256:<hex>`` fingerprints are safe to share by design and never
+flagged, so redacted live evidence passes the same scan.
+
+Pass explicit directories to scan those trees instead (the nightly live
+job runs ``python scripts/cassette_scan.py evidence cassettes`` over the
+redacted evidence bundle before upload)::
+
+    python scripts/cassette_scan.py [DIR ...]
 """
 
 from __future__ import annotations
@@ -39,6 +47,7 @@ ORG_IDS_FILE = ROOT / "cassettes" / "known_org_ids.txt"
 
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
 _PHONE_RE = re.compile(r"\+?\d[\d\s\-().]{6,}\d")
+_FINGERPRINT_RE = re.compile(r"sha256:[0-9a-fA-F]{8,}")
 _PLACEHOLDER_DOMAIN = "example.invalid"
 
 _ZOHO_OAUTHTOKEN_RE = re.compile(r"Zoho-oauthtoken\s+([^\s,;\"']+)", re.IGNORECASE)
@@ -77,6 +86,9 @@ def load_org_ids(path: Path = ORG_IDS_FILE) -> list[str]:
 
 def scan_text(text: str, org_ids: list[str]) -> list[str]:
     """Return human-readable findings for one cassette body."""
+    # Fingerprints are opaque by design: drop them before the digit-run
+    # scan so a hash holding 8+ consecutive digits never reads as a phone.
+    text = _FINGERPRINT_RE.sub("sha256:", text)
     findings: list[str] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
         for match in _EMAIL_RE.finditer(line):
@@ -123,12 +135,49 @@ def scan_all(root: Path = ROOT) -> dict[str, list[str]]:
     return offenders
 
 
-def main() -> int:
-    """Entry point for the ``cassette-scan`` CI job."""
-    offenders = scan_all()
-    if not offenders:
-        print(f"cassette-scan clean ({len(iter_cassette_files())} files)")
-        return 0
+#: File types scanned inside explicitly passed directories.
+EXTRA_SUFFIXES = (".json", ".yaml", ".yml", ".md")
+
+
+def scan_paths(paths: list[Path], root: Path = ROOT) -> dict[str, list[str]]:
+    """Scan every supported file under *paths* (files or directories)."""
+    org_ids = load_org_ids(root / "cassettes" / "known_org_ids.txt")
+    offenders: dict[str, list[str]] = {}
+    for path in paths:
+        candidates = (
+            [path]
+            if path.is_file()
+            else sorted(p for p in path.rglob("*") if p.is_file() and p.suffix in EXTRA_SUFFIXES)
+        )
+        for candidate in candidates:
+            try:
+                rel = str(candidate.relative_to(root)).replace("\\", "/")
+            except ValueError:
+                rel = str(candidate)
+            findings = scan_text(candidate.read_text(encoding="utf-8", errors="replace"), org_ids)
+            if findings:
+                offenders[rel] = findings
+    return offenders
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Entry point for the ``cassette-scan`` CI job.
+
+    No arguments scans the default cassette trees; explicit directories
+    scan those trees instead. ``argv`` must be passed explicitly (unlike
+    ``argparse``, a bare call never reads ``sys.argv``).
+    """
+    args = list(argv) if argv is not None else []
+    if args:
+        offenders = scan_paths([Path(arg) for arg in args])
+        if not offenders:
+            print(f"cassette-scan clean ({len(args)} explicit path(s))")
+            return 0
+    else:
+        offenders = scan_all()
+        if not offenders:
+            print(f"cassette-scan clean ({len(iter_cassette_files())} files)")
+            return 0
     for path, findings in offenders.items():
         for finding in findings:
             print(f"{path}: {finding}")
@@ -136,4 +185,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

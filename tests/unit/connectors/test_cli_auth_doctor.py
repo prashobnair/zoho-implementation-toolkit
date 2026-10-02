@@ -96,12 +96,13 @@ def test_doctor_cli_reports_checklist(
     monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
     (tmp_path / "dev-in.json").write_text(
         '{"name": "dev-in", "dc": "in", '
-        '"scopes": ["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", "ZohoCRM.users.READ"], '
+        '"scopes": ["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", '
+        '"ZohoCRM.users.READ", "ZohoCRM.org.READ"], '
         '"environment": "developer_edition", "org_name": "", '
         '"saved_at": "2026-10-01T00:00:00+00:00"}',
         encoding="utf-8",
     )
-    result = runner.invoke(app, ["doctor", "--profile", "dev-in", "--experimental"])
+    result = runner.invoke(app, ["doctor", "--live", "--profile", "dev-in", "--experimental"])
     assert result.exit_code == 0, result.output
     for name in (
         "dc_reachability",
@@ -115,8 +116,11 @@ def test_doctor_cli_reports_checklist(
     assert "555000111" not in result.output
 
 
-def test_doctor_cli_requires_profile() -> None:
+def test_doctor_cli_requires_live_and_profile() -> None:
     result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 1
+    assert "--live" in result.output
+    result = runner.invoke(app, ["doctor", "--live"])
     assert result.exit_code == 1
     assert "requires --profile" in result.output
 
@@ -133,7 +137,7 @@ def test_doctor_cli_over_privileged_scope_exits_3(
         '"saved_at": "2026-10-01T00:00:00+00:00"}',
         encoding="utf-8",
     )
-    result = runner.invoke(app, ["doctor", "--profile", "dev-in", "--experimental"])
+    result = runner.invoke(app, ["doctor", "--live", "--profile", "dev-in", "--experimental"])
     assert result.exit_code == 3
     assert "over_privileged_scope" in result.output
 

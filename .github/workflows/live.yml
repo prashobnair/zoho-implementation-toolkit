@@ -1,0 +1,89 @@
+name: live
+
+# Nightly read-only verification against the owner's Developer Edition org.
+# Manual-approval protected via the `zoho-dev` environment (the owner
+# approves each run). Never runs for forks, pull requests or pushes: the
+# job-level guard below limits execution to scheduled and manually
+# dispatched runs on main in the canonical repo. Nothing is committed from
+# this workflow; redacted evidence uploads as an artifact for lead review.
+on:
+  workflow_dispatch:
+    inputs:
+      record:
+        description: "Record redacted cassettes into cassettes/ (default only verifies)"
+        type: boolean
+        default: false
+  schedule:
+    # 02:30 IST == 21:00 UTC.
+    - cron: "0 21 * * *"
+
+jobs:
+  live-verify:
+    if: github.repository == 'prashobnair/zoho-implementation-toolkit' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: zoho-dev
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked
+      - name: Install the committed dev-in profile (no secrets in repo)
+        run: |
+          mkdir -p ~/.zohokit/profiles
+          cp profiles/dev-in.json ~/.zohokit/profiles/dev-in.json
+      - name: Doctor checklist (JSON evidence)
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+        run: |
+          uv run zohokit doctor --live --profile dev-in --experimental \
+            --max-api-calls 200 --format json --out evidence/doctor.json
+      - name: Doctor checklist (Markdown summary)
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+        run: |
+          uv run zohokit doctor --live --profile dev-in --experimental \
+            --max-api-calls 200 --format markdown --out evidence/doctor.md
+      - name: Read-only smoke reads (validated, redacted evidence)
+        if: inputs.record != true
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+        run: |
+          uv run python scripts/live_smoke.py --profile dev-in \
+            --evidence-dir evidence --max-api-calls 200
+      - name: Smoke reads plus redacted cassettes (owner-approved runs only)
+        if: inputs.record == true
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+        run: |
+          uv run python scripts/live_smoke.py --profile dev-in \
+            --evidence-dir evidence --max-api-calls 200 \
+            --record --cassettes-dir cassettes
+      - name: Re-run the redactor over evidence and cassettes
+        run: uv run python scripts/scrub_cassettes.py cassettes evidence
+      - name: Scan evidence and cassettes (fails on any hit)
+        run: uv run python scripts/cassette_scan.py evidence cassettes
+      - name: Upload redacted evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-evidence
+          path: evidence/
+          retention-days: 14
+      - name: Upload newly recorded cassettes
+        if: inputs.record == true
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-cassettes
+          path: cassettes/
+          retention-days: 14

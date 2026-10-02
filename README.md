@@ -39,10 +39,18 @@ renders `--format json|table|markdown|html` and writes to a file with `--out`;
 
 ## Live mode (read-only, your own Zoho Developer Edition org)
 
-Not available yet: `zohokit --live` exits 1 without touching the network, and
-`--profile`, `--ai`, `--baseline` and `--max-api-calls` likewise fail loudly
-until their releases. Live reads stay opt-in, GET-only and budget-capped when
-they land.
+Live reads are opt-in, `GET`-only and budget-capped (200 calls per run).
+Connect once, then verify:
+
+```sh
+uv run zohokit auth login --profile dev-in --dc in --scopes ZohoCRM.modules.READ,ZohoCRM.settings.READ,ZohoCRM.users.READ,ZohoCRM.org.READ
+uv run zohokit doctor --live --profile dev-in --experimental
+```
+
+A nightly `live` workflow re-runs the checklist plus smoke reads against
+the Developer Edition org and uploads redacted evidence as an artifact.
+Setup (Self Client, scopes, secrets, approving a run):
+[docs/live/SETUP.md](docs/live/SETUP.md).
 
 ## How it works
 
@@ -76,7 +84,7 @@ Differences from the original zoho-* tools: see docs/legacy-parity.md.
 
 ## Scope & safety
 
-> This tool never writes to any Zoho org, never sends messages, never stores real personal or customer data in-repo, and has no live mode yet (`--live` exits without touching the network). AI assistance does not exist yet and will stay opt-in, cited and never auto-applied when it lands.
+> This tool never writes to any Zoho org, never sends messages, never stores real personal or customer data in-repo, and reads live data only with `--live --profile` (GET-only, budget-capped). AI assistance does not exist yet and will stay opt-in, cited and never auto-applied when it lands.
 
 ## Roadmap · Contributing · License
 

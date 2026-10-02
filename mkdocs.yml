@@ -21,6 +21,7 @@ nav:
   - Known issues: KNOWN_ISSUES.md
   - Differences from the original tools: legacy-parity.md
   - Seeding the demo org: live/SEED_DEV_ORG.md
+  - Live setup: live/SETUP.md
   - Decisions:
       - ADR 0001: adr/0001-tooling-and-layout.md
       - ADR 0002: adr/0002-get-only-guard.md

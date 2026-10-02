@@ -51,4 +51,31 @@ class TokenPage(ZohoResponse):
     next_page_token: str | None = None
 
 
-__all__: list[str] = ["OrgInfo", "RecordPage", "TokenPage", "ZohoResponse", "validate_response"]
+class ModulesResponse(ZohoResponse):
+    """CRM ``/settings/modules`` reply: the visible module list (synthetic shape)."""
+
+    modules: list[dict[str, Any]]
+
+
+class FieldsResponse(ZohoResponse):
+    """CRM ``/settings/fields`` reply: field metadata for one module (synthetic shape)."""
+
+    fields: list[dict[str, Any]]
+
+
+class UsersResponse(ZohoResponse):
+    """CRM ``/users`` reply: the org user list (synthetic shape)."""
+
+    users: list[dict[str, Any]]
+
+
+__all__: list[str] = [
+    "FieldsResponse",
+    "ModulesResponse",
+    "OrgInfo",
+    "RecordPage",
+    "TokenPage",
+    "UsersResponse",
+    "ZohoResponse",
+    "validate_response",
+]
