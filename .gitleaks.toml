@@ -8,7 +8,7 @@ useDefault = true
 # credential ("abcdef12" is a placeholder), and never leaves the test
 # process. Allowlist that exact fake string in that one file only; every
 # other rule stays at default strictness.
-[[allowlist]]
+[allowlist]
 description = "Synthetic OAuth-shaped scanner fixture in test_cassette_scan.py (not a real credential)."
 paths = ['''tests/unit/test_cassette_scan\.py''']
 regexes = ['''1000\.abcdef12\.34567890''']
