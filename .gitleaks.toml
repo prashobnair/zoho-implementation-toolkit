@@ -1,0 +1,14 @@
+# Gitleaks config: default rules plus a narrow allowlist for synthetic test fixtures.
+[extend]
+useDefault = true
+
+# The cassette-scan regression test (tests/unit/test_cassette_scan.py)
+# plants an OAuth-shaped value to prove scanner output is value-free. It
+# is assembled from string fragments at test runtime, is never a real
+# credential ("abcdef12" is a placeholder), and never leaves the test
+# process. Allowlist that exact fake string in that one file only; every
+# other rule stays at default strictness.
+[[allowlist]]
+description = "Synthetic OAuth-shaped scanner fixture in test_cassette_scan.py (not a real credential)."
+paths = ['''tests/unit/test_cassette_scan\.py''']
+regexes = ['''1000\.abcdef12\.34567890''']
