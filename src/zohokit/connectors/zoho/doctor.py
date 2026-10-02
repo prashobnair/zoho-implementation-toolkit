@@ -16,6 +16,8 @@ from typing import Any, Literal
 from zohokit.connectors.zoho.budget import CallBudget
 from zohokit.connectors.zoho.client import ZohoClient
 from zohokit.connectors.zoho.dc import DC_TABLE
+from zohokit.connectors.zoho.errors import ContractDriftError
+from zohokit.connectors.zoho.models import OrgResponse, validate_response
 from zohokit.connectors.zoho.profiles import Profile, check_production
 from zohokit.connectors.zoho.scopes import READ_SCOPES, find_over_privileged, sufficient_for
 
@@ -92,7 +94,10 @@ def run_doctor(
         client = client_factory()
         response = client.get("/crm/v8/org", endpoint="/crm/v8/org", experimental=experimental)
         payload: dict[str, Any] = response.json()
-        org_id = str(payload.get("id", ""))
+        envelope = validate_response(OrgResponse, endpoint="/crm/v8/org", payload=payload)
+        if not envelope.org:
+            raise ContractDriftError("/crm/v8/org", "org: empty list")
+        org_id = envelope.org[0].id
         checks.append(
             CheckResult(
                 "org_identity",

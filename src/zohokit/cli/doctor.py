@@ -17,8 +17,20 @@ from zohokit.connectors.zoho.client import ZohoClient
 from zohokit.connectors.zoho.dc import DC_TABLE
 from zohokit.connectors.zoho.doctor import CheckResult, doctor_exit_code, run_doctor
 from zohokit.connectors.zoho.profiles import load_profile
+from zohokit.core.redact import redact_text
 
 app = typer.Typer(help="Check a profile before any live read.")
+
+
+def redact_checks(checks: list[CheckResult]) -> list[CheckResult]:
+    """Pass every check detail through the shared redactor (STD-X1).
+
+    Details can carry ``org read failed: ...`` error text from live API
+    data, so they are redacted before anything is printed or written.
+    ``sha256:`` fingerprints pass through untouched by design.
+    """
+    return [CheckResult(check.name, check.status, redact_text(check.detail)) for check in checks]
+
 
 #: Inner transport factory for API reads (tests inject a mock).
 TRANSPORT_FACTORY: Callable[[], httpx.BaseTransport] = httpx.HTTPTransport
@@ -113,6 +125,7 @@ def main(
         confirmed_org_name=confirm_org,
         experimental=experimental,
     )
+    checks = redact_checks(checks)
     if format_name == "json":
         document = render_json(current.name, checks)
         text = json.dumps(document, indent=2, sort_keys=True) + "\n"
@@ -133,4 +146,4 @@ def main(
     raise typer.Exit(code=doctor_exit_code(checks))
 
 
-__all__: list[str] = ["app"]
+__all__: list[str] = ["app", "redact_checks"]

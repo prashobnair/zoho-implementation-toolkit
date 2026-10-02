@@ -197,7 +197,7 @@ def _write_profile(tmp_path: Path) -> None:
 def _org_handler(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
         200,
-        json={"id": "555000111", "company_name": "Marigold Labs"},
+        json={"org": [{"id": "555000111", "company_name": "Marigold Labs"}]},
         headers={"date": "Thu, 01 Oct 2026 00:00:00 GMT"},
     )
 
@@ -263,7 +263,9 @@ def test_doctor_json_and_markdown_evidence(monkeypatch: pytest.MonkeyPatch, tmp_
 def _smoke_handler(request: httpx.Request) -> httpx.Response:
     path = request.url.path
     if path == "/crm/v8/org":
-        return httpx.Response(200, json={"id": "555000111", "company_name": "Marigold Labs"})
+        return httpx.Response(
+            200, json={"org": [{"id": "555000111", "company_name": "Marigold Labs"}]}
+        )
     if path == "/crm/v8/settings/modules":
         return httpx.Response(
             200, json={"modules": [{"api_name": "Leads", "plural_label": "Leads"}]}
@@ -273,7 +275,10 @@ def _smoke_handler(request: httpx.Request) -> httpx.Response:
     if path == "/crm/v8/users":
         return httpx.Response(
             200,
-            json={"users": [{"id": "555000002", "email": "o@example.invalid", "status": "active"}]},
+            json={
+                "users": [{"id": "555000002", "email": "o@example.invalid", "status": "active"}],
+                "info": {"per_page": 200, "count": 1, "page": 1, "more_records": False},
+            },
         )
     return httpx.Response(200, json={"data": [{"id": "555000001"}], "more_records": False})
 
@@ -346,6 +351,42 @@ def test_live_smoke_contract_drift_exits_3(monkeypatch: pytest.MonkeyPatch, tmp_
     _write_profile(tmp_path)
     code = live_smoke.main(["--profile", "dev-in", "--evidence-dir", str(tmp_path / "evidence")])
     assert code == 3
+
+
+def test_live_smoke_tries_every_endpoint_despite_one_drift(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """One drift must not hide the others: every read is recorded, exit stays non-zero."""
+    import live_smoke
+
+    def partial_drift_handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/crm/v8/org":
+            return httpx.Response(200, json={"id": "555000111", "company_name": "Marigold Labs"})
+        return _smoke_handler(request)
+
+    monkeypatch.setattr(
+        live_smoke, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(partial_drift_handler)
+    )
+    monkeypatch.setattr(live_smoke.TokenManager, "ensure_fresh", lambda self: "fake-access-token")
+    monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
+    _write_profile(tmp_path)
+    evidence_dir = tmp_path / "evidence"
+    code = live_smoke.main(["--profile", "dev-in", "--evidence-dir", str(evidence_dir)])
+    assert code == 3
+    document = json.loads((evidence_dir / "smoke.json").read_text(encoding="utf-8"))
+    assert len(document["reads"]) == 9
+    # Note: evidence "name" values are masked by the shared redactor ("name"
+    # is a person-name field), so failing reads are located by endpoint.
+    org_reads = [read for read in document["reads"] if read["endpoint"] == "/crm/v8/org"]
+    assert len(org_reads) == 1
+    assert org_reads[0]["status"] == "fail"
+    assert "/crm/v8/org" in org_reads[0]["error"]
+    assert "555000111" not in org_reads[0]["error"]
+    passing = [read for read in document["reads"] if read["status"] == "pass"]
+    assert len(passing) == 8
+    assert any(read["endpoint"] == "/crm/v8/settings/modules" for read in passing)
+    assert any(read["endpoint"] == "/crm/v8/users" for read in passing)
+    assert "555000111" not in json.dumps(document)
 
 
 def _scope_client() -> ZohoClient:

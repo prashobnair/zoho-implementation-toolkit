@@ -118,7 +118,7 @@ def _org_handler(request: httpx.Request) -> httpx.Response:
     assert request.method == "GET"
     return httpx.Response(
         200,
-        json={"id": "555000111", "company_name": "Marigold Labs"},
+        json={"org": [{"id": "555000111", "company_name": "Marigold Labs"}]},
         headers={"date": "Thu, 01 Oct 2026 00:00:00 GMT"},
     )
 

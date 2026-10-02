@@ -45,7 +45,7 @@ def _token_handler(request: httpx.Request) -> httpx.Response:
 def _org_handler(request: httpx.Request) -> httpx.Response:
     return httpx.Response(
         200,
-        json={"id": "555000111", "company_name": "Marigold Labs"},
+        json={"org": [{"id": "555000111", "company_name": "Marigold Labs"}]},
         headers={"date": "Thu, 01 Oct 2026 00:00:00 GMT"},
     )
 
@@ -114,6 +114,27 @@ def test_doctor_cli_reports_checklist(
     ):
         assert name in result.output
     assert "555000111" not in result.output
+
+
+def test_doctor_cli_redacts_check_details_before_printing() -> None:
+    from zohokit.cli.doctor import redact_checks
+    from zohokit.connectors.zoho.doctor import CheckResult, org_fingerprint
+
+    fingerprinted = f"org {org_fingerprint('555000111')}"
+    redacted = redact_checks(
+        [
+            CheckResult(
+                "org_identity",
+                "fail",
+                "org read failed at /crm/v8/org (seen alice@example.com +14158601234)",
+            ),
+            CheckResult("org_identity", "pass", fingerprinted),
+        ]
+    )
+    assert "alice@example.com" not in redacted[0].detail
+    assert "+14158601234" not in redacted[0].detail
+    assert "/crm/v8/org" in redacted[0].detail
+    assert redacted[1].detail == fingerprinted
 
 
 def test_doctor_cli_requires_live_and_profile() -> None:

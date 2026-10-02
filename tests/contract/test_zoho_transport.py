@@ -15,8 +15,19 @@ import pytest
 
 from zohokit.connectors.zoho.budget import CallBudget
 from zohokit.connectors.zoho.client import ZohoClient
-from zohokit.connectors.zoho.errors import ConnectorError
-from zohokit.connectors.zoho.models import OrgInfo, RecordPage, validate_response
+from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError
+from zohokit.connectors.zoho.models import (
+    FieldsResponse,
+    ModulesResponse,
+    OrgResponse,
+    RecordPage,
+    UsersResponse,
+    unwrap_fields,
+    unwrap_modules,
+    unwrap_org,
+    unwrap_users,
+    validate_response,
+)
 from zohokit.connectors.zoho.pagination import PaginationOutcome, iter_page_number_pages
 
 CASSETTES = Path(__file__).parent / "cassettes"
@@ -38,9 +49,55 @@ def _client_for(payloads: dict[str, dict]) -> ZohoClient:
 def test_org_identity_contract_from_synthetic_cassette() -> None:
     client = _client_for({"/crm/v8/org": _cassette("crm_org.json")})
     response = client.get("/crm/v8/org", endpoint="/crm/v8/org", experimental=True)
-    org = validate_response(OrgInfo, endpoint="/crm/v8/org", payload=response.json())
+    org = unwrap_org(response.json(), endpoint="/crm/v8/org")
     assert org.company_name == "Marigold Labs"
-    assert org.raw_extra == {}
+    assert org.raw_extra == {"country_code": "US", "currency": "US Dollar - USD", "iso_code": "USD"}
+
+
+@pytest.mark.contract
+def test_flat_org_shape_is_contract_drift() -> None:
+    """The live 2026-10-02 drift: the real reply is ``{"org": [...]}``, not flat."""
+    with pytest.raises(ContractDriftError, match="/crm/v8/org"):
+        validate_response(
+            OrgResponse,
+            endpoint="/crm/v8/org",
+            payload={"id": "555000111", "company_name": "Marigold Labs"},
+        )
+
+
+@pytest.mark.contract
+def test_modules_fields_users_envelopes_from_synthetic_cassettes() -> None:
+    modules = unwrap_modules(_cassette("crm_modules.json"), endpoint="/crm/v8/settings/modules")
+    assert [m["api_name"] for m in modules] == ["Leads", "Contacts", "Deals"]
+    fields = unwrap_fields(_cassette("crm_fields.json"), endpoint="/crm/v8/settings/fields")
+    assert [f["api_name"] for f in fields] == ["Email", "Phone"]
+    users = unwrap_users(_cassette("crm_users.json"), endpoint="/crm/v8/users")
+    assert [u["status"] for u in users] == ["active"]
+    validated = validate_response(
+        UsersResponse, endpoint="/crm/v8/users", payload=_cassette("crm_users.json")
+    )
+    assert validated.info is not None
+
+
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    ("model", "endpoint", "payload"),
+    [
+        (OrgResponse, "/crm/v8/org", {"org": []}),
+        (ModulesResponse, "/crm/v8/settings/modules", {"modules": []}),
+        (FieldsResponse, "/crm/v8/settings/fields", {"fields": []}),
+        (UsersResponse, "/crm/v8/users", {"users": [], "info": {}}),
+        (OrgResponse, "/crm/v8/org", {}),
+        (ModulesResponse, "/crm/v8/settings/modules", {}),
+        (FieldsResponse, "/crm/v8/settings/fields", {}),
+        (UsersResponse, "/crm/v8/users", {}),
+    ],
+)
+def test_empty_or_missing_envelope_list_is_contract_drift(
+    model: type, endpoint: str, payload: dict
+) -> None:
+    with pytest.raises(ContractDriftError, match=endpoint):
+        validate_response(model, endpoint=endpoint, payload=payload)
 
 
 @pytest.mark.contract
