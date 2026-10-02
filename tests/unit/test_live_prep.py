@@ -1,4 +1,4 @@
-"""WP-13 live preparation: nightly workflow lint, dev-in profile, evidence safety."""
+"""Live preparation: nightly workflow lint, dev-in profile, evidence safety."""
 
 from __future__ import annotations
 
