@@ -385,8 +385,10 @@ def test_live_smoke_tries_every_endpoint_despite_one_drift(
     assert code == 3
     document = json.loads((evidence_dir / "smoke.json").read_text(encoding="utf-8"))
     assert len(document["reads"]) == 9
-    # Note: evidence "name" values are masked by the shared redactor ("name"
-    # is a person-name field), so failing reads are located by endpoint.
+    # Note: smoke-read "name" values are structural checklist labels (a
+    # "name" next to a "status" plus an "endpoint"), not people, so the
+    # shared redactor leaves them alone; reads are still located by
+    # endpoint here to stay independent of the label.
     org_reads = [read for read in document["reads"] if read["endpoint"] == "/crm/v8/org"]
     assert len(org_reads) == 1
     assert org_reads[0]["status"] == "fail"

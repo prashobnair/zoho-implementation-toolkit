@@ -13,6 +13,12 @@ Scans ``cassettes/**`` and ``tests/contract/cassettes/**`` for:
 
 Exit 0 when clean, exit 1 listing every offending file and line.
 
+Findings are always value-free: each line reports the file, the line
+number, the JSON key (the ``"key":`` on that line when the line parses
+as a JSON member, else ``unknown``) and the category (``email``,
+``phone``, ``credential`` or ``org_id``). Matched values are NEVER
+echoed, so the scan gate itself can never leak PII into a public log.
+
 ``555``-prefixed digit runs are treated as synthetic fixtures (the same
 convention as ``example.invalid`` for mailboxes) and never flagged; real
 org IDs are caught by the configured-ID check instead. Opaque
@@ -84,35 +90,55 @@ def load_org_ids(path: Path = ORG_IDS_FILE) -> list[str]:
     return ids
 
 
+#: A JSON member on one pretty-printed line: ``"some_key": ...``.
+_KEY_OF_LINE_RE = re.compile(r'"([^"]+)"\s*:')
+
+
+def key_of_line(line: str) -> str:
+    """JSON key for a scanned line (``unknown`` when it has no ``"key":``).
+
+    Never returns a value: only the member name left of the colon, so the
+    finding that carries it stays value-free.
+    """
+    match = _KEY_OF_LINE_RE.search(line)
+    return match.group(1) if match is not None else "unknown"
+
+
 def scan_text(text: str, org_ids: list[str]) -> list[str]:
-    """Return human-readable findings for one cassette body."""
+    """Return value-free findings for one cassette body.
+
+    Each finding names the line number, the JSON key on that line (when
+    the line parses as a JSON member) and the category only — matched
+    values are never included, so findings are safe for public logs.
+    """
     # Fingerprints are opaque by design: drop them before the digit-run
     # scan so a hash holding 8+ consecutive digits never reads as a phone.
     text = _FINGERPRINT_RE.sub("sha256:", text)
     findings: list[str] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
+        key = key_of_line(line)
         for match in _EMAIL_RE.finditer(line):
             if match.group(1).casefold() != _PLACEHOLDER_DOMAIN:
-                findings.append(f"line {lineno}: unredacted email {match.group(0)!r}")
+                findings.append(f"line {lineno}: unredacted email [key: {key}]")
         for match in _PHONE_RE.finditer(line):
             digits = re.sub(r"\D", "", match.group(0))
             if digits.startswith("555"):
                 continue
-            findings.append(f"line {lineno}: unredacted phone {match.group(0)!r}")
+            findings.append(f"line {lineno}: unredacted phone [key: {key}]")
         for match in _ZOHO_OAUTHTOKEN_RE.finditer(line):
             if _REDACTED_CREDENTIAL not in match.group(1):
-                findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
+                findings.append(f"line {lineno}: unredacted credential [key: {key}]")
         for match in _BEARER_RE.finditer(line):
             if _REDACTED_CREDENTIAL not in match.group(1):
-                findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
-        for match in _ZOHO_TOKEN_RE.finditer(line):
-            findings.append(f"line {lineno}: unredacted credential {match.group(0)!r}")
+                findings.append(f"line {lineno}: unredacted credential [key: {key}]")
+        if _ZOHO_TOKEN_RE.search(line):
+            findings.append(f"line {lineno}: unredacted credential [key: {key}]")
         key_match = _CREDENTIAL_KEY_RE.search(line)
         if key_match is not None and _REDACTED_CREDENTIAL not in line:
-            findings.append(f"line {lineno}: unredacted credential key {key_match.group(1)!r}")
+            findings.append(f"line {lineno}: unredacted credential [key: {key_match.group(1)}]")
         for org_id in org_ids:
             if org_id and org_id in line:
-                findings.append(f"line {lineno}: configured org ID {org_id!r}")
+                findings.append(f"line {lineno}: configured org ID [key: {key}]")
     return findings
 
 
