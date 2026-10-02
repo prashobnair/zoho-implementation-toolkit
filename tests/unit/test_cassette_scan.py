@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
+import httpx
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src"))
 
+import cassette_scan  # noqa: E402
 from cassette_scan import main as scan_main  # noqa: E402
 from cassette_scan import scan_all, scan_text  # noqa: E402
 
@@ -84,3 +88,160 @@ def test_record_refuses_in_ci(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
 def test_scanner_passes_on_repo_tree() -> None:
     assert scan_main() == 0
     assert scan_all(ROOT) == {}
+
+
+def test_scanner_output_never_contains_matched_values(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Scan-gate output is value-free: file, line, key and category only.
+
+    Regression for the recording run whose scan failure printed the real
+    phone into the public Actions log: every planted value (email, phone,
+    token, org ID) must be absent from the scanner's stdout+stderr while
+    every category is still reported.
+    """
+    email = "pii.probe@example.com"
+    phone = "+49 170 1234567"
+    token = "1000.abcdef12.34567890"
+    org_id = "6000990011"
+    cassette_dir = tmp_path / "cassettes"
+    cassette_dir.mkdir()
+    (cassette_dir / "crm.json").write_text(
+        json.dumps(
+            {
+                "Contact_Email": email,
+                "Contact_Phone": phone,
+                "note": f"saw {token} here",
+                "company_id": org_id,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(cassette_scan, "load_org_ids", lambda *_a, **_k: [org_id])
+    assert scan_main([str(cassette_dir)]) == 1
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert email not in combined
+    assert phone not in combined
+    assert token not in combined
+    assert org_id not in combined
+    assert "unredacted email" in combined
+    assert "unredacted phone" in combined
+    assert "unredacted credential" in combined
+    assert "configured org ID" in combined
+    # The JSON key is reported so the finding stays actionable without values.
+    assert "Contact_Email" in combined
+    assert "Contact_Phone" in combined
+
+
+def test_record_then_scrub_is_byte_identical_and_scan_clean(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Recorder == scrub: scrubbing a fresh recording changes NOTHING.
+
+    Synthetic org + users + Leads payloads carry an 8-digit phone, a
+    spaced mobile, emails, names, a ZUID and a street. They flow through
+    the real recorder (redacted before write); re-running the scrub over
+    the written cassettes must be byte-identical, and the scanner must
+    pass over every file.
+    """
+    import record_cassette
+    import scrub_cassettes
+
+    monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
+    (tmp_path / "dev-in.json").write_text(
+        '{"name": "dev-in", "dc": "in", '
+        '"scopes": ["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", '
+        '"ZohoCRM.users.READ", "ZohoCRM.org.READ"], '
+        '"environment": "developer_edition", "org_name": "", '
+        '"saved_at": "2026-10-01T00:00:00+00:00"}',
+        encoding="utf-8",
+    )
+
+    org_payload = {
+        "org": [
+            {
+                "id": "600012345",
+                "company_name": "Acme Widgets",
+                "Phone": "23456789",
+                "Email": "owner@example.com",
+                "Mailing_Street": "12 Oracle Lane",
+                "ZUID": "998877665544332211",
+            }
+        ]
+    }
+    users_payload = {
+        "users": [
+            {
+                "id": "600012346",
+                "name": "Asha Menon",
+                "full_name": "Asha Menon",
+                "first_name": "Asha",
+                "last_name": "Menon",
+                "email": "asha@example.com",
+                "phone": "98765 43210",
+                "zuid": "112233445566778899",
+                "status": "active",
+            }
+        ],
+        "info": {"per_page": 200, "count": 1, "page": 1, "more_records": False},
+    }
+    leads_payload = {
+        "data": [
+            {
+                "id": "600012347",
+                "Full_Name": "Ravi Kumar",
+                "Last_Name": "Kumar",
+                "Email": "ravi@example.com",
+                "Phone": "23456789",
+                "Mobile": "98765 43210",
+                "Mailing_Street": "12 Oracle Lane",
+            }
+        ],
+        "info": {"per_page": 5, "count": 1, "page": 1, "more_records": False},
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/crm/v8/org":
+            return httpx.Response(200, json=org_payload)
+        if request.url.path == "/crm/v8/users":
+            return httpx.Response(200, json=users_payload)
+        if request.url.path == "/crm/v8/Leads":
+            return httpx.Response(200, json=leads_payload)
+        return httpx.Response(404, json={"code": "NOT_FOUND"})
+
+    cassettes_dir = tmp_path / "cassettes"
+    jobs = (
+        ("/crm/v8/org", "org.json"),
+        ("/crm/v8/users", "users.json"),
+        ("/crm/v8/Leads", "Leads.json"),
+    )
+    for endpoint, filename in jobs:
+        record_cassette.record(
+            "crm",
+            "dev-in",
+            endpoint,
+            cassettes_dir / "crm" / filename,
+            allow_ci=True,
+            token_provider=lambda: "fake-access-token",
+            transport_factory=lambda: httpx.MockTransport(handler),
+        )
+    recorded = sorted((cassettes_dir / "crm").glob("*.json"))
+    assert [path.name for path in recorded] == ["Leads.json", "org.json", "users.json"]
+    before = {path: path.read_bytes() for path in recorded}
+    assert scrub_cassettes.main([str(cassettes_dir)]) == 0
+    for path in recorded:
+        assert path.read_bytes() == before[path], path.name
+    for path in recorded:
+        body = path.read_text(encoding="utf-8")
+        assert "23456789" not in body
+        assert "98765 43210" not in body
+        assert "owner@example.com" not in body
+        assert "asha@example.com" not in body
+        assert "ravi@example.com" not in body
+        assert "Asha Menon" not in body
+        assert "Ravi Kumar" not in body
+        assert "998877665544332211" not in body
+        assert "12 Oracle Lane" not in body
+        assert scan_text(body, []) == []

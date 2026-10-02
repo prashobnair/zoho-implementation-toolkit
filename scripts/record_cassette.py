@@ -28,7 +28,7 @@ from zohokit.connectors.zoho.cache import ResponseCache  # noqa: E402
 from zohokit.connectors.zoho.client import ZohoClient  # noqa: E402
 from zohokit.connectors.zoho.dc import DC_TABLE  # noqa: E402
 from zohokit.connectors.zoho.profiles import load_profile  # noqa: E402
-from zohokit.core.redact import Redactor  # noqa: E402
+from zohokit.core.redact import Redactor, redact_text  # noqa: E402
 
 #: Response/request headers kept in cassettes. Pagination rides in the
 #: response body (``info.more_records``), so only the body media type
@@ -88,19 +88,23 @@ def record(
     )
     response = client.get(path, endpoint=path.split("?")[0], experimental=True)
     refuse_accounts_host(response.request.url)
-    redacted_body = Redactor().redact_obj(response.json())
-    cassette = {
-        "request": {
-            "method": "GET",
-            "url": str(target),
-            "headers": filter_headers(response.request.headers),
-        },
-        "response": {
-            "status": response.status_code,
-            "headers": filter_headers(response.headers),
-            "body": redacted_body,
-        },
-    }
+    # The full Redactor runs over the whole envelope BEFORE anything is
+    # written — the same pass ``scrub_cassettes`` re-applies — so scrubbing
+    # a freshly recorded cassette is a byte-identical no-op.
+    cassette = Redactor().redact_obj(
+        {
+            "request": {
+                "method": "GET",
+                "url": str(target),
+                "headers": filter_headers(response.request.headers),
+            },
+            "response": {
+                "status": response.status_code,
+                "headers": filter_headers(response.headers),
+                "body": response.json(),
+            },
+        }
+    )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(cassette, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     _ = (module, ResponseCache)
@@ -118,7 +122,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         written = record(args.module, args.profile, args.path, Path(args.out))
     except (PermissionError, ValueError) as exc:
-        print(f"record refused: {exc}", file=sys.stderr)
+        # Value-free refusal: the error can echo the request URL, so it is
+        # redacted before it reaches the log.
+        print(f"record refused: {redact_text(str(exc))}", file=sys.stderr)
         return 1
     print(f"recorded {written}")
     return 0

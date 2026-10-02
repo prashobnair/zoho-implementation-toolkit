@@ -19,6 +19,7 @@ from zohokit.connectors.zoho.dc import DC_TABLE
 from zohokit.connectors.zoho.profiles import Profile, check_production
 from zohokit.connectors.zoho.readers import read_org
 from zohokit.connectors.zoho.scopes import READ_SCOPES, find_over_privileged, sufficient_for
+from zohokit.core.redact import redact_text
 
 #: Scope prefix per module: a profile is "configured for" a module when it
 #: carries at least one scope with that prefix. Unconfigured modules are
@@ -79,7 +80,9 @@ def run_doctor(
         refreshed = token_refresher()
     except Exception as exc:
         refreshed = False
-        checks.append(CheckResult("token_refresh", "fail", f"refresh failed: {exc}"))
+        # Value-free detail: the refresher error can echo live API data,
+        # so it is redacted before it can reach any log or evidence file.
+        checks.append(CheckResult("token_refresh", "fail", redact_text(f"refresh failed: {exc}")))
     else:
         checks.append(
             CheckResult(
@@ -111,7 +114,7 @@ def run_doctor(
         else:
             checks.append(CheckResult("clock_skew", "warn", "no date header to compare the clock"))
     except Exception as exc:
-        checks.append(CheckResult("org_identity", "fail", f"org read failed: {exc}"))
+        checks.append(CheckResult("org_identity", "fail", redact_text(f"org read failed: {exc}")))
         checks.append(CheckResult("clock_skew", "warn", "skipped: org read failed"))
 
     offenders = find_over_privileged(profile.scopes)
@@ -172,7 +175,7 @@ def run_doctor(
             )
         )
     except PermissionError as exc:
-        checks.append(CheckResult("environment_type", "fail", str(exc)))
+        checks.append(CheckResult("environment_type", "fail", redact_text(str(exc))))
 
     _ = moment
     return checks

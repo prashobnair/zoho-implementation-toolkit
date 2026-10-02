@@ -198,14 +198,15 @@ def run_smoke(
                     transport_factory=transport_factory,
                 )
             except Exception as exc:  # a failed recording is a result, not a stop
+                detail = redact_text(f"{endpoint} record failed: {exc}")
                 reads[-1] = {
                     "name": name,
                     "endpoint": endpoint,
                     "model": model_name,
                     "status": "fail",
-                    "error": redact_text(f"{endpoint} record failed: {exc}"),
+                    "error": detail,
                 }
-                print(f"[FAIL] {endpoint} record failed: {exc}", file=sys.stderr)
+                print(f"[FAIL] {endpoint} record failed: {detail}", file=sys.stderr)
                 return
             print(f"recorded {written}")
 

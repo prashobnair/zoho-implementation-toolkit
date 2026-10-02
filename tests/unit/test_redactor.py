@@ -7,7 +7,13 @@ import string
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from zohokit.core.redact import REDACTED_CREDENTIAL, REDACTED_VALUE, Redactor, redact_text
+from zohokit.core.redact import (
+    REDACTED_CREDENTIAL,
+    REDACTED_VALUE,
+    Redactor,
+    mask_phone,
+    redact_text,
+)
 
 redactor = Redactor(pii_fields=frozenset({"tax_id", "notes"}))
 
@@ -138,6 +144,99 @@ def test_property_no_generated_token_survives(token: str) -> None:
     assert token not in redact_text(f"saw {token} here")
     redacted = redactor.redact_record({"access_token": token, "Note": token})
     assert token not in str(redacted)
+
+
+def test_key_based_pii_masking_independent_of_value_format() -> None:
+    """Any PII-named key is masked even when the value looks innocent."""
+    plain = Redactor()
+    payload = {
+        "Phone": "23456789",
+        "Mobile": "98765 43210",
+        "$Phone": "+919820011223",
+        "Email": "owner@example.com",
+        "Mailing_Street": "12 Oracle Lane",
+        "Billing_ZIP": "560001",
+        "ZUID": "998877665544332211",
+        "Primary_Email": "x@y.com",
+        "Photo_Id": "some-photo",
+        "Domain_Name": "example.com",
+        "Website": "https://example.com",
+        "Full_Name": "Asha Menon",
+        "Fax_Number": "23456789",
+        "Skype_ID": "asha.live",
+        "Company_Name": "Acme Widgets",
+        "DOB": "1990-01-01",
+    }
+    redacted = plain.redact_obj(payload)
+    assert redacted["Phone"] == "******89"
+    assert redacted["Mobile"] == "********10"
+    assert str(redacted["$Phone"]).endswith("23")
+    assert redacted["Email"] == "o***@example.invalid"
+    # Phone-like keys (phone/mobile/fax) keep the shaped mask style.
+    assert redacted["Fax_Number"] == "******89"
+    for key in (
+        "Mailing_Street",
+        "Billing_ZIP",
+        "ZUID",
+        "Photo_Id",
+        "Domain_Name",
+        "Website",
+        "Full_Name",
+        "Skype_ID",
+        "Company_Name",
+        "DOB",
+    ):
+        assert redacted[key] == REDACTED_VALUE, key
+    assert redacted["Primary_Email"] == "x***@example.invalid"
+
+
+def test_structural_keys_are_never_masked() -> None:
+    """Metadata keys survive even though they contain ``name``/``id``."""
+    plain = Redactor()
+    assert plain.redact_obj({"api_name": "Email"}) == {"api_name": "Email"}
+    assert plain.redact_obj({"api_names": ["Leads"]}) == {"api_names": ["Leads"]}
+    assert plain.redact_obj({"module_name": "Leads"}) == {"module_name": "Leads"}
+    assert plain.redact_obj({"id": "abc123"}) == {"id": "abc123"}
+
+
+def test_check_and_read_names_survive_but_record_names_do_not() -> None:
+    """Bare ``name`` is structural only beside status+detail/endpoint."""
+    plain = Redactor()
+    check = {"name": "org_identity", "status": "pass", "detail": "org sha256:abc"}
+    assert plain.redact_obj(check) == check
+    read = {"name": "Leads", "endpoint": "/crm/v8/Leads", "status": "pass"}
+    assert plain.redact_obj(read)["name"] == "Leads"
+    user = {"name": "Asha Menon", "status": "active", "email": "a@example.com"}
+    masked = plain.redact_obj(user)
+    assert masked["name"] == REDACTED_VALUE
+    assert masked["status"] == "active"
+
+
+def test_non_string_pii_values_are_masked() -> None:
+    """Numeric phones and nulls under PII keys never leak raw digits."""
+    plain = Redactor()
+    assert plain.redact_obj({"Phone": 98765432}) == {"Phone": "******32"}
+    assert plain.redact_obj({"Phone": None}) == {"Phone": None}
+    assert plain.redact_obj({"Email": None}) == {"Email": None}
+    assert plain.redact_obj({"ZUID": 99887766}) == {"ZUID": REDACTED_VALUE}
+    assert plain.redact_obj({"Street": None}) == {"Street": None}
+
+
+def test_redaction_is_idempotent() -> None:
+    """A second pass changes nothing, so scrub == record byte-for-byte."""
+    plain = Redactor()
+    payload = {
+        "Phone": "23456789",
+        "Mobile": "+919820011223",
+        "Email": "owner@example.com",
+        "Full_Name": "Asha Menon",
+        "Mailing_Street": "12 Oracle Lane",
+        "access_token": "tok-1",
+    }
+    once = plain.redact_obj(payload)
+    assert plain.redact_obj(once) == once
+    assert mask_phone(str(once["Phone"])) == once["Phone"]
+    assert mask_phone(str(once["Mobile"])) == once["Mobile"]
 
 
 def test_local_numbers_gain_no_country_code() -> None:
