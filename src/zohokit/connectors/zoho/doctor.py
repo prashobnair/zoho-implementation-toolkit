@@ -19,6 +19,23 @@ from zohokit.connectors.zoho.dc import DC_TABLE
 from zohokit.connectors.zoho.profiles import Profile, check_production
 from zohokit.connectors.zoho.scopes import READ_SCOPES, find_over_privileged, sufficient_for
 
+#: Scope prefix per module: a profile is "configured for" a module when it
+#: carries at least one scope with that prefix. Unconfigured modules are
+#: never required (dev-in ships CRM scopes only, so Books absence is not a
+#: failure and not even a warning).
+MODULE_SCOPE_PREFIX = {"crm": "ZohoCRM.", "books": "ZohoBooks."}
+
+
+def configured_modules(scopes: list[str]) -> list[str]:
+    """Modules the profile is configured for (prefix match, READ_SCOPES order)."""
+    configured: list[str] = []
+    for module in READ_SCOPES:
+        prefix = MODULE_SCOPE_PREFIX.get(module, "")
+        if prefix and any(scope.startswith(prefix) for scope in scopes):
+            configured.append(module)
+    return configured
+
+
 CheckStatus = Literal["pass", "warn", "fail"]
 
 
@@ -104,14 +121,35 @@ def run_doctor(
             )
         )
     else:
-        needed = READ_SCOPES["crm"]
-        missing = sufficient_for(profile.scopes, needed)
-        if missing:
+        modules = configured_modules(profile.scopes)
+        if not modules:
             checks.append(
-                CheckResult("scope_sufficiency", "warn", f"missing read scopes: {sorted(missing)}")
+                CheckResult(
+                    "scope_sufficiency",
+                    "warn",
+                    "no module scopes configured (expected one of: crm, books)",
+                )
             )
         else:
-            checks.append(CheckResult("scope_sufficiency", "pass", "read scopes cover CRM checks"))
+            missing_parts: list[str] = []
+            for module in modules:
+                missing = sufficient_for(profile.scopes, READ_SCOPES[module])
+                for scope in sorted(missing):
+                    missing_parts.append(f"missing {scope} for {module}")
+            if missing_parts:
+                checks.append(CheckResult("scope_sufficiency", "warn", "; ".join(missing_parts)))
+            elif modules == ["crm"]:
+                checks.append(
+                    CheckResult("scope_sufficiency", "pass", "read scopes cover CRM checks")
+                )
+            else:
+                checks.append(
+                    CheckResult(
+                        "scope_sufficiency",
+                        "pass",
+                        f"read scopes cover {', '.join(modules)} checks",
+                    )
+                )
 
     if budget.exhausted:
         checks.append(CheckResult("budget", "fail", "call budget already exhausted"))
@@ -145,6 +183,7 @@ def doctor_exit_code(checks: list[CheckResult]) -> int:
 __all__: list[str] = [
     "CheckResult",
     "CheckStatus",
+    "configured_modules",
     "doctor_exit_code",
     "org_fingerprint",
     "run_doctor",

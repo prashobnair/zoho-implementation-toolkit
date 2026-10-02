@@ -6,6 +6,11 @@ name: live
 # job-level guard below limits execution to scheduled and manually
 # dispatched runs on main in the canonical repo. Nothing is committed from
 # this workflow; redacted evidence uploads as an artifact for lead review.
+#
+# Diagnostics design (a failing doctor/smoke check must still leave
+# evidence): doctor and smoke steps carry `continue-on-error: true` so the
+# redactor + scan always run; uploads are gated on the scan passing
+# fail-closed; a final gate re-fails the job when doctor or smoke failed.
 on:
   workflow_dispatch:
     inputs:
@@ -36,6 +41,8 @@ jobs:
           mkdir -p ~/.zohokit/profiles
           cp profiles/dev-in.json ~/.zohokit/profiles/dev-in.json
       - name: Doctor checklist (JSON evidence)
+        id: doctor_json
+        continue-on-error: true
         env:
           ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
           ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
@@ -44,6 +51,9 @@ jobs:
           uv run zohokit doctor --live --profile dev-in --experimental \
             --max-api-calls 200 --format json --out evidence/doctor.json
       - name: Doctor checklist (Markdown summary)
+        id: doctor_md
+        if: always()
+        continue-on-error: true
         env:
           ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
           ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
@@ -52,7 +62,9 @@ jobs:
           uv run zohokit doctor --live --profile dev-in --experimental \
             --max-api-calls 200 --format markdown --out evidence/doctor.md
       - name: Read-only smoke reads (validated, redacted evidence)
-        if: inputs.record != true
+        id: smoke
+        if: always() && inputs.record != true
+        continue-on-error: true
         env:
           ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
           ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
@@ -61,7 +73,9 @@ jobs:
           uv run python scripts/live_smoke.py --profile dev-in \
             --evidence-dir evidence --max-api-calls 200
       - name: Smoke reads plus redacted cassettes (owner-approved runs only)
-        if: inputs.record == true
+        id: smoke_record
+        if: always() && inputs.record == true
+        continue-on-error: true
         env:
           ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
           ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
@@ -71,19 +85,57 @@ jobs:
             --evidence-dir evidence --max-api-calls 200 \
             --record --cassettes-dir cassettes
       - name: Re-run the redactor over evidence and cassettes
+        id: scrub
+        if: always()
         run: uv run python scripts/scrub_cassettes.py cassettes evidence
+      - name: Show doctor checklist (redacted)
+        if: always()
+        run: |
+          if [ -f evidence/doctor.md ]; then
+            cat evidence/doctor.md
+          else
+            echo "doctor.md missing (doctor step produced no evidence)"
+          fi
       - name: Scan evidence and cassettes (fails on any hit)
+        id: scan
+        if: always()
         run: uv run python scripts/cassette_scan.py evidence cassettes
       - name: Upload redacted evidence
+        if: always() && steps.scan.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: live-evidence
           path: evidence/
           retention-days: 14
       - name: Upload newly recorded cassettes
-        if: inputs.record == true
+        if: always() && steps.scan.outcome == 'success' && inputs.record == true
         uses: actions/upload-artifact@v7
         with:
           name: live-cassettes
           path: cassettes/
           retention-days: 14
+      - name: Fail the run when doctor or smoke failed
+        if: always()
+        run: |
+          fail=0
+          echo "doctor_json outcome: ${{ steps.doctor_json.outcome }}"
+          echo "doctor_md outcome: ${{ steps.doctor_md.outcome }}"
+          echo "smoke outcome: ${{ steps.smoke.outcome }}"
+          echo "smoke_record outcome: ${{ steps.smoke_record.outcome }}"
+          if [ "${{ steps.doctor_json.outcome }}" = "failure" ]; then
+            echo "doctor JSON checklist failed"
+            fail=1
+          fi
+          if [ "${{ steps.doctor_md.outcome }}" = "failure" ]; then
+            echo "doctor Markdown checklist failed"
+            fail=1
+          fi
+          if [ "${{ steps.smoke.outcome }}" = "failure" ]; then
+            echo "smoke reads failed"
+            fail=1
+          fi
+          if [ "${{ steps.smoke_record.outcome }}" = "failure" ]; then
+            echo "smoke reads (record) failed"
+            fail=1
+          fi
+          exit "$fail"

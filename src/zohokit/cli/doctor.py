@@ -39,6 +39,11 @@ def render_json(profile_name: str, checks: list[CheckResult]) -> dict[str, Any]:
     }
 
 
+def render_table(checks: list[CheckResult]) -> str:
+    """Redacted checklist table for the job log (fingerprints only, no secrets)."""
+    return "".join(f"[{check.status.upper():4}] {check.name}: {check.detail}\n" for check in checks)
+
+
 def render_markdown(profile_name: str, checks: list[CheckResult]) -> str:
     """Checklist as a short Markdown summary for the live-run evidence bundle."""
     lines = [f"# Doctor: {profile_name}", ""]
@@ -114,15 +119,17 @@ def main(
     elif format_name == "markdown":
         text = render_markdown(current.name, checks)
     else:
-        text = "".join(
-            f"[{check.status.upper():4}] {check.name}: {check.detail}\n" for check in checks
-        )
+        text = render_table(checks)
     if out is None:
         typer.echo(text.rstrip("\n"))
     else:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
         typer.echo(f"Wrote {out}")
+        # Always leave the redacted checklist in the job log, even when the
+        # machine-readable file goes to --out (fingerprints only, no secrets).
+        table = text if format_name == "table" else render_table(checks)
+        typer.echo(table.rstrip("\n"))
     raise typer.Exit(code=doctor_exit_code(checks))
 
 
