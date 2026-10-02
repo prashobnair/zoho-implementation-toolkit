@@ -15,7 +15,7 @@ import argparse
 import json
 import os
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import httpx
@@ -59,16 +59,34 @@ def refuse_accounts_host(url: httpx.URL | str) -> None:
         )
 
 
-def record(module: str, profile_name: str, path: str, out: Path) -> Path:
-    """GET *path* through the guarded client and write the redacted cassette."""
-    if os.environ.get("CI"):
+def record(
+    module: str,
+    profile_name: str,
+    path: str,
+    out: Path,
+    *,
+    allow_ci: bool = False,
+    token_provider: Callable[[], str | None] | None = None,
+    budget: CallBudget | None = None,
+    transport_factory: Callable[[], httpx.BaseTransport] | None = None,
+) -> Path:
+    """GET *path* through the guarded client and write the redacted cassette.
+
+    Recording stays local-only unless *allow_ci* is set: the nightly live
+    job passes it explicitly when the owner approves a ``record`` run, and
+    every payload is still redacted before anything is written.
+    """
+    if os.environ.get("CI") and not allow_ci:
         raise PermissionError("refusing to record in CI: cassettes are recorded locally only")
     profile = load_profile(profile_name)
     api_base = DC_TABLE[profile.dc].api_base
     target = httpx.URL(path) if "://" in path else httpx.URL(api_base + path)
     refuse_accounts_host(target)
-    client = ZohoClient(api_base, budget=CallBudget())
-    response = client.get(path, endpoint=path, experimental=True)
+    transport = transport_factory() if transport_factory is not None else None
+    client = ZohoClient(
+        api_base, transport=transport, token_provider=token_provider, budget=budget or CallBudget()
+    )
+    response = client.get(path, endpoint=path.split("?")[0], experimental=True)
     refuse_accounts_host(response.request.url)
     redacted_body = Redactor().redact_obj(response.json())
     cassette = {

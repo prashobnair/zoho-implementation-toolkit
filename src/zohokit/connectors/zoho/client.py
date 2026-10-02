@@ -32,7 +32,11 @@ from zohokit.connectors.zoho.retry import RetryPolicy, default_timeouts
 ENDPOINT_STATUS: dict[str, str] = {
     "/crm/v8/org": "unverified",
     "/crm/v8/settings/modules": "unverified",
+    "/crm/v8/settings/fields": "unverified",
     "/crm/v8/Leads": "unverified",
+    "/crm/v8/Contacts": "unverified",
+    "/crm/v8/Deals": "unverified",
+    "/crm/v8/users": "unverified",
 }
 
 _EXPERIMENTAL_WARNING = (

@@ -16,6 +16,11 @@ _ZOHO_TOKEN_RE = re.compile(r"\b1000\.[0-9a-fA-F]{2,}\.[0-9a-fA-F]{2,}\b")
 #: Placeholder domain: scanner-tolerated, never a real mailbox.
 REDACTED_DOMAIN = "example.invalid"
 
+#: Opaque org/record fingerprints (``sha256:<hex>``) are safe to share by
+#: design (report envelopes carry the fingerprint, never the raw ID), so the
+#: redactor and the cassette scanner both leave them untouched.
+FINGERPRINT_RE = re.compile(r"sha256:[0-9a-fA-F]{8,}")
+
 #: Person-name fields masked wherever the redactor sees them (STD-X1).
 DEFAULT_NAME_FIELDS = frozenset(
     {
@@ -102,11 +107,27 @@ def _redact_credential_patterns(text: str) -> str:
     return _ZOHO_TOKEN_RE.sub(REDACTED_CREDENTIAL, redacted)
 
 
-def redact_text(text: str) -> str:
-    """Redact credentials, then emails and phone-like digit runs."""
-    redacted = _redact_credential_patterns(text)
+#: Splitter that keeps ``sha256:<hex>`` fingerprints as separate chunks.
+_FINGERPRINT_SPLIT_RE = re.compile(r"(sha256:[0-9a-fA-F]{8,})")
+
+
+def _redact_segment(segment: str) -> str:
+    redacted = _redact_credential_patterns(segment)
     redacted = _EMAIL_RE.sub(lambda match: mask_email(match.group(0)), redacted)
     return _PHONE_DIGITS_RE.sub(lambda match: mask_phone(match.group(0)), redacted)
+
+
+def redact_text(text: str) -> str:
+    """Redact credentials, then emails and phone-like digit runs.
+
+    ``sha256:<hex>`` fingerprints are opaque by design and pass through
+    untouched so evidence keeps a stable org identity.
+    """
+    chunks = _FINGERPRINT_SPLIT_RE.split(text)
+    return "".join(
+        chunk if _FINGERPRINT_SPLIT_RE.fullmatch(chunk) else _redact_segment(chunk)
+        for chunk in chunks
+    )
 
 
 @dataclass(frozen=True)
@@ -170,6 +191,7 @@ class Redactor:
 __all__: list[str] = [
     "CREDENTIAL_KEYS",
     "DEFAULT_NAME_FIELDS",
+    "FINGERPRINT_RE",
     "REDACTED_CREDENTIAL",
     "REDACTED_DOMAIN",
     "REDACTED_VALUE",

@@ -26,7 +26,12 @@ def _profile(**overrides: object) -> Profile:
     base: dict[str, object] = {
         "name": "dev-in",
         "dc": "in",
-        "scopes": ["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", "ZohoCRM.users.READ"],
+        "scopes": [
+            "ZohoCRM.modules.READ",
+            "ZohoCRM.settings.READ",
+            "ZohoCRM.users.READ",
+            "ZohoCRM.org.READ",
+        ],
         "environment": "developer_edition",
     }
     base.update(overrides)
@@ -44,7 +49,18 @@ def test_write_markers_detected(scope: str) -> None:
 
 
 def test_read_scopes_are_clean() -> None:
-    assert find_over_privileged(["ZohoCRM.modules.READ", "ZohoBooks.settings.READ"]) == []
+    assert (
+        find_over_privileged(
+            [
+                "ZohoCRM.modules.READ",
+                "ZohoCRM.settings.READ",
+                "ZohoCRM.users.READ",
+                "ZohoCRM.org.READ",
+                "ZohoBooks.settings.READ",
+            ]
+        )
+        == []
+    )
 
 
 def test_sufficient_for_reports_missing() -> None:

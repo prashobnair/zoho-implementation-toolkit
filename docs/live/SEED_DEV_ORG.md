@@ -38,8 +38,10 @@
 
 ## After seeding
 
-- Run `zohokit auth login --profile dev-in --dc <dc> --scopes ...`
-  with read-only scopes, then `zohokit doctor --profile dev-in`.
+- Run `zohokit auth login --profile dev-in --dc in --scopes
+  ZohoCRM.modules.READ,ZohoCRM.settings.READ,ZohoCRM.users.READ,ZohoCRM.org.READ`
+  with read-only scopes (see `live/SETUP.md`), then
+  `zohokit doctor --live --profile dev-in --experimental`.
 - Record cassettes locally: `make record MODULE=crm PROFILE=dev-in
   ENDPOINT=/crm/v8/org`, then `make scrub`.
 - Never commit unredacted exports: the `cassette-scan` CI job fails on

@@ -67,7 +67,12 @@ def test_doctor_contract_against_org_cassette() -> None:
     profile = Profile(
         name="dev-in",
         dc="in",
-        scopes=["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", "ZohoCRM.users.READ"],
+        scopes=[
+            "ZohoCRM.modules.READ",
+            "ZohoCRM.settings.READ",
+            "ZohoCRM.users.READ",
+            "ZohoCRM.org.READ",
+        ],
         environment="developer_edition",
     )
     checks = run_doctor(

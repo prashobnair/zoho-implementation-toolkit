@@ -6,7 +6,12 @@ OVER_PRIVILEGED_MARKERS = ("ALL", "CREATE", "UPDATE", "DELETE", "WRITE")
 
 #: Read scopes the toolkit asks for per product area.
 READ_SCOPES = {
-    "crm": ["ZohoCRM.modules.READ", "ZohoCRM.settings.READ", "ZohoCRM.users.READ"],
+    "crm": [
+        "ZohoCRM.modules.READ",
+        "ZohoCRM.settings.READ",
+        "ZohoCRM.users.READ",
+        "ZohoCRM.org.READ",
+    ],
     "books": ["ZohoBooks.settings.READ"],
 }
 

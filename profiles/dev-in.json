@@ -1,0 +1,13 @@
+{
+  "name": "dev-in",
+  "dc": "in",
+  "scopes": [
+    "ZohoCRM.modules.READ",
+    "ZohoCRM.settings.READ",
+    "ZohoCRM.users.READ",
+    "ZohoCRM.org.READ"
+  ],
+  "environment": "developer_edition",
+  "org_name": "",
+  "saved_at": ""
+}
