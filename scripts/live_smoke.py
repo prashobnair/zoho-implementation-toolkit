@@ -45,43 +45,71 @@ from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError  #
 from zohokit.connectors.zoho.models import (  # noqa: E402
     FieldsResponse,
     ModulesResponse,
-    OrgResponse,
+    OrgInfo,
     RecordPage,
     UsersResponse,
     ZohoResponse,
-    validate_response,
 )
 from zohokit.connectors.zoho.profiles import Profile, load_profile  # noqa: E402
+from zohokit.connectors.zoho.readers import (  # noqa: E402
+    RECORD_FIELDS,
+    RECORD_SMOKE_PER_PAGE,
+    OrgRead,
+    authenticated_client,
+    read_model,
+    read_org,
+    read_records,
+)
 from zohokit.core.redact import Redactor, redact_text  # noqa: E402
 
 #: Inner transport factory for API reads (tests inject a mock).
 TRANSPORT_FACTORY: Callable[[], httpx.BaseTransport] = httpx.HTTPTransport
 
-#: (evidence name, request path, contract model, cassette file).
-SMOKE_READS: tuple[tuple[str, str, type[ZohoResponse], str], ...] = (
-    ("org", "/crm/v8/org", OrgResponse, "org.json"),
-    ("modules", "/crm/v8/settings/modules", ModulesResponse, "modules.json"),
-    ("fields_Leads", "/crm/v8/settings/fields?module=Leads", FieldsResponse, "fields_Leads.json"),
+#: Validated meta reads: (evidence name, request path, contract model,
+#: query params, cassette file). Record modules are read separately through
+#: the shared :func:`read_records` (mandatory ``fields`` included).
+META_READS: tuple[tuple[str, str, type[ZohoResponse], dict[str, str] | None, str], ...] = (
+    ("modules", "/crm/v8/settings/modules", ModulesResponse, None, "modules.json"),
+    (
+        "fields_Leads",
+        "/crm/v8/settings/fields",
+        FieldsResponse,
+        {"module": "Leads"},
+        "fields_Leads.json",
+    ),
     (
         "fields_Contacts",
-        "/crm/v8/settings/fields?module=Contacts",
+        "/crm/v8/settings/fields",
         FieldsResponse,
+        {"module": "Contacts"},
         "fields_Contacts.json",
     ),
-    ("fields_Deals", "/crm/v8/settings/fields?module=Deals", FieldsResponse, "fields_Deals.json"),
-    ("Leads", "/crm/v8/Leads", RecordPage, "Leads.json"),
-    ("Contacts", "/crm/v8/Contacts", RecordPage, "Contacts.json"),
-    ("Deals", "/crm/v8/Deals", RecordPage, "Deals.json"),
-    ("users", "/crm/v8/users", UsersResponse, "users.json"),
+    (
+        "fields_Deals",
+        "/crm/v8/settings/fields",
+        FieldsResponse,
+        {"module": "Deals"},
+        "fields_Deals.json",
+    ),
+    ("users", "/crm/v8/users", UsersResponse, None, "users.json"),
 )
+
+#: Modules listed record-by-record (each sends its minimal read-only
+#: ``fields`` list from :data:`RECORD_FIELDS`).
+RECORD_SMOKE_MODULES: tuple[str, ...] = ("Leads", "Contacts", "Deals")
+
+
+def summarize_org(read: OrgRead) -> dict[str, Any]:
+    """Shapes-only summary of the shared org read (no raw IDs or values)."""
+    keys = sorted(read.org.model_dump().keys())
+    return {"org_fingerprint": org_fingerprint(read.org.id), "fields_seen": keys}
 
 
 def summarize(name: str, model: ZohoResponse, payload: Any) -> dict[str, Any]:
     """Shapes-only summary of a validated payload (no raw IDs or values)."""
-    if isinstance(model, OrgResponse):
-        first = model.org[0] if model.org else None
-        raw_id = first.id if first is not None else ""
-        keys = sorted(first.model_dump().keys()) if first is not None else []
+    if isinstance(model, OrgInfo):
+        raw_id = model.id
+        keys = sorted(model.model_dump().keys())
         return {"org_fingerprint": org_fingerprint(raw_id), "fields_seen": keys}
     if isinstance(model, ModulesResponse):
         names = sorted(str(m.get("api_name", "?")) for m in model.modules)
@@ -104,14 +132,8 @@ def build_client(
 ) -> ZohoClient:
     """Authenticated GET-only client for *profile* (token from env/keyring)."""
     factory = transport_factory or TRANSPORT_FACTORY
-    access_token = manager.ensure_fresh()
-    client = ZohoClient(
-        DC_TABLE[profile.dc].api_base,
-        transport=factory(),
-        token_provider=lambda: access_token,
-        budget=budget,
-    )
-    return client
+    # Same shared builder the doctor CLI uses (fresh token up front).
+    return authenticated_client(DC_TABLE[profile.dc].api_base, manager, budget, factory())
 
 
 def run_smoke(
@@ -145,43 +167,30 @@ def run_smoke(
         )
         print(f"[FAIL] {endpoint} ({model_name}): {detail}", file=sys.stderr)
 
-    for name, path, model, cassette_file in SMOKE_READS:
-        endpoint = path.split("?")[0]
-        model_name = model.__name__
-        try:
-            payload = client.get(path, endpoint=endpoint, experimental=True).json()
-        except ValueError as exc:
-            fail_read(
-                name,
-                endpoint,
-                model_name,
-                ConnectorError(f"{endpoint} returned non-JSON: {exc}"),
-            )
-            continue
-        except Exception as exc:  # diagnostics must try every endpoint
-            fail_read(name, endpoint, model_name, exc)
-            continue
-        try:
-            validated = validate_response(model, endpoint=endpoint, payload=payload)
-        except Exception as exc:  # contract drift is a recorded result here
-            fail_read(name, endpoint, model_name, exc)
-            continue
+    def pass_read(
+        name: str,
+        endpoint: str,
+        model_name: str,
+        shape: dict[str, Any],
+        cassette_path: str,
+        cassette_file: str,
+    ) -> None:
         reads.append(
             {
                 "name": name,
                 "endpoint": endpoint,
-                "model": model.__name__,
+                "model": model_name,
                 "status": "pass",
-                "shape": summarize(name, validated, payload),
+                "shape": shape,
             }
         )
-        print(f"[PASS] {endpoint} validates as {model.__name__}")
+        print(f"[PASS] {endpoint} validates as {model_name}")
         if record:
             try:
                 written = record_cassette(
                     "crm",
                     profile.name,
-                    path,
+                    cassette_path,
                     cassettes_dir / "crm" / cassette_file,
                     allow_ci=True,
                     token_provider=token_provider,
@@ -192,13 +201,64 @@ def run_smoke(
                 reads[-1] = {
                     "name": name,
                     "endpoint": endpoint,
-                    "model": model.__name__,
+                    "model": model_name,
                     "status": "fail",
                     "error": redact_text(f"{endpoint} record failed: {exc}"),
                 }
                 print(f"[FAIL] {endpoint} record failed: {exc}", file=sys.stderr)
-                continue
+                return
             print(f"recorded {written}")
+
+    # Org first, through the single shared reader doctor also uses.
+    try:
+        org_read = read_org(client, experimental=True)
+    except Exception as exc:  # diagnostics must try every endpoint
+        fail_read("org", "/crm/v8/org", "OrgInfo", exc)
+    else:
+        pass_read(
+            "org", "/crm/v8/org", "OrgInfo", summarize_org(org_read), "/crm/v8/org", "org.json"
+        )
+
+    for name, path, model, params, cassette_file in META_READS:
+        endpoint = path.split("?")[0]
+        model_name = model.__name__
+        cassette_path = (
+            path
+            if not params
+            else path + "?" + "&".join(f"{key}={value}" for key, value in params.items())
+        )
+        try:
+            validated = read_model(client, path, model, params=params, experimental=True)
+        except Exception as exc:  # contract drift is a recorded result here
+            fail_read(name, endpoint, model_name, exc)
+            continue
+        pass_read(
+            name,
+            endpoint,
+            model_name,
+            summarize(name, validated, None),
+            cassette_path,
+            cassette_file,
+        )
+
+    for module in RECORD_SMOKE_MODULES:
+        endpoint = f"/crm/v8/{module}"
+        fields = ",".join(RECORD_FIELDS[module])
+        cassette_path = f"{endpoint}?fields={fields}&page=1&per_page={RECORD_SMOKE_PER_PAGE}"
+        try:
+            page = read_records(client, module, experimental=True)
+        except Exception as exc:  # contract drift is a recorded result here
+            fail_read(module, endpoint, "RecordPage", exc)
+            continue
+        pass_read(
+            module,
+            endpoint,
+            "RecordPage",
+            summarize(module, page, None),
+            cassette_path,
+            f"{module}.json",
+        )
+
     return {
         "profile": profile.name,
         "dc": profile.dc,
@@ -244,7 +304,7 @@ def main(argv: list[str] | None = None) -> int:
     out = evidence_dir / "smoke.json"
     out.write_text(json.dumps(redacted, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     passed = sum(1 for read in evidence["reads"] if read["status"] == "pass")
-    total = len(SMOKE_READS)
+    total = 1 + len(META_READS) + len(RECORD_SMOKE_MODULES)
     print(f"wrote {out} ({passed}/{total} reads pass)")
     if passed != total:
         failed = [str(read["endpoint"]) for read in evidence["reads"] if read["status"] != "pass"]

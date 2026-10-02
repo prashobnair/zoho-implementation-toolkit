@@ -17,6 +17,7 @@ from zohokit.connectors.zoho.client import ZohoClient
 from zohokit.connectors.zoho.dc import DC_TABLE
 from zohokit.connectors.zoho.doctor import CheckResult, doctor_exit_code, run_doctor
 from zohokit.connectors.zoho.profiles import load_profile
+from zohokit.connectors.zoho.readers import authenticated_client
 from zohokit.core.redact import redact_text
 
 app = typer.Typer(help="Check a profile before any live read.")
@@ -104,15 +105,12 @@ def main(
     dc = DC_TABLE[current.dc]
 
     def make_client() -> ZohoClient:
+        # Same authenticated builder the smoke reads use: the token is
+        # refreshed up front, so the org read can never go out anonymous.
         manager = TokenManager(
             dc=current.dc, profile=current.name, transport_factory=TRANSPORT_FACTORY
         )
-        return ZohoClient(
-            dc.api_base,
-            transport=TRANSPORT_FACTORY(),
-            token_provider=manager.token_provider,
-            budget=budget,
-        )
+        return authenticated_client(dc.api_base, manager, budget, TRANSPORT_FACTORY())
 
     def refresher() -> bool:
         return bool(read_refresh_token(current.name))

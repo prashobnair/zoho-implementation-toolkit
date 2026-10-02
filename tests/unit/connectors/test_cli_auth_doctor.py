@@ -93,6 +93,10 @@ def test_doctor_cli_reports_checklist(
 ) -> None:
     fake_keyring["zohokit:dev-in:refresh_token"] = "fake.refresh.token"
     monkeypatch.setattr(doctor_cli, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(_org_handler))
+    monkeypatch.setattr(
+        "zohokit.connectors.zoho.auth.TokenManager.ensure_fresh",
+        lambda self: "fake-access-token",
+    )
     monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
     (tmp_path / "dev-in.json").write_text(
         '{"name": "dev-in", "dc": "in", '
@@ -100,7 +104,6 @@ def test_doctor_cli_reports_checklist(
         '"ZohoCRM.users.READ", "ZohoCRM.org.READ"], '
         '"environment": "developer_edition", "org_name": "", '
         '"saved_at": "2026-10-01T00:00:00+00:00"}',
-        encoding="utf-8",
     )
     result = runner.invoke(app, ["doctor", "--live", "--profile", "dev-in", "--experimental"])
     assert result.exit_code == 0, result.output
@@ -151,6 +154,10 @@ def test_doctor_cli_over_privileged_scope_exits_3(
 ) -> None:
     fake_keyring["zohokit:dev-in:refresh_token"] = "fake.refresh.token"
     monkeypatch.setattr(doctor_cli, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(_org_handler))
+    monkeypatch.setattr(
+        "zohokit.connectors.zoho.auth.TokenManager.ensure_fresh",
+        lambda self: "fake-access-token",
+    )
     monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
     (tmp_path / "dev-in.json").write_text(
         '{"name": "dev-in", "dc": "in", "scopes": ["ZohoCRM.modules.ALL"], '
