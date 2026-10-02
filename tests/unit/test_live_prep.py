@@ -19,6 +19,13 @@ from cassette_scan import scan_all, scan_text  # noqa: E402
 
 from zohokit.cli import app  # noqa: E402
 from zohokit.cli import doctor as doctor_cli  # noqa: E402
+from zohokit.connectors.zoho.budget import CallBudget  # noqa: E402
+from zohokit.connectors.zoho.client import ZohoClient  # noqa: E402
+from zohokit.connectors.zoho.doctor import (  # noqa: E402
+    configured_modules,
+    doctor_exit_code,
+    run_doctor,
+)
 from zohokit.connectors.zoho.profiles import Profile  # noqa: E402
 from zohokit.connectors.zoho.scopes import READ_SCOPES, find_over_privileged  # noqa: E402
 from zohokit.core.redact import redact_text  # noqa: E402
@@ -78,6 +85,49 @@ def test_live_scan_runs_before_upload() -> None:
     for step in steps:
         if "upload-artifact" in str(step.get("uses", "")):
             assert step["with"]["retention-days"] == 14
+    # Evidence uploads only leave the runner when the fail-closed scan passed.
+    for step in steps:
+        if "upload-artifact" in str(step.get("uses", "")):
+            condition = str(step.get("if", ""))
+            assert "steps.scan.outcome == 'success'" in condition
+            assert "always()" in condition
+    # The scan itself stays fail-closed: no continue-on-error.
+    scan_step = next(s for s in steps if "cassette_scan.py" in str(s.get("run", "")))
+    assert scan_step.get("continue-on-error") is not True
+    assert "always()" in str(scan_step.get("if", ""))
+    # A final always() gate re-fails the run when doctor or smoke failed.
+    gate = next(
+        s for s in steps if "Fail the run when doctor or smoke failed" in str(s.get("name", ""))
+    )
+    assert "always()" in str(gate.get("if", ""))
+    gate_run = str(gate.get("run", ""))
+    assert "steps.doctor_json.outcome" in gate_run
+    assert "steps.smoke.outcome" in gate_run
+
+
+def test_live_doctor_and_smoke_do_not_stop_evidence_handling() -> None:
+    steps = _job(_live_workflow())["steps"]
+    assert isinstance(steps, list) and steps
+    by_id = {str(s.get("id", "")): s for s in steps if s.get("id")}
+    for step_id in ("doctor_json", "doctor_md", "smoke", "smoke_record", "scan"):
+        assert step_id in by_id, f"live job must define step id {step_id!r}"
+    # Doctor + smoke keep going so evidence is always scrubbed/scanned/uploaded.
+    for step_id in ("doctor_json", "doctor_md", "smoke", "smoke_record"):
+        assert by_id[step_id].get("continue-on-error") is True
+    # Every step after the first doctor still runs its command once.
+    for step_id in ("doctor_md", "smoke", "smoke_record"):
+        assert "always()" in str(by_id[step_id].get("if", ""))
+    assert "always()" in str(by_id["scan"].get("if", ""))
+    scrub = next(s for s in steps if "scrub_cassettes.py" in str(s.get("run", "")))
+    assert "always()" in str(scrub.get("if", ""))
+    # The readable checklist is printed even when checks fail.
+    showers = [
+        s
+        for s in steps
+        if "evidence/doctor.md" in str(s.get("run", "")) and "cat" in str(s.get("run", ""))
+    ]
+    assert showers, "live job must cat evidence/doctor.md for the job log"
+    assert all("always()" in str(s.get("if", "")) for s in showers)
 
 
 def test_dev_in_profile_scopes_are_read_only() -> None:
@@ -296,3 +346,95 @@ def test_live_smoke_contract_drift_exits_3(monkeypatch: pytest.MonkeyPatch, tmp_
     _write_profile(tmp_path)
     code = live_smoke.main(["--profile", "dev-in", "--evidence-dir", str(tmp_path / "evidence")])
     assert code == 3
+
+
+def _scope_client() -> ZohoClient:
+    return ZohoClient("https://www.zohoapis.in", transport=httpx.MockTransport(_org_handler))
+
+
+def _scope_profile(scopes: list[str]) -> Profile:
+    return Profile.model_validate(
+        {"name": "dev-in", "dc": "in", "scopes": scopes, "environment": "developer_edition"}
+    )
+
+
+def test_doctor_scope_ignores_unconfigured_books() -> None:
+    assert configured_modules(sorted(READ_SCOPES["crm"])) == ["crm"]
+    checks = run_doctor(
+        _scope_profile(sorted(READ_SCOPES["crm"])),
+        client_factory=_scope_client,
+        token_refresher=lambda: True,
+        budget=CallBudget(max_calls=200),
+        experimental=True,
+    )
+    scope = next(c for c in checks if c.name == "scope_sufficiency")
+    assert scope.status == "pass"
+    assert "books" not in scope.detail.lower()
+    assert doctor_exit_code(checks) == 0
+
+
+def test_doctor_books_missing_is_warn_not_fail() -> None:
+    scopes = [*sorted(READ_SCOPES["crm"]), "ZohoBooks.other.READ"]
+    assert configured_modules(scopes) == ["crm", "books"]
+    checks = run_doctor(
+        _scope_profile(scopes),
+        client_factory=_scope_client,
+        token_refresher=lambda: True,
+        budget=CallBudget(max_calls=200),
+        experimental=True,
+    )
+    scope = next(c for c in checks if c.name == "scope_sufficiency")
+    assert scope.status == "warn"
+    assert "ZohoBooks.settings.READ" in scope.detail
+    assert "for books" in scope.detail
+    assert doctor_exit_code(checks) == 0
+
+
+def test_doctor_crm_partial_missing_warns_with_module() -> None:
+    scopes = ["ZohoCRM.modules.READ"]
+    checks = run_doctor(
+        _scope_profile(scopes),
+        client_factory=_scope_client,
+        token_refresher=lambda: True,
+        budget=CallBudget(max_calls=200),
+        experimental=True,
+    )
+    scope = next(c for c in checks if c.name == "scope_sufficiency")
+    assert scope.status == "warn"
+    assert "for crm" in scope.detail
+    assert doctor_exit_code(checks) == 0
+
+
+def test_doctor_json_out_also_prints_redacted_table(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    vault: dict[str, str] = {}
+    monkeypatch.setattr("keyring.set_password", lambda s, k, v: vault.update({f"{s}:{k}": v}))
+    monkeypatch.setattr("keyring.get_password", lambda s, k: vault.get(f"{s}:{k}"))
+    vault["zohokit:dev-in:refresh_token"] = "fake.refresh.token"
+    monkeypatch.setattr(doctor_cli, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(_org_handler))
+    monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
+    _write_profile(tmp_path)
+    json_out = tmp_path / "doctor.json"
+    result = runner.invoke(
+        app,
+        [
+            "doctor",
+            "--live",
+            "--profile",
+            "dev-in",
+            "--experimental",
+            "--format",
+            "json",
+            "--out",
+            str(json_out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert json_out.exists()
+    # The job log keeps the readable checklist even though the file got JSON.
+    assert f"Wrote {json_out}" in result.output
+    assert "scope_sufficiency" in result.output
+    assert "[PASS]" in result.output
+    assert "555000111" not in result.output
+    assert "fake.refresh.token" not in result.output
