@@ -11,14 +11,13 @@ import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Literal
 
 from zohokit.connectors.zoho.budget import CallBudget
 from zohokit.connectors.zoho.client import ZohoClient
 from zohokit.connectors.zoho.dc import DC_TABLE
-from zohokit.connectors.zoho.errors import ContractDriftError
-from zohokit.connectors.zoho.models import OrgResponse, validate_response
 from zohokit.connectors.zoho.profiles import Profile, check_production
+from zohokit.connectors.zoho.readers import read_org
 from zohokit.connectors.zoho.scopes import READ_SCOPES, find_over_privileged, sufficient_for
 
 #: Scope prefix per module: a profile is "configured for" a module when it
@@ -92,12 +91,11 @@ def run_doctor(
 
     try:
         client = client_factory()
-        response = client.get("/crm/v8/org", endpoint="/crm/v8/org", experimental=experimental)
-        payload: dict[str, Any] = response.json()
-        envelope = validate_response(OrgResponse, endpoint="/crm/v8/org", payload=payload)
-        if not envelope.org:
-            raise ContractDriftError("/crm/v8/org", "org: empty list")
-        org_id = envelope.org[0].id
+        # The single shared org read (also used by smoke): identical payloads
+        # can never disagree again. Zoho error bodies arrive here as
+        # ConnectorError (carrying the Zoho code only), not contract drift.
+        read = read_org(client, experimental=experimental)
+        org_id = read.org.id
         checks.append(
             CheckResult(
                 "org_identity",
@@ -105,7 +103,7 @@ def run_doctor(
                 f"org {org_fingerprint(org_id)}" if org_id else "org response has no id",
             )
         )
-        date_header = response.headers.get("date")
+        date_header = read.date_header
         if date_header:
             checks.append(
                 CheckResult("clock_skew", "pass", f"server date header seen ({date_header})")

@@ -208,6 +208,10 @@ def test_doctor_json_and_markdown_evidence(monkeypatch: pytest.MonkeyPatch, tmp_
     monkeypatch.setattr("keyring.get_password", lambda s, k: vault.get(f"{s}:{k}"))
     vault["zohokit:dev-in:refresh_token"] = "fake.refresh.token"
     monkeypatch.setattr(doctor_cli, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(_org_handler))
+    monkeypatch.setattr(
+        "zohokit.connectors.zoho.auth.TokenManager.ensure_fresh",
+        lambda self: "fake-access-token",
+    )
     monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
     _write_profile(tmp_path)
     json_out = tmp_path / "doctor.json"
@@ -280,7 +284,13 @@ def _smoke_handler(request: httpx.Request) -> httpx.Response:
                 "info": {"per_page": 200, "count": 1, "page": 1, "more_records": False},
             },
         )
-    return httpx.Response(200, json={"data": [{"id": "555000001"}], "more_records": False})
+    return httpx.Response(
+        200,
+        json={
+            "data": [{"id": "555000001"}],
+            "info": {"per_page": 5, "count": 1, "page": 1, "more_records": False},
+        },
+    )
 
 
 def test_live_smoke_offline_writes_scannable_evidence(
@@ -454,6 +464,10 @@ def test_doctor_json_out_also_prints_redacted_table(
     monkeypatch.setattr("keyring.get_password", lambda s, k: vault.get(f"{s}:{k}"))
     vault["zohokit:dev-in:refresh_token"] = "fake.refresh.token"
     monkeypatch.setattr(doctor_cli, "TRANSPORT_FACTORY", lambda: httpx.MockTransport(_org_handler))
+    monkeypatch.setattr(
+        "zohokit.connectors.zoho.auth.TokenManager.ensure_fresh",
+        lambda self: "fake-access-token",
+    )
     monkeypatch.setattr("zohokit.connectors.zoho.profiles.profiles_dir", lambda base=None: tmp_path)
     _write_profile(tmp_path)
     json_out = tmp_path / "doctor.json"

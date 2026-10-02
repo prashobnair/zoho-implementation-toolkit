@@ -6,6 +6,9 @@ see ``docs/API_CONTRACTS.md`` for the per-endpoint doc URL):
 - ``GET /crm/v8/org`` → ``{"org": [...]}``
 - ``GET /crm/v8/settings/modules`` → ``{"modules": [...]}``
 - ``GET /crm/v8/settings/fields?module=X`` → ``{"fields": [...]}``
+- ``GET /crm/v8/{module}?fields=...`` → ``{"data": [...], "info": {...}}``
+  (``fields`` is mandatory in v8; HTTP 204 with an empty body means the
+  module holds no records)
 - ``GET /crm/v8/users`` → ``{"users": [...], "info": {...}}``
 
 An empty or missing envelope list raises :class:`ContractDriftError`
@@ -75,11 +78,36 @@ class OrgResponse(ZohoResponse):
     org: list[OrgInfo] = Field(min_length=1)
 
 
+class RecordPageInfo(ZohoResponse):
+    """The ``info`` envelope of a CRM record list reply (v8 get-records).
+
+    ``more_records``/``next_page_token`` drive pagination; ``count``,
+    ``page``/``per_page`` and the rest ride along verbatim in ``raw_extra``.
+    """
+
+    more_records: bool = False
+    next_page_token: str | None = None
+
+
 class RecordPage(ZohoResponse):
-    """One page of CRM records with the ``info.more_records`` style flag."""
+    """One page of CRM records: ``{"data": [...], "info": {...}}`` (v8).
+
+    A module with no records answers HTTP 204 with an empty body instead;
+    see :func:`read_records`, which maps that to an empty page.
+    """
 
     data: list[dict[str, Any]]
-    more_records: bool = False
+    info: RecordPageInfo | None = None
+
+    @property
+    def more_records(self) -> bool:
+        """Whether Zoho reports further pages (``info.more_records``)."""
+        return bool(self.info is not None and self.info.more_records)
+
+    @property
+    def next_page_token(self) -> str | None:
+        """Cursor past the offset, when Zoho reports one."""
+        return self.info.next_page_token if self.info is not None else None
 
 
 class TokenPage(ZohoResponse):
@@ -149,6 +177,7 @@ __all__: list[str] = [
     "OrgInfo",
     "OrgResponse",
     "RecordPage",
+    "RecordPageInfo",
     "TokenPage",
     "UsersResponse",
     "ZohoResponse",
