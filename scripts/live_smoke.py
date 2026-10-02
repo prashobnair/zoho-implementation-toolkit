@@ -45,21 +45,21 @@ from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError  #
 from zohokit.connectors.zoho.models import (  # noqa: E402
     FieldsResponse,
     ModulesResponse,
-    OrgInfo,
+    OrgResponse,
     RecordPage,
     UsersResponse,
     ZohoResponse,
     validate_response,
 )
 from zohokit.connectors.zoho.profiles import Profile, load_profile  # noqa: E402
-from zohokit.core.redact import Redactor  # noqa: E402
+from zohokit.core.redact import Redactor, redact_text  # noqa: E402
 
 #: Inner transport factory for API reads (tests inject a mock).
 TRANSPORT_FACTORY: Callable[[], httpx.BaseTransport] = httpx.HTTPTransport
 
 #: (evidence name, request path, contract model, cassette file).
 SMOKE_READS: tuple[tuple[str, str, type[ZohoResponse], str], ...] = (
-    ("org", "/crm/v8/org", OrgInfo, "org.json"),
+    ("org", "/crm/v8/org", OrgResponse, "org.json"),
     ("modules", "/crm/v8/settings/modules", ModulesResponse, "modules.json"),
     ("fields_Leads", "/crm/v8/settings/fields?module=Leads", FieldsResponse, "fields_Leads.json"),
     (
@@ -78,9 +78,10 @@ SMOKE_READS: tuple[tuple[str, str, type[ZohoResponse], str], ...] = (
 
 def summarize(name: str, model: ZohoResponse, payload: Any) -> dict[str, Any]:
     """Shapes-only summary of a validated payload (no raw IDs or values)."""
-    if isinstance(model, OrgInfo):
-        raw_id = str(payload.get("id", "")) if isinstance(payload, dict) else ""
-        keys = sorted(payload.keys()) if isinstance(payload, dict) else []
+    if isinstance(model, OrgResponse):
+        first = model.org[0] if model.org else None
+        raw_id = first.id if first is not None else ""
+        keys = sorted(first.model_dump().keys()) if first is not None else []
         return {"org_fingerprint": org_fingerprint(raw_id), "fields_seen": keys}
     if isinstance(model, ModulesResponse):
         names = sorted(str(m.get("api_name", "?")) for m in model.modules)
@@ -123,15 +124,48 @@ def run_smoke(
     token_provider: Callable[[], str | None],
     transport_factory: Callable[[], httpx.BaseTransport] | None = None,
 ) -> dict[str, Any]:
-    """Run every smoke read; raise (exit 3 upstream) on the first failure."""
+    """Run every smoke read; each result is recorded, nothing stops the rest.
+
+    A drift on one endpoint no longer hides the others: failures are kept
+    as ``status: fail`` entries (redacted, value-free) and the caller exits
+    non-zero at the end when any read failed.
+    """
     reads: list[dict[str, Any]] = []
+
+    def fail_read(name: str, endpoint: str, model_name: str, error: BaseException) -> None:
+        detail = redact_text(f"{endpoint} failed: {error}")
+        reads.append(
+            {
+                "name": name,
+                "endpoint": endpoint,
+                "model": model_name,
+                "status": "fail",
+                "error": detail,
+            }
+        )
+        print(f"[FAIL] {endpoint} ({model_name}): {detail}", file=sys.stderr)
+
     for name, path, model, cassette_file in SMOKE_READS:
         endpoint = path.split("?")[0]
+        model_name = model.__name__
         try:
             payload = client.get(path, endpoint=endpoint, experimental=True).json()
         except ValueError as exc:
-            raise ConnectorError(f"{endpoint} returned non-JSON: {exc}") from exc
-        validated = validate_response(model, endpoint=endpoint, payload=payload)
+            fail_read(
+                name,
+                endpoint,
+                model_name,
+                ConnectorError(f"{endpoint} returned non-JSON: {exc}"),
+            )
+            continue
+        except Exception as exc:  # diagnostics must try every endpoint
+            fail_read(name, endpoint, model_name, exc)
+            continue
+        try:
+            validated = validate_response(model, endpoint=endpoint, payload=payload)
+        except Exception as exc:  # contract drift is a recorded result here
+            fail_read(name, endpoint, model_name, exc)
+            continue
         reads.append(
             {
                 "name": name,
@@ -143,16 +177,27 @@ def run_smoke(
         )
         print(f"[PASS] {endpoint} validates as {model.__name__}")
         if record:
-            written = record_cassette(
-                "crm",
-                profile.name,
-                path,
-                cassettes_dir / "crm" / cassette_file,
-                allow_ci=True,
-                token_provider=token_provider,
-                budget=budget,
-                transport_factory=transport_factory,
-            )
+            try:
+                written = record_cassette(
+                    "crm",
+                    profile.name,
+                    path,
+                    cassettes_dir / "crm" / cassette_file,
+                    allow_ci=True,
+                    token_provider=token_provider,
+                    budget=budget,
+                    transport_factory=transport_factory,
+                )
+            except Exception as exc:  # a failed recording is a result, not a stop
+                reads[-1] = {
+                    "name": name,
+                    "endpoint": endpoint,
+                    "model": model.__name__,
+                    "status": "fail",
+                    "error": redact_text(f"{endpoint} record failed: {exc}"),
+                }
+                print(f"[FAIL] {endpoint} record failed: {exc}", file=sys.stderr)
+                continue
             print(f"recorded {written}")
     return {
         "profile": profile.name,
@@ -181,24 +226,33 @@ def main(argv: list[str] | None = None) -> int:
     manager = TokenManager(dc=profile.dc, profile=profile.name, transport_factory=TRANSPORT_FACTORY)
     try:
         client = build_client(profile, budget, manager)
-        evidence = run_smoke(
-            client,
-            profile,
-            budget,
-            record=args.record,
-            cassettes_dir=Path(args.cassettes_dir),
-            token_provider=manager.token_provider,
-            transport_factory=TRANSPORT_FACTORY,
-        )
     except (ConnectorError, ContractDriftError) as exc:
-        print(f"SMOKE FAIL: {exc}", file=sys.stderr)
+        print(f"SMOKE FAIL: {redact_text(str(exc))}", file=sys.stderr)
         return 3
+    evidence = run_smoke(
+        client,
+        profile,
+        budget,
+        record=args.record,
+        cassettes_dir=Path(args.cassettes_dir),
+        token_provider=manager.token_provider,
+        transport_factory=TRANSPORT_FACTORY,
+    )
     redacted = Redactor().redact_obj(evidence)
     evidence_dir = Path(args.evidence_dir)
     evidence_dir.mkdir(parents=True, exist_ok=True)
     out = evidence_dir / "smoke.json"
     out.write_text(json.dumps(redacted, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"wrote {out} ({len(evidence['reads'])}/{len(SMOKE_READS)} reads pass)")
+    passed = sum(1 for read in evidence["reads"] if read["status"] == "pass")
+    total = len(SMOKE_READS)
+    print(f"wrote {out} ({passed}/{total} reads pass)")
+    if passed != total:
+        failed = [str(read["endpoint"]) for read in evidence["reads"] if read["status"] != "pass"]
+        print(
+            f"SMOKE FAIL: {len(failed)} read(s) failed: {', '.join(sorted(set(failed)))}",
+            file=sys.stderr,
+        )
+        return 3
     return 0
 
 

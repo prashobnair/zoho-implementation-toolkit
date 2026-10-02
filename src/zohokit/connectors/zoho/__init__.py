@@ -36,9 +36,14 @@ from zohokit.connectors.zoho.errors import (
 from zohokit.connectors.zoho.guard import AsyncGetOnlyTransport, GetOnlyTransport
 from zohokit.connectors.zoho.models import (
     OrgInfo,
+    OrgResponse,
     RecordPage,
     TokenPage,
     ZohoResponse,
+    unwrap_fields,
+    unwrap_modules,
+    unwrap_org,
+    unwrap_users,
     validate_response,
 )
 from zohokit.connectors.zoho.pagination import (
@@ -96,6 +101,7 @@ __all__: list[str] = [
     "EnvironmentType",
     "GetOnlyTransport",
     "OrgInfo",
+    "OrgResponse",
     "PaginationOutcome",
     "Profile",
     "RecordPage",
@@ -130,5 +136,9 @@ __all__: list[str] = [
     "store_refresh_token",
     "sufficient_for",
     "token_url",
+    "unwrap_fields",
+    "unwrap_modules",
+    "unwrap_org",
+    "unwrap_users",
     "validate_response",
 ]

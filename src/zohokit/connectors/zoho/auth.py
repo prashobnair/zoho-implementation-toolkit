@@ -16,7 +16,7 @@ from collections.abc import Callable
 from typing import Any
 
 import httpx
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from zohokit.connectors.zoho.dc import DC_TABLE, TOKEN_PATH
 from zohokit.connectors.zoho.errors import ConnectorError, SafetyGuardError
@@ -37,6 +37,26 @@ class TokenResponse(BaseModel):
     access_token: str = ""
     api_domain: str = ""
     expires_in: int = 3600
+
+
+def _validate_token_response(payload: Any) -> TokenResponse:
+    """Validate a token-endpoint payload without ever echoing its values.
+
+    A validation failure raises :class:`ConnectorError` carrying only the
+    endpoint plus field locations and error types (never tokens or secrets),
+    so the message is safe for logs and evidence.
+    """
+    try:
+        return TokenResponse.model_validate(payload)
+    except ValidationError as exc:
+        parts: list[str] = []
+        for err in exc.errors(include_input=False, include_url=False):
+            loc = ".".join(str(step) for step in err.get("loc", ()))
+            kind = str(err.get("type", "invalid"))
+            parts.append(f"{loc}: {kind}" if loc else kind)
+        raise ConnectorError(
+            "token response invalid: " + ("; ".join(parts) or "invalid payload")
+        ) from exc
 
 
 class AuthTransport(httpx.BaseTransport):
@@ -98,7 +118,7 @@ def exchange_grant_code(
         client.close()
     if response.status_code != 200:
         raise ConnectorError(f"token exchange failed with HTTP {response.status_code}")
-    payload = TokenResponse.model_validate(response.json())
+    payload = _validate_token_response(response.json())
     if not payload.refresh_token:
         raise ConnectorError("token exchange returned no refresh_token")
     if (
@@ -139,7 +159,7 @@ def refresh_access_token(
         client.close()
     if response.status_code != 200:
         raise ConnectorError(f"token refresh failed with HTTP {response.status_code}")
-    payload = TokenResponse.model_validate(response.json())
+    payload = _validate_token_response(response.json())
     if not payload.access_token:
         raise ConnectorError("token refresh returned no access_token")
     return payload
