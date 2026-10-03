@@ -13,7 +13,19 @@ useDefault = true
 # redaction proof). They are assembled from fragments at runtime, are
 # never real tokens, and never leave the test process. Allowlist those
 # exact fake strings in that one file only.
-[allowlist]
-description = "Synthetic OAuth/pagination-token scanner fixtures in test_cassette_scan.py and test_cassette_quality.py (not real credentials)."
-paths = ['''tests/unit/test_cassette_scan\.py''', '''tests/unit/test_cassette_quality\.py''']
-regexes = ['''1000\.abcdef12\.34567890''', '''90c6abcdef0123456789fc09f0abcdef''']
+#
+# Each entry below combines its path with its regex via condition = "AND":
+# only the exact fake string inside that exact file is allowlisted. (The
+# global [allowlist] table combines paths OR regexes, which would
+# allowlist both test files entirely, so it is not used here.)
+[[allowlists]]
+description = "Synthetic OAuth scanner fixture in test_cassette_scan.py (not a real credential)."
+condition = "AND"
+paths = ['''tests/unit/test_cassette_scan\.py''']
+regexes = ['''1000\.abcdef12\.34567890''']
+
+[[allowlists]]
+description = "Synthetic pagination-token fixtures in test_cassette_quality.py (not real tokens)."
+condition = "AND"
+paths = ['''tests/unit/test_cassette_quality\.py''']
+regexes = ['''90c6abcdef0123456789fc09f0abcdef''']

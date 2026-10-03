@@ -157,6 +157,28 @@ def test_offset_value_under_phone_key_still_fails_scan() -> None:
     assert any("unredacted phone" in finding for finding in findings)
 
 
+def test_benign_run_id_skips_phone_but_nothing_else() -> None:
+    """Workflow-metadata IDs skip the phone rule by exact digit equality."""
+    benign = ["71110022334"]
+    assert scan_text("Run ID 71110022334 recorded", [], benign) == []
+    assert any("unredacted phone" in f for f in scan_text("Run ID 71110022334 recorded", []))
+    # Exact equality only: a longer run containing the ID still fails.
+    assert any(
+        "unredacted phone" in f for f in scan_text("Run ID 711100223345 recorded", [], benign)
+    )
+    # Other numbers on the same line still fail.
+    assert any(
+        "unredacted phone" in f for f in scan_text("Run ID 71110022334 call 4158601234", [], benign)
+    )
+
+
+def test_benign_ids_load_from_repo_file() -> None:
+    from cassette_scan import load_benign_ids
+
+    assert "37120123276" in load_benign_ids()
+    assert load_benign_ids(ROOT / "does-not-exist.txt") == []
+
+
 def test_record_then_scrub_is_byte_identical_and_scan_clean(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

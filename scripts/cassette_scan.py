@@ -23,7 +23,10 @@ echoed, so the scan gate itself can never leak PII into a public log.
 convention as ``example.invalid`` for mailboxes) and never flagged; real
 org IDs are caught by the configured-ID check instead. Opaque
 ``sha256:<hex>`` fingerprints are safe to share by design and never
-flagged, so redacted live evidence passes the same scan.
+flagged, so redacted live evidence passes the same scan. Digit runs that
+exactly equal an entry in ``cassettes/known_benign_ids.txt`` (workflow
+metadata such as live-run IDs, never PII) are skipped as well; any other
+digit run is scanned normally.
 
 Pass explicit directories to scan those trees instead (the weekly live
 job runs ``python scripts/cassette_scan.py evidence cassettes`` over the
@@ -50,6 +53,9 @@ EXTRA_GLOBS = (
 )
 
 ORG_IDS_FILE = ROOT / "cassettes" / "known_org_ids.txt"
+
+#: Workflow-metadata IDs that are safe to share (live-run IDs, never PII).
+BENIGN_IDS_FILE = ROOT / "cassettes" / "known_benign_ids.txt"
 
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
 _PHONE_RE = re.compile(r"\+?\d[\d\s\-().]{6,}\d")
@@ -119,6 +125,18 @@ def load_org_ids(path: Path = ORG_IDS_FILE) -> list[str]:
     return ids
 
 
+def load_benign_ids(path: Path = BENIGN_IDS_FILE) -> list[str]:
+    """Workflow-metadata IDs that are safe to share; empty when absent."""
+    if not path.exists():
+        return []
+    ids: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            ids.append(stripped)
+    return ids
+
+
 #: A JSON member on one pretty-printed line: ``"some_key": ...``.
 _KEY_OF_LINE_RE = re.compile(r'"([^"]+)"\s*:')
 
@@ -169,16 +187,20 @@ def key_of_line(line: str) -> str:
     return match.group(1) if match is not None else "unknown"
 
 
-def scan_text(text: str, org_ids: list[str]) -> list[str]:
+def scan_text(text: str, org_ids: list[str], benign_ids: list[str] | None = None) -> list[str]:
     """Return value-free findings for one cassette body.
 
     Each finding names the line number, the JSON key on that line (when
     the line parses as a JSON member) and the category only — matched
     values are never included, so findings are safe for public logs.
+    A phone-like digit run whose digits exactly equal a *benign_ids*
+    entry (workflow metadata, never PII) is skipped; anything else is
+    scanned normally.
     """
     # Fingerprints are opaque by design: drop them before the digit-run
     # scan so a hash holding 8+ consecutive digits never reads as a phone.
     text = _FINGERPRINT_RE.sub("sha256:", text)
+    benign = set(benign_ids or [])
     findings: list[str] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
         key = key_of_line(line)
@@ -202,6 +224,8 @@ def scan_text(text: str, org_ids: list[str]) -> list[str]:
             ):
                 continue
             digits = re.sub(r"\D", "", match.group(0))
+            if digits in benign:
+                continue
             if digits.startswith("555"):
                 continue
             findings.append(f"line {lineno}: unredacted phone [key: {key}]")
@@ -233,9 +257,12 @@ def iter_cassette_files(root: Path = ROOT) -> list[Path]:
 def scan_all(root: Path = ROOT) -> dict[str, list[str]]:
     """Map offending relative paths to their findings (empty when clean)."""
     org_ids = load_org_ids(root / "cassettes" / "known_org_ids.txt")
+    benign_ids = load_benign_ids(root / "cassettes" / "known_benign_ids.txt")
     offenders: dict[str, list[str]] = {}
     for path in iter_cassette_files(root):
-        findings = scan_text(path.read_text(encoding="utf-8", errors="replace"), org_ids)
+        findings = scan_text(
+            path.read_text(encoding="utf-8", errors="replace"), org_ids, benign_ids
+        )
         if findings:
             offenders[str(path.relative_to(root)).replace("\\", "/")] = findings
     return offenders
@@ -248,6 +275,7 @@ EXTRA_SUFFIXES = (".json", ".yaml", ".yml", ".md")
 def scan_paths(paths: list[Path], root: Path = ROOT) -> dict[str, list[str]]:
     """Scan every supported file under *paths* (files or directories)."""
     org_ids = load_org_ids(root / "cassettes" / "known_org_ids.txt")
+    benign_ids = load_benign_ids(root / "cassettes" / "known_benign_ids.txt")
     offenders: dict[str, list[str]] = {}
     for path in paths:
         candidates = (
@@ -260,7 +288,9 @@ def scan_paths(paths: list[Path], root: Path = ROOT) -> dict[str, list[str]]:
                 rel = str(candidate.relative_to(root)).replace("\\", "/")
             except ValueError:
                 rel = str(candidate)
-            findings = scan_text(candidate.read_text(encoding="utf-8", errors="replace"), org_ids)
+            findings = scan_text(
+                candidate.read_text(encoding="utf-8", errors="replace"), org_ids, benign_ids
+            )
             if findings:
                 offenders[rel] = findings
     return offenders
