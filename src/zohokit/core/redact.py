@@ -46,7 +46,7 @@ DEFAULT_NAME_FIELDS = frozenset(
 REDACTED_VALUE = "[redacted]"
 
 #: Replacement for pagination tokens (whole-value, never half-masked).
-REDACTED_TOKEN = "[redacted-token]"
+REDACTED_TOKEN = "[redacted-token]"  # nosec B105 -- placeholder, not a credential
 
 #: Pagination token keys: always replaced whole with :data:`REDACTED_TOKEN`.
 TOKEN_KEYS = frozenset({"next_page_token", "previous_page_token"})
