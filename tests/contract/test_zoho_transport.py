@@ -124,6 +124,6 @@ def test_record_search_pagination_contract_with_budget_cap() -> None:
 
 @pytest.mark.contract
 def test_unverified_endpoint_requires_experimental() -> None:
-    client = _client_for({"/crm/v8/org": _cassette("crm_org.json")})
+    client = _client_for({"/crm/v8/Accounts": _cassette("crm_org.json")})
     with pytest.raises(ConnectorError, match="unverified"):
-        client.get("/crm/v8/org", endpoint="/crm/v8/org")
+        client.get("/crm/v8/Accounts", endpoint="/crm/v8/Accounts")
