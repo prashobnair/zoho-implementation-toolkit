@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -43,6 +44,87 @@ DEFAULT_NAME_FIELDS = frozenset(
 
 #: Replacement for fully-suppressed values (names, pii-tagged fields).
 REDACTED_VALUE = "[redacted]"
+
+#: Replacement for pagination tokens (whole-value, never half-masked).
+REDACTED_TOKEN = "[redacted-token]"  # nosec B105 -- placeholder, not a credential
+
+#: Pagination token keys: always replaced whole with :data:`REDACTED_TOKEN`.
+TOKEN_KEYS = frozenset({"next_page_token", "previous_page_token"})
+
+#: Location keys masked only inside user/org contexts (country may stay).
+LOCATION_KEYS = frozenset({"state", "city"})
+
+#: Dict keys whose list/dict children count as user/org context.
+LOCATION_CONTEXT_KEYS = frozenset({"org", "users"})
+
+
+def _is_location_key(normalized: str) -> bool:
+    """True for bare ``state``/``city`` (or ``*_state``/``*_city``)."""
+    return (
+        normalized in LOCATION_KEYS or normalized.endswith("_state") or normalized.endswith("_city")
+    )
+
+
+def _is_id_key(normalized: str) -> bool:
+    """True for ID-keyed fields (``id`` / ``*_id``), excluding identity PII.
+
+    ``zuid``/``zgid``/``photo_id`` stay masked even though they look like
+    IDs, so they are never treated as keepable record IDs.
+    """
+    if "zuid" in normalized or "zgid" in normalized:
+        return False
+    if "photo_id" in normalized:
+        return False
+    return normalized == "id" or normalized.endswith("_id")
+
+
+def _is_bare_long_id(value: object) -> bool:
+    """True for a bare numeric ID with >= 15 digits (string or int)."""
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, int):
+        return len(str(abs(value))) >= 15
+    if isinstance(value, str):
+        text = value.strip()
+        return len(text) >= 15 and text.isdigit()
+    return False
+
+
+def pseudonymise_org_id(raw: object) -> str:
+    """Stable pseudonym for an org ID: ``org-<first 8 hex of sha256>``.
+
+    Deterministic across files and runs (same raw ID always maps to the
+    same pseudonym); the ``org-`` prefix keeps it out of phone/email scans.
+    """
+    digest = hashlib.sha256(str(raw).encode("utf-8")).hexdigest()[:8]
+    return f"org-{digest}"
+
+
+#: ISO-8601 dates/datetimes (``2026-10-02``, ``2026-10-02T12:42:04+05:30``).
+#: Phone free-text masking must never touch these spans.
+_ISO_8601_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?"
+)
+
+
+def _mask_phones_iso_safe(text: str) -> str:
+    """Apply :data:`_PHONE_DIGITS_RE`, skipping ISO-8601 spans (overlap)."""
+    spans = [(m.start(), m.end()) for m in _ISO_8601_RE.finditer(text)]
+    if not spans:
+        return _PHONE_DIGITS_RE.sub(lambda m: mask_phone(m.group(0)), text)
+    out: list[str] = []
+    last = 0
+    for match in _PHONE_DIGITS_RE.finditer(text):
+        start, end = match.start(), match.end()
+        out.append(text[last:start])
+        if any(start < iso_end and iso_start < end for iso_start, iso_end in spans):
+            out.append(match.group(0))
+        else:
+            out.append(mask_phone(match.group(0)))
+        last = end
+    out.append(text[last:])
+    return "".join(out)
+
 
 #: Replacement for OAuth credentials (tokens, secrets, auth headers).
 REDACTED_CREDENTIAL = "[redacted-credential]"
@@ -239,7 +321,7 @@ _FINGERPRINT_SPLIT_RE = re.compile(r"(sha256:[0-9a-fA-F]{8,})")
 def _redact_segment(segment: str) -> str:
     redacted = _redact_credential_patterns(segment)
     redacted = _EMAIL_RE.sub(lambda match: mask_email(match.group(0)), redacted)
-    return _PHONE_DIGITS_RE.sub(lambda match: mask_phone(match.group(0)), redacted)
+    return _mask_phones_iso_safe(redacted)
 
 
 def redact_text(text: str) -> str:
@@ -279,18 +361,29 @@ class Redactor:
     name_fields: frozenset[str] = DEFAULT_NAME_FIELDS
     pii_fields: frozenset[str] = field(default_factory=frozenset)
 
-    def redact_value(self, key: str, value: Any, *, is_check_or_read: bool = False) -> Any:
+    def redact_value(
+        self,
+        key: str,
+        value: Any,
+        *,
+        is_check_or_read: bool = False,
+        in_location_context: bool = False,
+    ) -> Any:
         """Redact one field value by its field name."""
         lowered = key.casefold()
         normalized = _normalize_key(key)
         if lowered in CREDENTIAL_KEYS or normalized in CREDENTIAL_KEYS:
             return REDACTED_CREDENTIAL
+        if normalized in TOKEN_KEYS:
+            return None if value is None else REDACTED_TOKEN
         if lowered in self.name_fields or normalized in self.name_fields:
             return REDACTED_VALUE
         if lowered in self.pii_fields or normalized in self.pii_fields:
             return REDACTED_VALUE
         if is_structural_tz_offset(key, value):
             return value
+        if in_location_context and _is_location_key(normalized):
+            return None if value is None else REDACTED_VALUE
         kind = _pii_kind(normalized, is_check_or_read=is_check_or_read)
         if kind == "phone":
             if isinstance(value, str):
@@ -310,11 +403,13 @@ class Redactor:
             if value is None:
                 return None
             return REDACTED_VALUE
+        if _is_id_key(normalized) and _is_bare_long_id(value):
+            return value
         if isinstance(value, str):
             return redact_text(value)
-        return self.redact_obj(value)
+        return self.redact_obj(value, _in_location_context=in_location_context)
 
-    def redact_obj(self, value: Any) -> Any:
+    def redact_obj(self, value: Any, *, _in_location_context: bool = False) -> Any:
         """Recursively redact dicts, lists and strings."""
         if isinstance(value, dict):
             lowered_keys = {str(key).casefold() for key in value}
@@ -333,27 +428,69 @@ class Redactor:
                 and "status" in normalized_keys
                 and ("detail" in normalized_keys or "endpoint" in normalized_keys)
             )
+            dict_loc = _in_location_context
             redacted: dict[Any, Any] = {}
             for key, item in value.items():
                 lowered = str(key).casefold()
                 normalized = _normalize_key(key)
+                child_loc = dict_loc or (normalized in LOCATION_CONTEXT_KEYS)
                 if lowered in CREDENTIAL_KEYS or normalized in CREDENTIAL_KEYS:
                     redacted[key] = REDACTED_CREDENTIAL
                 elif (lowered == "code" or normalized == "code") and token_context:
                     redacted[key] = REDACTED_CREDENTIAL
+                elif normalized in TOKEN_KEYS:
+                    redacted[key] = None if item is None else REDACTED_TOKEN
+                elif child_loc and _is_location_key(normalized):
+                    # ``country`` intentionally stays: only state/city are
+                    # masked, and only inside user/org contexts.
+                    redacted[key] = None if item is None else REDACTED_VALUE
+                elif normalized == "org" and isinstance(item, list):
+                    slimmed: list[Any] = []
+                    for entry in item:
+                        if isinstance(entry, dict):
+                            entry_copy = dict(entry)
+                            for id_key in tuple(entry_copy):
+                                if (
+                                    _normalize_key(id_key) == "id"
+                                    and entry_copy[id_key] is not None
+                                ):
+                                    current = entry_copy[id_key]
+                                    if isinstance(current, str) and current.startswith("org-"):
+                                        pass
+                                    else:
+                                        entry_copy[id_key] = pseudonymise_org_id(current)
+                                    break
+                            slimmed.append(self.redact_obj(entry_copy, _in_location_context=True))
+                        else:
+                            slimmed.append(self.redact_obj(entry, _in_location_context=True))
+                    redacted[key] = slimmed
                 elif normalized in STRUCTURAL_KEYS:
                     # Metadata (``api_name``, ...) survives by key, but its
                     # value is still swept for free-text emails/phones.
-                    redacted[key] = (
-                        redact_text(item) if isinstance(item, str) else self.redact_obj(item)
-                    )
+                    # Bare numeric IDs >= 15 digits under ``id`` are real
+                    # Zoho record IDs (not phones) and survive intact; the
+                    # org ID never reaches here (pseudonymised above) and
+                    # zuid/zgid stay masked via the PII path.
+                    if normalized == "id" and _is_bare_long_id(item):
+                        redacted[key] = item
+                    else:
+                        redacted[key] = (
+                            redact_text(item)
+                            if isinstance(item, str)
+                            else self.redact_obj(item, _in_location_context=child_loc)
+                        )
                 else:
                     redacted[key] = self.redact_value(
-                        str(key), item, is_check_or_read=is_check_or_read
+                        str(key),
+                        item,
+                        is_check_or_read=is_check_or_read,
+                        in_location_context=child_loc,
                     )
             return redacted
         if isinstance(value, list):
-            return [self.redact_obj(item) for item in value]
+            return [
+                self.redact_obj(item, _in_location_context=_in_location_context) for item in value
+            ]
         if isinstance(value, str):
             return redact_text(value)
         return value
@@ -370,16 +507,21 @@ __all__: list[str] = [
     "CREDENTIAL_KEYS",
     "DEFAULT_NAME_FIELDS",
     "FINGERPRINT_RE",
+    "LOCATION_CONTEXT_KEYS",
+    "LOCATION_KEYS",
     "MAX_TZ_OFFSET_MS",
     "PII_KEY_SUBSTRINGS",
     "REDACTED_CREDENTIAL",
     "REDACTED_DOMAIN",
+    "REDACTED_TOKEN",
     "REDACTED_VALUE",
     "STRUCTURAL_KEYS",
     "STRUCTURAL_TZ_KEYS",
+    "TOKEN_KEYS",
     "Redactor",
     "is_structural_tz_offset",
     "mask_email",
     "mask_phone",
+    "pseudonymise_org_id",
     "redact_text",
 ]

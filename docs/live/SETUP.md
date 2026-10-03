@@ -59,7 +59,7 @@ ZOHO_CLIENT_SECRET`).
 
 ## 3. Save the three secrets for scheduled runs
 
-The nightly verification runs on GitHub, not on your machine, so it
+The weekly verification runs on GitHub, not on your machine, so it
 needs its own copy of the credentials:
 
 1. Open the repo on GitHub → Settings → Environments → `zoho-dev`.
@@ -79,7 +79,8 @@ Every live run waits for your approval — nothing runs unattended:
 
 1. Open the repo on GitHub → Actions → **live**.
 2. Pick **Run workflow** (tick `record` only when you want fresh redacted
-   cassettes recorded), or wait for the nightly schedule (02:30 IST).
+   cassettes recorded), or wait for the weekly schedule (Mondays 21:00
+   UTC == Tuesdays 02:30 IST).
 3. GitHub asks for review because the job uses the `zoho-dev`
    environment. Open the pending run and choose **Approve**.
 4. When the run finishes, download the **live-evidence** artifact
