@@ -26,17 +26,41 @@ from zohokit.connectors.zoho.guard import (
 )
 from zohokit.connectors.zoho.retry import RetryPolicy, default_timeouts
 
-#: Endpoint call status (STD-C1/C2). Every endpoint in this release is
-#: ``unverified``: hand-written from the official Zoho API docs with
-#: synthetic cassettes, and therefore gated behind ``experimental=True``.
+#: Endpoints confirmed against the live Developer Edition org
+#: (``docs/evidence/2026-10-03/``). These call without ``experimental``;
+#: every other endpoint stays ``unverified`` and keeps the gate.
+#: Single source of truth: :data:`ENDPOINT_STATUS` is derived from this
+#: set, and the ``docs/API_CONTRACTS.md`` status column is tested against
+#: it (see ``tests/contract/test_live_replay.py``).
+VERIFIED_ENDPOINTS: frozenset[str] = frozenset(
+    {
+        "/crm/v8/org",
+        "/crm/v8/settings/modules",
+        "/crm/v8/settings/fields",
+        "/crm/v8/Leads",
+        "/crm/v8/Contacts",
+        "/crm/v8/Deals",
+        "/crm/v8/users",
+    }
+)
+
+#: Endpoint call status (STD-C1/C2). Endpoints in
+#: :data:`VERIFIED_ENDPOINTS` were read live and validated; anything else
+#: is hand-written from the official Zoho API docs with synthetic
+#: cassettes, and therefore gated behind ``experimental=True``.
+_KNOWN_ENDPOINTS: tuple[str, ...] = (
+    "/crm/v8/org",
+    "/crm/v8/settings/modules",
+    "/crm/v8/settings/fields",
+    "/crm/v8/Leads",
+    "/crm/v8/Contacts",
+    "/crm/v8/Deals",
+    "/crm/v8/users",
+)
+
 ENDPOINT_STATUS: dict[str, str] = {
-    "/crm/v8/org": "unverified",
-    "/crm/v8/settings/modules": "unverified",
-    "/crm/v8/settings/fields": "unverified",
-    "/crm/v8/Leads": "unverified",
-    "/crm/v8/Contacts": "unverified",
-    "/crm/v8/Deals": "unverified",
-    "/crm/v8/users": "unverified",
+    endpoint: ("verified" if endpoint in VERIFIED_ENDPOINTS else "unverified")
+    for endpoint in _KNOWN_ENDPOINTS
 }
 
 _EXPERIMENTAL_WARNING = (
@@ -263,4 +287,4 @@ class ZohoClient:
         return self._budget.remaining
 
 
-__all__: list[str] = ["ENDPOINT_STATUS", "ZohoClient"]
+__all__: list[str] = ["ENDPOINT_STATUS", "VERIFIED_ENDPOINTS", "ZohoClient"]

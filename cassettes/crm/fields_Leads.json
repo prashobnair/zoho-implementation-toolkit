@@ -1,0 +1,323 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/fields?module=Leads"
+  },
+  "response": {
+    "body": {
+      "fields": [
+        {
+          "api_name": "Address",
+          "data_type": "textarea",
+          "field_label": "Address",
+          "json_type": "string",
+          "length": 2000,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Annual_Revenue",
+          "data_type": "currency",
+          "field_label": "Annual Revenue",
+          "json_type": "double",
+          "length": 16,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Change_Log_Time__s",
+          "data_type": "datetime",
+          "field_label": "Change Log Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "City",
+          "data_type": "text",
+          "field_label": "Address - City",
+          "json_type": "string",
+          "length": 255,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Company",
+          "data_type": "text",
+          "field_label": "Company",
+          "json_type": "string",
+          "length": 200,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Converted_Account",
+          "data_type": "lookup",
+          "field_label": "Converted Account",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Accounts"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Converted_Contact",
+          "data_type": "lookup",
+          "field_label": "Converted Contact",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Contacts"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Converted_Date_Time",
+          "data_type": "datetime",
+          "field_label": "Converted Date Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Converted_Deal",
+          "data_type": "lookup",
+          "field_label": "Converted Deal",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Deals"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Converted__s",
+          "data_type": "boolean",
+          "field_label": "Is Converted",
+          "json_type": "boolean",
+          "length": 5,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Coordinates",
+          "data_type": "textarea",
+          "field_label": "Address - Coordinates",
+          "json_type": "string",
+          "length": 255,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Country",
+          "data_type": "picklist",
+          "field_label": "Address - Country / Region",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "-None-"
+            },
+            {
+              "actual_value": "Afghanistan"
+            },
+            {
+              "actual_value": "Aland Islands"
+            },
+            {
+              "actual_value": "Albania"
+            },
+            {
+              "actual_value": "Algeria"
+            },
+            {
+              "actual_value": "American Samoa"
+            },
+            {
+              "actual_value": "Andorra"
+            },
+            {
+              "actual_value": "Angola"
+            },
+            {
+              "actual_value": "Anguilla"
+            },
+            {
+              "actual_value": "Antarctica"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_By",
+          "data_type": "ownerlookup",
+          "field_label": "Created By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_Time",
+          "data_type": "datetime",
+          "field_label": "Created Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Description",
+          "data_type": "textarea",
+          "field_label": "Description",
+          "json_type": "string",
+          "length": 32000,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Designation",
+          "data_type": "text",
+          "field_label": "Title",
+          "json_type": "string",
+          "length": 100,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Email",
+          "data_type": "email",
+          "field_label": "Email",
+          "json_type": "string",
+          "length": 100,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Email_Opt_Out",
+          "data_type": "boolean",
+          "field_label": "Email Opt Out",
+          "json_type": "boolean",
+          "length": 5,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Enrich_Status__s",
+          "data_type": "picklist",
+          "field_label": "Enrich Status",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "Available"
+            },
+            {
+              "actual_value": "Data not found"
+            },
+            {
+              "actual_value": "Enriched"
+            }
+          ],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "First_Name",
+          "data_type": "text",
+          "field_label": "First Name",
+          "json_type": "string",
+          "length": 40,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Last_Name",
+          "data_type": "text",
+          "field_label": "Last Name",
+          "json_type": "string",
+          "length": 80,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": true
+        },
+        {
+          "api_name": "Modified_By",
+          "data_type": "ownerlookup",
+          "field_label": "Modified By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Modified_Time",
+          "data_type": "datetime",
+          "field_label": "Modified Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Owner",
+          "data_type": "ownerlookup",
+          "field_label": "Lead Owner",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "id",
+          "data_type": "bigint",
+          "field_label": "Record Id",
+          "json_type": "string",
+          "length": 18,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        }
+      ]
+    },
+    "headers": {
+      "content-type": "application/json;charset=UTF-8"
+    },
+    "status": 200
+  }
+}

@@ -165,7 +165,7 @@ def test_doctor_over_privileged_scope_fails() -> None:
     assert doctor_exit_code(checks) == 3
 
 
-def test_doctor_without_experimental_fails_org_read() -> None:
+def test_doctor_verified_org_read_needs_no_experimental() -> None:
     checks = run_doctor(
         _profile(),
         client_factory=_doctor_client,
@@ -174,9 +174,8 @@ def test_doctor_without_experimental_fails_org_read() -> None:
         experimental=False,
     )
     org = next(c for c in checks if c.name == "org_identity")
-    assert org.status == "fail"
-    assert "unverified" in org.detail
-    assert doctor_exit_code(checks) == 3
+    assert org.status == "pass"
+    assert doctor_exit_code(checks) == 0
 
 
 def test_doctor_exhausted_budget_fails(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1,0 +1,5 @@
+# Benign numeric IDs that are workflow metadata, not PII (one per line).
+# The cassette-scan job skips a phone-like digit run only when the run's
+# digits exactly equal a listed ID; every other digit run is scanned
+# normally. Current entries: owner-approved live verification run IDs.
+37120123276

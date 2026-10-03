@@ -19,7 +19,7 @@ from zohokit.connectors.zoho.auth import (
 )
 from zohokit.connectors.zoho.budget import DEFAULT_MAX_API_CALLS, CallBudget
 from zohokit.connectors.zoho.cache import DEFAULT_TTL_SECONDS, ResponseCache, cache_dir
-from zohokit.connectors.zoho.client import ENDPOINT_STATUS, ZohoClient
+from zohokit.connectors.zoho.client import ENDPOINT_STATUS, VERIFIED_ENDPOINTS, ZohoClient
 from zohokit.connectors.zoho.dc import DC_TABLE, TOKEN_PATH, DataCentre, data_centre, token_url
 from zohokit.connectors.zoho.doctor import (
     CheckResult,
@@ -101,6 +101,7 @@ __all__: list[str] = [
     "RECORD_FIELDS",
     "REFRESH_TOKEN_ENV",
     "TOKEN_PATH",
+    "VERIFIED_ENDPOINTS",
     "AsyncGetOnlyTransport",
     "AuthTransport",
     "CallBudget",
