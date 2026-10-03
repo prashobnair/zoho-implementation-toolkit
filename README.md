@@ -49,6 +49,7 @@ uv run zohokit doctor --live --profile dev-in --experimental
 
 A weekly `live` workflow re-runs the checklist plus smoke reads against
 the Developer Edition org and uploads redacted evidence as an artifact.
+Verified against a Zoho CRM Developer Edition (IN) on 2026-10-03; weekly read-only checks ([evidence](docs/evidence/2026-10-03/README.md)).
 Setup (Self Client, scopes, secrets, approving a run):
 [docs/live/SETUP.md](docs/live/SETUP.md).
 
