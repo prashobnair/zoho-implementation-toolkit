@@ -1,0 +1,556 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/modules"
+  },
+  "response": {
+    "body": {
+      "modules": [
+        {
+          "api_name": "Accounts",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000041",
+          "module_name": "Accounts",
+          "plural_label": "Accounts",
+          "singular_label": "Account",
+          "viewable": true
+        },
+        {
+          "api_name": "Actions_Performed",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000087",
+          "module_name": "Actions Performed",
+          "plural_label": "Actions Performed",
+          "singular_label": "Actions Performed",
+          "viewable": true
+        },
+        {
+          "api_name": "Activities",
+          "api_supported": false,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000045",
+          "module_name": "Activities",
+          "plural_label": "Activities",
+          "singular_label": "Activity",
+          "viewable": false
+        },
+        {
+          "api_name": "Analytics",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000049",
+          "module_name": "Dashboards",
+          "plural_label": "Analytics",
+          "singular_label": "Analytics",
+          "viewable": true
+        },
+        {
+          "api_name": "Approvals",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000462042",
+          "module_name": "Approvals",
+          "plural_label": "My Jobs",
+          "singular_label": "My Jobs",
+          "viewable": true
+        },
+        {
+          "api_name": "Attachments",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000111",
+          "module_name": "Attachments",
+          "plural_label": "Attachments",
+          "singular_label": "Attachment",
+          "viewable": true
+        },
+        {
+          "api_name": "CalendarBookings__s",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000464048",
+          "module_name": "CalendarBookings",
+          "plural_label": "Calendar Bookings",
+          "singular_label": "Calendar Booking",
+          "viewable": false
+        },
+        {
+          "api_name": "Calls",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000067",
+          "module_name": "Calls",
+          "plural_label": "Calls",
+          "singular_label": "Call",
+          "viewable": true
+        },
+        {
+          "api_name": "Campaigns",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000055",
+          "module_name": "Campaigns",
+          "plural_label": "Campaigns",
+          "singular_label": "Campaign",
+          "viewable": true
+        },
+        {
+          "api_name": "Cases",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000093",
+          "module_name": "Cases",
+          "plural_label": "Cases",
+          "singular_label": "Case",
+          "viewable": true
+        },
+        {
+          "api_name": "Contacts",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000039",
+          "module_name": "Contacts",
+          "plural_label": "Contacts",
+          "singular_label": "Contact",
+          "viewable": true
+        },
+        {
+          "api_name": "DealHistory",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "field_tracker",
+          "id": "1455423000000039001",
+          "module_name": "DealHistory",
+          "plural_label": "Stage History",
+          "singular_label": "Stage History",
+          "viewable": true
+        },
+        {
+          "api_name": "Deals",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000043",
+          "module_name": "Deals",
+          "plural_label": "Deals",
+          "singular_label": "Deal",
+          "viewable": true
+        },
+        {
+          "api_name": "Documents",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000081",
+          "module_name": "Documents",
+          "plural_label": "Documents",
+          "singular_label": "Documents",
+          "viewable": true
+        },
+        {
+          "api_name": "Email_Analytics",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000114033",
+          "module_name": "Email Analytics",
+          "plural_label": "Email Analytics",
+          "singular_label": "Email Analytics",
+          "viewable": false
+        },
+        {
+          "api_name": "Email_Drafts__s",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000414251",
+          "module_name": "EmailDrafts",
+          "plural_label": "Email Drafts",
+          "singular_label": "Email Draft",
+          "viewable": false
+        },
+        {
+          "api_name": "Email_Sentiment",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000060001",
+          "module_name": "EmailSentiment",
+          "plural_label": "EmailSentiment",
+          "singular_label": "EmailSentiment",
+          "viewable": false
+        },
+        {
+          "api_name": "Email_Template_Analytics",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000114132",
+          "module_name": "Email Template Analytics",
+          "plural_label": "Email Template Analytics",
+          "singular_label": "Email Template Analytics",
+          "viewable": false
+        },
+        {
+          "api_name": "Email_Template__s",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000345031",
+          "module_name": "EmailTemplate",
+          "plural_label": "Email Templates",
+          "singular_label": "Email Template",
+          "viewable": false
+        },
+        {
+          "api_name": "Emails",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000113",
+          "module_name": "Emails",
+          "plural_label": "Emails",
+          "singular_label": "Email",
+          "viewable": false
+        },
+        {
+          "api_name": "Events",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000065",
+          "module_name": "Meetings",
+          "plural_label": "Meetings",
+          "singular_label": "Meeting",
+          "viewable": true
+        },
+        {
+          "api_name": "Feeds",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000053",
+          "module_name": "Feeds",
+          "plural_label": "Feeds",
+          "singular_label": "Feeds",
+          "viewable": true
+        },
+        {
+          "api_name": "Forecast_Groups",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000173027",
+          "module_name": "Forecast Groups",
+          "plural_label": "Forecast Groups",
+          "singular_label": "Forecast Group",
+          "viewable": false
+        },
+        {
+          "api_name": "Forecast_Items",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000173019",
+          "module_name": "Forecast Items",
+          "plural_label": "Forecast Items",
+          "singular_label": "Forecast Item",
+          "viewable": false
+        },
+        {
+          "api_name": "Forecast_Quotas",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000173017",
+          "module_name": "Forecast Quotas",
+          "plural_label": "Forecast Targets",
+          "singular_label": "Forecast Target",
+          "viewable": false
+        },
+        {
+          "api_name": "Forecasts",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000073",
+          "module_name": "Forecasts",
+          "plural_label": "Forecasts",
+          "singular_label": "Forecast",
+          "viewable": true
+        },
+        {
+          "api_name": "Functions__s",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000451094",
+          "module_name": "Functions",
+          "plural_label": "Functions",
+          "singular_label": "Function",
+          "viewable": true
+        },
+        {
+          "api_name": "Home",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000035",
+          "module_name": "Home",
+          "plural_label": "Home",
+          "singular_label": "Home",
+          "viewable": true
+        },
+        {
+          "api_name": "Invoiced_Items",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "subform",
+          "id": "1455423000000098255",
+          "module_name": "InvoicedItems",
+          "plural_label": "Invoiced Items",
+          "singular_label": "Invoiced Items",
+          "viewable": true
+        },
+        {
+          "api_name": "Invoices",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000109",
+          "module_name": "Invoices",
+          "plural_label": "Invoices",
+          "singular_label": "Invoice",
+          "viewable": true
+        },
+        {
+          "api_name": "Leads",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000037",
+          "module_name": "Leads",
+          "plural_label": "Leads",
+          "singular_label": "Lead",
+          "viewable": true
+        },
+        {
+          "api_name": "Locking_Information__s",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000236001",
+          "module_name": "LockingInformation",
+          "plural_label": "Locking Information",
+          "singular_label": "Locking Information",
+          "viewable": false
+        },
+        {
+          "api_name": "Notes",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000069",
+          "module_name": "Notes",
+          "plural_label": "Notes",
+          "singular_label": "Note",
+          "viewable": true
+        },
+        {
+          "api_name": "Ordered_Items",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "subform",
+          "id": "1455423000000097419",
+          "module_name": "OrderedItems",
+          "plural_label": "Ordered Items",
+          "singular_label": "Ordered Items",
+          "viewable": true
+        },
+        {
+          "api_name": "Price_Books",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000101",
+          "module_name": "PriceBooks",
+          "plural_label": "Price Books",
+          "singular_label": "Price Book",
+          "viewable": true
+        },
+        {
+          "api_name": "Products",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000097",
+          "module_name": "Products",
+          "plural_label": "Products",
+          "singular_label": "Product",
+          "viewable": true
+        },
+        {
+          "api_name": "Purchase_Items",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "subform",
+          "id": "1455423000000097837",
+          "module_name": "PurchaseItems",
+          "plural_label": "Purchase Items",
+          "singular_label": "Purchase Items",
+          "viewable": true
+        },
+        {
+          "api_name": "Purchase_Orders",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000107",
+          "module_name": "PurchaseOrders",
+          "plural_label": "Purchase Orders",
+          "singular_label": "Purchase Order",
+          "viewable": true
+        },
+        {
+          "api_name": "Quoted_Items",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "subform",
+          "id": "1455423000000097001",
+          "module_name": "QuotedItems",
+          "plural_label": "Quoted Items",
+          "singular_label": "Quoted Items",
+          "viewable": true
+        },
+        {
+          "api_name": "Quotes",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000103",
+          "module_name": "Quotes",
+          "plural_label": "Quotes",
+          "singular_label": "Quote",
+          "viewable": true
+        },
+        {
+          "api_name": "Reports",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000047",
+          "module_name": "Reports",
+          "plural_label": "Reports",
+          "singular_label": "Report",
+          "viewable": true
+        },
+        {
+          "api_name": "SalesInbox",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000051",
+          "module_name": "SalesInbox",
+          "plural_label": "SalesInbox",
+          "singular_label": "SalesInbox",
+          "viewable": true
+        },
+        {
+          "api_name": "Sales_Orders",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000105",
+          "module_name": "SalesOrders",
+          "plural_label": "Sales Orders",
+          "singular_label": "Sales Order",
+          "viewable": true
+        },
+        {
+          "api_name": "Social",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000083",
+          "module_name": "Social",
+          "plural_label": "Social",
+          "singular_label": "Social",
+          "viewable": true
+        },
+        {
+          "api_name": "Solutions",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000095",
+          "module_name": "Solutions",
+          "plural_label": "Solutions",
+          "singular_label": "Solution",
+          "viewable": true
+        },
+        {
+          "api_name": "Tasks",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000063",
+          "module_name": "Tasks",
+          "plural_label": "Tasks",
+          "singular_label": "Task",
+          "viewable": true
+        },
+        {
+          "api_name": "Unknown__s",
+          "api_supported": false,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000464049",
+          "module_name": "Unknown",
+          "plural_label": "Unknown",
+          "singular_label": "Unknown",
+          "viewable": false
+        },
+        {
+          "api_name": "Vendors",
+          "api_supported": true,
+          "editable": true,
+          "generated_type": "default",
+          "id": "1455423000000000099",
+          "module_name": "Vendors",
+          "plural_label": "Vendors",
+          "singular_label": "Vendor",
+          "viewable": true
+        },
+        {
+          "api_name": "Visits",
+          "api_supported": true,
+          "editable": false,
+          "generated_type": "default",
+          "id": "1455423000000000085",
+          "module_name": "Visits",
+          "plural_label": "Visits",
+          "singular_label": "Visit",
+          "viewable": true
+        }
+      ]
+    },
+    "headers": {
+      "content-type": "application/json;charset=UTF-8"
+    },
+    "status": 200
+  }
+}

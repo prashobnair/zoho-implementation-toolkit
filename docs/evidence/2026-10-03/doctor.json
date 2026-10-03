@@ -1,0 +1,49 @@
+{
+  "checks": [
+    {
+      "detail": "DC 'in' maps to a known accounts host",
+      "name": "dc_reachability",
+      "status": "pass"
+    },
+    {
+      "detail": "refresh token exchanged",
+      "name": "token_refresh",
+      "status": "pass"
+    },
+    {
+      "detail": "org sha256:ce40ff0a2b1339c2",
+      "name": "org_identity",
+      "status": "pass"
+    },
+    {
+      "detail": "server date header seen (Sat, 03 Oct 2026 12:20:53 GMT)",
+      "name": "clock_skew",
+      "status": "pass"
+    },
+    {
+      "detail": "read scopes cover CRM checks",
+      "name": "scope_sufficiency",
+      "status": "pass"
+    },
+    {
+      "detail": "199 of 200 calls remain",
+      "name": "budget",
+      "status": "pass"
+    },
+    {
+      "detail": "environment is developer_edition",
+      "name": "environment_type",
+      "status": "pass"
+    }
+  ],
+  "dc": "in",
+  "environment": "developer_edition",
+  "exit_code": 0,
+  "profile": "dev-in",
+  "scopes": [
+    "ZohoCRM.modules.READ",
+    "ZohoCRM.org.READ",
+    "ZohoCRM.settings.READ",
+    "ZohoCRM.users.READ"
+  ]
+}

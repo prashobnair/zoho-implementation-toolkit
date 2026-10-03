@@ -20,9 +20,9 @@ htmlcov/
 # Docs build
 site/
 
-# Reports / local runs
+# Reports / local runs (root only: docs/evidence/ holds committed redacted bundles)
 out/
-evidence/
+/evidence/
 .zohokit/
 .scratch/
 *.token

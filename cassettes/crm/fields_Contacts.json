@@ -1,0 +1,313 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/fields?module=Contacts"
+  },
+  "response": {
+    "body": {
+      "fields": [
+        {
+          "api_name": "Account_Name",
+          "data_type": "lookup",
+          "field_label": "Account Name",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Accounts"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Assistant",
+          "data_type": "text",
+          "field_label": "Assistant",
+          "json_type": "string",
+          "length": 50,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Asst_Phone",
+          "data_type": "phone",
+          "field_label": "Asst Phone",
+          "json_type": "string",
+          "length": 30,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Change_Log_Time__s",
+          "data_type": "datetime",
+          "field_label": "Change Log Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_By",
+          "data_type": "ownerlookup",
+          "field_label": "Created By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_Time",
+          "data_type": "datetime",
+          "field_label": "Created Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Date_of_Birth",
+          "data_type": "date",
+          "field_label": "Date of Birth",
+          "json_type": "string",
+          "length": 20,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Department",
+          "data_type": "text",
+          "field_label": "Department",
+          "json_type": "string",
+          "length": 50,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Description",
+          "data_type": "textarea",
+          "field_label": "Description",
+          "json_type": "string",
+          "length": 32000,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Email",
+          "data_type": "email",
+          "field_label": "Email",
+          "json_type": "string",
+          "length": 100,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Email_Opt_Out",
+          "data_type": "boolean",
+          "field_label": "Email Opt Out",
+          "json_type": "boolean",
+          "length": 5,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Enrich_Status__s",
+          "data_type": "picklist",
+          "field_label": "Enrich Status",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "Available"
+            },
+            {
+              "actual_value": "Data not found"
+            },
+            {
+              "actual_value": "Enriched"
+            }
+          ],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Fax",
+          "data_type": "text",
+          "field_label": "Fax",
+          "json_type": "string",
+          "length": 30,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "First_Name",
+          "data_type": "text",
+          "field_label": "First Name",
+          "json_type": "string",
+          "length": 40,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Full_Name",
+          "data_type": "text",
+          "field_label": "Full Name",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Home_Phone",
+          "data_type": "phone",
+          "field_label": "Home Phone",
+          "json_type": "string",
+          "length": 30,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Last_Activity_Time",
+          "data_type": "datetime",
+          "field_label": "Last Activity Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Last_Enriched_Time__s",
+          "data_type": "datetime",
+          "field_label": "Last Enriched Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Last_Name",
+          "data_type": "text",
+          "field_label": "Last Name",
+          "json_type": "string",
+          "length": 80,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": true
+        },
+        {
+          "api_name": "Lead_Source",
+          "data_type": "picklist",
+          "field_label": "Lead Source",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "-None-"
+            },
+            {
+              "actual_value": "Advertisement"
+            },
+            {
+              "actual_value": "Chat"
+            },
+            {
+              "actual_value": "Cold Call"
+            },
+            {
+              "actual_value": "Employee Referral"
+            },
+            {
+              "actual_value": "External Referral"
+            },
+            {
+              "actual_value": "Facebook"
+            },
+            {
+              "actual_value": "OnlineStore"
+            },
+            {
+              "actual_value": "Partner"
+            },
+            {
+              "actual_value": "Public Relations"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Locked__s",
+          "data_type": "boolean",
+          "field_label": "Locked",
+          "json_type": "boolean",
+          "length": 5,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Modified_By",
+          "data_type": "ownerlookup",
+          "field_label": "Modified By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Modified_Time",
+          "data_type": "datetime",
+          "field_label": "Modified Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Owner",
+          "data_type": "ownerlookup",
+          "field_label": "Contact Owner",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "id",
+          "data_type": "bigint",
+          "field_label": "Record Id",
+          "json_type": "string",
+          "length": 18,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        }
+      ]
+    },
+    "headers": {
+      "content-type": "application/json;charset=UTF-8"
+    },
+    "status": 200
+  }
+}

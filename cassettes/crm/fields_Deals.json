@@ -1,0 +1,382 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/fields?module=Deals"
+  },
+  "response": {
+    "body": {
+      "fields": [
+        {
+          "api_name": "Account_Name",
+          "data_type": "lookup",
+          "field_label": "Account Name",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Accounts"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Amount",
+          "data_type": "currency",
+          "field_label": "Amount",
+          "json_type": "double",
+          "length": 16,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Campaign_Source",
+          "data_type": "lookup",
+          "field_label": "Campaign Source",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Campaigns"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Change_Log_Time__s",
+          "data_type": "datetime",
+          "field_label": "Change Log Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Closing_Date",
+          "data_type": "date",
+          "field_label": "Closing Date",
+          "json_type": "string",
+          "length": 20,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Contact_Name",
+          "data_type": "lookup",
+          "field_label": "Contact Name",
+          "json_type": "jsonobject",
+          "length": 120,
+          "lookup": {
+            "module": {
+              "api_name": "Contacts"
+            }
+          },
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_By",
+          "data_type": "ownerlookup",
+          "field_label": "Created By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Created_Time",
+          "data_type": "datetime",
+          "field_label": "Created Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Deal_Name",
+          "data_type": "text",
+          "field_label": "Deal Name",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": true
+        },
+        {
+          "api_name": "Description",
+          "data_type": "textarea",
+          "field_label": "Description",
+          "json_type": "string",
+          "length": 32000,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Expected_Revenue",
+          "data_type": "currency",
+          "field_label": "Expected Revenue",
+          "json_type": "double",
+          "length": 16,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Last_Activity_Time",
+          "data_type": "datetime",
+          "field_label": "Last Activity Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Lead_Conversion_Time",
+          "data_type": "integer",
+          "field_label": "Lead Conversion Time",
+          "json_type": "integer",
+          "length": 9,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Lead_Source",
+          "data_type": "picklist",
+          "field_label": "Lead Source",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "-None-"
+            },
+            {
+              "actual_value": "Advertisement"
+            },
+            {
+              "actual_value": "Chat"
+            },
+            {
+              "actual_value": "Cold Call"
+            },
+            {
+              "actual_value": "Employee Referral"
+            },
+            {
+              "actual_value": "External Referral"
+            },
+            {
+              "actual_value": "OnlineStore"
+            },
+            {
+              "actual_value": "Partner"
+            },
+            {
+              "actual_value": "Public Relations"
+            },
+            {
+              "actual_value": "Sales Mail Alias"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Locked__s",
+          "data_type": "boolean",
+          "field_label": "Locked",
+          "json_type": "boolean",
+          "length": 5,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Modified_By",
+          "data_type": "ownerlookup",
+          "field_label": "Modified By",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Modified_Time",
+          "data_type": "datetime",
+          "field_label": "Modified Time",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Next_Step",
+          "data_type": "text",
+          "field_label": "Next Step",
+          "json_type": "string",
+          "length": 100,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Overall_Sales_Duration",
+          "data_type": "integer",
+          "field_label": "Overall Sales Duration",
+          "json_type": "integer",
+          "length": 9,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Owner",
+          "data_type": "ownerlookup",
+          "field_label": "Deal Owner",
+          "json_type": "jsonobject",
+          "length": 120,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Probability",
+          "data_type": "integer",
+          "field_label": "Probability (%)",
+          "json_type": "integer",
+          "length": 3,
+          "pick_list_values": [],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Reason_For_Loss__s",
+          "data_type": "picklist",
+          "field_label": "Reason For Loss",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "-None-"
+            },
+            {
+              "actual_value": "Competition"
+            },
+            {
+              "actual_value": "Expectation Mismatch"
+            },
+            {
+              "actual_value": "Future Interest"
+            },
+            {
+              "actual_value": "Lack of response"
+            },
+            {
+              "actual_value": "Missed Follow Ups"
+            },
+            {
+              "actual_value": "Other"
+            },
+            {
+              "actual_value": "Price"
+            },
+            {
+              "actual_value": "Unqualified Customer"
+            },
+            {
+              "actual_value": "Wrong Target"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Record_Status__s",
+          "data_type": "picklist",
+          "field_label": "Record Status",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "Available"
+            },
+            {
+              "actual_value": "Draft"
+            },
+            {
+              "actual_value": "Trash"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": false
+        },
+        {
+          "api_name": "Stage",
+          "data_type": "picklist",
+          "field_label": "Stage",
+          "json_type": "string",
+          "length": 120,
+          "pick_list_values": [
+            {
+              "actual_value": "Closed Lost"
+            },
+            {
+              "actual_value": "Closed Lost to Competition"
+            },
+            {
+              "actual_value": "Closed Won"
+            },
+            {
+              "actual_value": "Id. Decision Makers"
+            },
+            {
+              "actual_value": "Needs Analysis"
+            },
+            {
+              "actual_value": "Negotiation/Review"
+            },
+            {
+              "actual_value": "Proposal/Price Quote"
+            },
+            {
+              "actual_value": "Qualification"
+            },
+            {
+              "actual_value": "Value Proposition"
+            }
+          ],
+          "read_only": false,
+          "system_mandatory": true
+        },
+        {
+          "api_name": "id",
+          "data_type": "bigint",
+          "field_label": "Record Id",
+          "json_type": "string",
+          "length": 18,
+          "pick_list_values": [],
+          "read_only": true,
+          "system_mandatory": false
+        }
+      ]
+    },
+    "headers": {
+      "content-type": "application/json;charset=UTF-8"
+    },
+    "status": 200
+  }
+}
