@@ -62,6 +62,23 @@ _ZOHO_TOKEN_RE = re.compile(r"\b1000\.[0-9a-fA-F]{2,}\.[0-9a-fA-F]{2,}\b")
 
 _REDACTED_CREDENTIAL = "[redacted-credential]"
 
+#: Numeric time-zone offsets in milliseconds are structural, not PII: the
+#: lead-verified recording run showed ``"offset": 19800000`` on a CRM users
+#: entry (19,800,000 ms = IST, UTC+5:30). Users endpoint docs (doc URL as
+#: recorded in ``docs/API_CONTRACTS.md``):
+#: https://www.zoho.com/crm/developer/docs/api/v8/get-users.html
+#: Narrow allowlist: only the ``offset`` key (no other key could be
+#: justified without fetching the Zoho docs, which this repo never does),
+#: and only when the value is an integer (a JSON number or an all-digit
+#: string with an optional sign) within +/-50400000 (+/-14 h in ms).
+#: Anything else under ``offset`` is scanned normally.
+_STRUCTURAL_TZ_KEYS = frozenset({"offset"})
+_MAX_TZ_OFFSET_MS = 50400000
+_STRUCTURAL_TZ_VALUE_RE = re.compile(
+    r"\"(" + "|".join(sorted(_STRUCTURAL_TZ_KEYS)) + r")\"\s*:\s*(-?)(?:\"([0-9]+)\"|([0-9]+))",
+    re.IGNORECASE,
+)
+
 _CREDENTIAL_KEYS = (
     "access_token",
     "refresh_token",
@@ -94,6 +111,22 @@ def load_org_ids(path: Path = ORG_IDS_FILE) -> list[str]:
 _KEY_OF_LINE_RE = re.compile(r'"([^"]+)"\s*:')
 
 
+def _structural_tz_spans(line: str) -> list[tuple[int, int]]:
+    """Spans of in-range ``"offset": <int>`` values on one line.
+
+    Only exact integers within ``_MAX_TZ_OFFSET_MS`` count: the digit span
+    itself is returned so a phone-like match fully inside it can be skipped
+    while anything else on the line is scanned normally.
+    """
+    spans: list[tuple[int, int]] = []
+    for match in _STRUCTURAL_TZ_VALUE_RE.finditer(line):
+        digits = match.group(3) if match.group(3) is not None else match.group(4)
+        if digits is not None and abs(int(f"{match.group(2)}{digits}")) <= _MAX_TZ_OFFSET_MS:
+            start = match.start(3) if match.group(3) is not None else match.start(4)
+            spans.append((start, start + len(digits)))
+    return spans
+
+
 def key_of_line(line: str) -> str:
     """JSON key for a scanned line (``unknown`` when it has no ``"key":``).
 
@@ -117,10 +150,13 @@ def scan_text(text: str, org_ids: list[str]) -> list[str]:
     findings: list[str] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
         key = key_of_line(line)
+        tz_spans = _structural_tz_spans(line)
         for match in _EMAIL_RE.finditer(line):
             if match.group(1).casefold() != _PLACEHOLDER_DOMAIN:
                 findings.append(f"line {lineno}: unredacted email [key: {key}]")
         for match in _PHONE_RE.finditer(line):
+            if any(start <= match.start() and match.end() <= end for start, end in tz_spans):
+                continue
             digits = re.sub(r"\D", "", match.group(0))
             if digits.startswith("555"):
                 continue

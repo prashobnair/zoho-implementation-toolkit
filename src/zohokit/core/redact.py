@@ -108,6 +108,43 @@ PII_KEY_SUBSTRINGS = (
 #:   them, as already designed).
 STRUCTURAL_KEYS = frozenset({"api_name", "api_names", "module_name", "id"})
 
+#: Numeric time-zone offsets in milliseconds are structural, not PII: the
+#: lead-verified recording run showed ``"offset": 19800000`` on a CRM users
+#: entry (19,800,000 ms = IST, UTC+5:30). Users endpoint docs (doc URL as
+#: recorded in ``docs/API_CONTRACTS.md``):
+#: https://www.zoho.com/crm/developer/docs/api/v8/get-users.html
+#: Narrow allowlist: only the ``offset`` key (no other key could be
+#: justified without fetching the Zoho docs, which this repo never does),
+#: and only when the value is an integer (a JSON number or an all-digit
+#: string with an optional sign) within +/-50400000 (+/-14 h in ms).
+#: Mirrored in ``scripts/cassette_scan.py`` (which stays import-free), so
+#: the recorder (redacts before write) and the scan gate agree.
+STRUCTURAL_TZ_KEYS = frozenset({"offset"})
+
+#: Largest valid time-zone offset: +/-14 h in milliseconds.
+MAX_TZ_OFFSET_MS = 50400000
+
+_TZ_OFFSET_STR_RE = re.compile(r"[-+]?[0-9]+")
+
+
+def is_structural_tz_offset(key: str, value: object) -> bool:
+    """True for an in-range ``offset`` integer (number or digit string).
+
+    Anything else — out-of-range numbers, non-numeric strings, other keys —
+    returns False so the normal redaction/scan rules still apply.
+    """
+    if _normalize_key(key) not in STRUCTURAL_TZ_KEYS or isinstance(value, bool):
+        return False
+    if isinstance(value, int):
+        return abs(value) <= MAX_TZ_OFFSET_MS
+    if isinstance(value, str):
+        text = value.strip()
+        if _TZ_OFFSET_STR_RE.fullmatch(text) is None:
+            return False
+        return abs(int(text)) <= MAX_TZ_OFFSET_MS
+    return False
+
+
 #: Keys whose presence marks a dict as a token exchange: a sibling
 #: ``code`` there is the OAuth grant code, not a finding code.
 _TOKEN_CONTEXT_KEYS = frozenset(
@@ -252,6 +289,8 @@ class Redactor:
             return REDACTED_VALUE
         if lowered in self.pii_fields or normalized in self.pii_fields:
             return REDACTED_VALUE
+        if is_structural_tz_offset(key, value):
+            return value
         kind = _pii_kind(normalized, is_check_or_read=is_check_or_read)
         if kind == "phone":
             if isinstance(value, str):
@@ -331,12 +370,15 @@ __all__: list[str] = [
     "CREDENTIAL_KEYS",
     "DEFAULT_NAME_FIELDS",
     "FINGERPRINT_RE",
+    "MAX_TZ_OFFSET_MS",
     "PII_KEY_SUBSTRINGS",
     "REDACTED_CREDENTIAL",
     "REDACTED_DOMAIN",
     "REDACTED_VALUE",
     "STRUCTURAL_KEYS",
+    "STRUCTURAL_TZ_KEYS",
     "Redactor",
+    "is_structural_tz_offset",
     "mask_email",
     "mask_phone",
     "redact_text",
