@@ -2,7 +2,7 @@
 
 With no arguments every ``*.json`` cassette under the scanned trees is
 redacted in place. Pass explicit directories to redact those trees
-instead (the nightly live job runs
+instead (the weekly live job runs
 ``python scripts/scrub_cassettes.py cassettes evidence`` over the redacted
 evidence bundle before the scan)::
 

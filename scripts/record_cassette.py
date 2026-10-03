@@ -35,6 +35,130 @@ from zohokit.core.redact import Redactor, redact_text  # noqa: E402
 #: is needed to replay a cassette.
 ALLOWED_HEADERS = frozenset({"content-type"})
 
+#: Deterministic slimming for large metadata cassettes (cassette README).
+#: Fields endpoints keep at most 25 fields per module (sorted by
+#: ``api_name``, always including mandatory/system fields); each field
+#: keeps only the listed properties. Modules keep only the listed keys.
+MAX_SLIM_FIELDS = 25
+MAX_PICKLIST_VALUES = 10
+FIELD_PRIORITY_API_NAMES = frozenset(
+    {
+        "id",
+        "Owner",
+        "Created_By",
+        "Created_Time",
+        "Modified_Time",
+        "Modified_By",
+        "Last_Name",
+        "First_Name",
+        "Deal_Name",
+    }
+)
+ALLOWED_FIELD_KEYS = frozenset(
+    {
+        "api_name",
+        "field_label",
+        "data_type",
+        "length",
+        "read_only",
+        "system_mandatory",
+        "json_type",
+    }
+)
+ALLOWED_MODULE_KEYS = frozenset(
+    {
+        "api_name",
+        "module_name",
+        "singular_label",
+        "plural_label",
+        "api_supported",
+        "editable",
+        "viewable",
+        "generated_type",
+        "id",
+    }
+)
+
+
+def slim_field(field: dict) -> dict:
+    """Keep only the committable properties of one field definition."""
+    out: dict = {}
+    for key in (
+        "api_name",
+        "field_label",
+        "data_type",
+        "length",
+        "read_only",
+        "system_mandatory",
+        "json_type",
+    ):
+        if key in field:
+            out[key] = field[key]
+    lookup = field.get("lookup")
+    if isinstance(lookup, dict):
+        module = lookup.get("module")
+        if isinstance(module, dict) and "api_name" in module:
+            out["lookup"] = {"module": {"api_name": module["api_name"]}}
+    pick_list = field.get("pick_list_values")
+    if isinstance(pick_list, list):
+        kept: list[dict] = []
+        for entry in pick_list:
+            if isinstance(entry, dict) and "actual_value" in entry:
+                kept.append({"actual_value": entry["actual_value"]})
+            elif isinstance(entry, str):
+                kept.append({"actual_value": entry})
+        kept.sort(key=lambda item: str(item.get("actual_value")))
+        out["pick_list_values"] = kept[:MAX_PICKLIST_VALUES]
+    return out
+
+
+def slim_fields(fields: list) -> list:
+    """Select at most 25 fields (priority first), sorted by ``api_name``."""
+    ordered = sorted(
+        fields, key=lambda f: str(f.get("api_name", "")) if isinstance(f, dict) else ""
+    )
+    priority_ids: set[int] = set()
+    priority: list = []
+    rest: list = []
+    for item in ordered:
+        is_priority = isinstance(item, dict) and (
+            item.get("system_mandatory") is True
+            or str(item.get("api_name", "")) in FIELD_PRIORITY_API_NAMES
+        )
+        if is_priority:
+            priority_ids.add(id(item))
+            priority.append(item)
+        else:
+            rest.append(item)
+    if len(priority) >= MAX_SLIM_FIELDS:
+        selected = priority[:MAX_SLIM_FIELDS]
+    else:
+        selected = priority + rest[: MAX_SLIM_FIELDS - len(priority)]
+    selected = sorted(
+        selected, key=lambda f: str(f.get("api_name", "")) if isinstance(f, dict) else ""
+    )
+    return [slim_field(f) if isinstance(f, dict) else f for f in selected]
+
+
+def slim_module(module: dict) -> dict:
+    """Keep only the committable properties of one module definition."""
+    return {key: module[key] for key in ALLOWED_MODULE_KEYS if key in module}
+
+
+def slim_body(body: object) -> object:
+    """Deterministically slim fields/modules bodies; pass others through."""
+    if isinstance(body, dict) and isinstance(body.get("fields"), list):
+        out = dict(body)
+        out["fields"] = slim_fields(body["fields"])
+        return out
+    if isinstance(body, dict) and isinstance(body.get("modules"), list):
+        out = dict(body)
+        modules = [slim_module(m) if isinstance(m, dict) else m for m in body["modules"]]
+        modules.sort(key=lambda m: str(m.get("api_name", "")) if isinstance(m, dict) else "")
+        out["modules"] = modules
+        return out
+    return body
+
 
 def filter_headers(headers: Mapping[str, str]) -> dict[str, str]:
     """Keep only allowlisted headers, then redact their values."""
@@ -72,7 +196,7 @@ def record(
 ) -> Path:
     """GET *path* through the guarded client and write the redacted cassette.
 
-    Recording stays local-only unless *allow_ci* is set: the nightly live
+    Recording stays local-only unless *allow_ci* is set: the weekly live
     job passes it explicitly when the owner approves a ``record`` run, and
     every payload is still redacted before anything is written.
     """
@@ -88,9 +212,12 @@ def record(
     )
     response = client.get(path, endpoint=path.split("?")[0], experimental=True)
     refuse_accounts_host(response.request.url)
+    # Deterministic slimming before redaction: fields/modules metadata is
+    # cut to its committable shape (see slim_body) so cassettes stay small.
     # The full Redactor runs over the whole envelope BEFORE anything is
     # written — the same pass ``scrub_cassettes`` re-applies — so scrubbing
     # a freshly recorded cassette is a byte-identical no-op.
+    slimmed_body = slim_body(response.json())
     cassette = Redactor().redact_obj(
         {
             "request": {
@@ -101,7 +228,7 @@ def record(
             "response": {
                 "status": response.status_code,
                 "headers": filter_headers(response.headers),
-                "body": response.json(),
+                "body": slimmed_body,
             },
         }
     )

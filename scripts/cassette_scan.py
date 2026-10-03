@@ -25,7 +25,7 @@ org IDs are caught by the configured-ID check instead. Opaque
 ``sha256:<hex>`` fingerprints are safe to share by design and never
 flagged, so redacted live evidence passes the same scan.
 
-Pass explicit directories to scan those trees instead (the nightly live
+Pass explicit directories to scan those trees instead (the weekly live
 job runs ``python scripts/cassette_scan.py evidence cassettes`` over the
 redacted evidence bundle before upload)::
 
@@ -79,6 +79,18 @@ _STRUCTURAL_TZ_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: ISO-8601 dates/datetimes are structural, not phones: the free-text
+#: phone pattern matches the date part (``2026-10-02``) otherwise.
+#: Mirrors ``zohokit.core.redact`` (this script stays import-free).
+_ISO_8601_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?"
+)
+
+#: Bare numeric Zoho IDs (>= 15 digits) under ID-keyed fields are record
+#: entity IDs, not phones. Only ``id`` / ``*_id`` keys count, and identity
+#: PII (zuid/zgid/photo_id) is never allowlisted. Mirrors the redactor.
+_LONG_ID_RE = re.compile(r"\b\d{15,}\b")
+
 _CREDENTIAL_KEYS = (
     "access_token",
     "refresh_token",
@@ -127,6 +139,26 @@ def _structural_tz_spans(line: str) -> list[tuple[int, int]]:
     return spans
 
 
+def _iso_spans(line: str) -> list[tuple[int, int]]:
+    """Spans of ISO-8601 dates/datetimes on one line (structural, not phones)."""
+    return [(m.start(), m.end()) for m in _ISO_8601_RE.finditer(line)]
+
+
+def _is_id_key(key: str) -> bool:
+    """True for ID-keyed fields (``id`` / ``*_id``), excluding identity PII."""
+    normalized = key.casefold().lstrip("$")
+    if "zuid" in normalized or "zgid" in normalized:
+        return False
+    if "photo_id" in normalized:
+        return False
+    return normalized == "id" or normalized.endswith("_id")
+
+
+def _long_id_spans(line: str) -> list[tuple[int, int]]:
+    """Spans of bare numeric runs with >= 15 digits on one line."""
+    return [(m.start(), m.end()) for m in _LONG_ID_RE.finditer(line)]
+
+
 def key_of_line(line: str) -> str:
     """JSON key for a scanned line (``unknown`` when it has no ``"key":``).
 
@@ -151,11 +183,23 @@ def scan_text(text: str, org_ids: list[str]) -> list[str]:
     for lineno, line in enumerate(text.splitlines(), start=1):
         key = key_of_line(line)
         tz_spans = _structural_tz_spans(line)
+        iso_spans = _iso_spans(line)
+        id_like = _is_id_key(key)
+        long_id_spans = _long_id_spans(line) if id_like else []
         for match in _EMAIL_RE.finditer(line):
             if match.group(1).casefold() != _PLACEHOLDER_DOMAIN:
                 findings.append(f"line {lineno}: unredacted email [key: {key}]")
         for match in _PHONE_RE.finditer(line):
             if any(start <= match.start() and match.end() <= end for start, end in tz_spans):
+                continue
+            if any(
+                match.start() < iso_end and iso_start < match.end()
+                for iso_start, iso_end in iso_spans
+            ):
+                continue
+            if id_like and any(
+                start <= match.start() and match.end() <= end for start, end in long_id_spans
+            ):
                 continue
             digits = re.sub(r"\D", "", match.group(0))
             if digits.startswith("555"):

@@ -1,4 +1,4 @@
-"""Live preparation: nightly workflow lint, dev-in profile, evidence safety."""
+"""Live preparation: weekly workflow lint, dev-in profile, evidence safety."""
 
 from __future__ import annotations
 
@@ -61,6 +61,9 @@ def test_live_triggers_are_exactly_dispatch_plus_schedule() -> None:
     assert record["type"] == "boolean"
     assert record["default"] is False
     assert triggers["schedule"] != []
+    # Owner decision: WEEKLY on Mondays 21:00 UTC (Tuesdays 02:30 IST).
+    crons = [str(entry.get("cron", "")) for entry in triggers["schedule"]]
+    assert crons == ["0 21 * * 1"]
 
 
 def test_live_job_guard_environment_and_permissions() -> None:

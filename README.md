@@ -47,7 +47,7 @@ uv run zohokit auth login --profile dev-in --dc in --scopes ZohoCRM.modules.READ
 uv run zohokit doctor --live --profile dev-in --experimental
 ```
 
-A nightly `live` workflow re-runs the checklist plus smoke reads against
+A weekly `live` workflow re-runs the checklist plus smoke reads against
 the Developer Edition org and uploads redacted evidence as an artifact.
 Setup (Self Client, scopes, secrets, approving a run):
 [docs/live/SETUP.md](docs/live/SETUP.md).

@@ -1,4 +1,4 @@
-"""Nightly live smoke reads: GET-only, validated, redacted evidence.
+"""Weekly live smoke reads: GET-only, validated, redacted evidence.
 
 Reads org, modules, fields (Leads, Contacts, Deals) and users through the
 GET-only :class:`ZohoClient` (``experimental=True``: every endpoint is still
@@ -13,7 +13,7 @@ recorder (:func:`record_cassette.record`, redacted before write) into
 (``ZOHO_CLIENT_ID``/``ZOHO_CLIENT_SECRET``/``ZOHO_REFRESH_TOKEN``); the
 committed ``profiles/dev-in.json`` holds no secrets.
 
-Usage (nightly live job only; never runs on a pull request)::
+Usage (weekly live job only; never runs on a pull request)::
 
     uv run python scripts/live_smoke.py --profile dev-in --evidence-dir evidence
     uv run python scripts/live_smoke.py --profile dev-in --evidence-dir evidence \\
@@ -270,7 +270,7 @@ def run_smoke(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the nightly live job."""
+    """Entry point for the weekly live job."""
     parser = argparse.ArgumentParser(description="Read-only live smoke reads.")
     parser.add_argument("--profile", default="dev-in")
     parser.add_argument("--evidence-dir", default="evidence")

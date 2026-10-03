@@ -1,6 +1,6 @@
 name: live
 
-# Nightly read-only verification against the owner's Developer Edition org.
+# Weekly read-only verification against the owner's Developer Edition org.
 # Manual-approval protected via the `zoho-dev` environment (the owner
 # approves each run). Never runs for forks, pull requests or pushes: the
 # job-level guard below limits execution to scheduled and manually
@@ -19,8 +19,8 @@ on:
         type: boolean
         default: false
   schedule:
-    # 02:30 IST == 21:00 UTC.
-    - cron: "0 21 * * *"
+    # Weekly: Mondays 21:00 UTC == Tuesdays 02:30 IST.
+    - cron: "0 21 * * 1"
 
 jobs:
   live-verify:
