@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.2.0](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.1.0...v0.2.0) (2026-10-03)
+
+
+### Features
+
+* **connectors:** read-only Zoho connector foundation [STD-L1..L6, STD-A1..A4, STD-H1..H3, STD-X1..X2, STD-W1..W3, TK-CONN-1, TK-CONN-2, TK-CONN-9] ([#23](https://github.com/prashobnair/zoho-implementation-toolkit/issues/23)) ([12fba75](https://github.com/prashobnair/zoho-implementation-toolkit/commit/12fba7582ef8386b180be25ef970c84cb9d98136))
+* **live:** verified CRM read contracts from the developer org ([#32](https://github.com/prashobnair/zoho-implementation-toolkit/issues/32)) ([8e6cec6](https://github.com/prashobnair/zoho-implementation-toolkit/commit/8e6cec631f378ba5f0637b07eeecc1187ad3c3a8))
+
+
+### Bug Fixes
+
+* **connectors:** doctor org parsing, empty and parameterised record reads ([#28](https://github.com/prashobnair/zoho-implementation-toolkit/issues/28)) ([d5bcd03](https://github.com/prashobnair/zoho-implementation-toolkit/commit/d5bcd034f1a1a902670ed12e3562bb6a6ab4cb5f))
+* **connectors:** real Zoho CRM v8 response envelopes; value-free contract errors ([#27](https://github.com/prashobnair/zoho-implementation-toolkit/issues/27)) ([e737dbf](https://github.com/prashobnair/zoho-implementation-toolkit/commit/e737dbfc270ea0dbbf08b3076aef02c38257bd8b))
+* **recording:** timestamp-safe redaction, stable IDs, slim cassettes; weekly live schedule ([#31](https://github.com/prashobnair/zoho-implementation-toolkit/issues/31)) ([0e23cfd](https://github.com/prashobnair/zoho-implementation-toolkit/commit/0e23cfd9e733e24f8eda0c6ed14bbd8326e33355))
+* **redaction:** key-based PII masking; value-free scanner output ([#29](https://github.com/prashobnair/zoho-implementation-toolkit/issues/29)) ([2fae25b](https://github.com/prashobnair/zoho-implementation-toolkit/commit/2fae25bae6b2642deff1a1ffeaad41b64921afd2))
+* **scan:** treat numeric time-zone offsets as structural ([#30](https://github.com/prashobnair/zoho-implementation-toolkit/issues/30)) ([145ae2d](https://github.com/prashobnair/zoho-implementation-toolkit/commit/145ae2d0c6003ed85bf8a4342a6df4fa8b3dfe1a))
+
 ## 0.1.0 (2026-09-28)
 
 
