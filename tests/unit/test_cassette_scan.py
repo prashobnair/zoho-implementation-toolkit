@@ -139,6 +139,24 @@ def test_scanner_output_never_contains_matched_values(
     assert "Contact_Phone" in combined
 
 
+def test_structural_tz_offset_passes_scan() -> None:
+    """In-range ``offset`` integers are time-zone data, not phone numbers."""
+    assert scan_text('{"offset": 19800000}', []) == []
+    assert scan_text('{"users": [{"offset": -18000000}]}', []) == []
+    assert scan_text('{"offset": "19800000"}', []) == []
+
+
+def test_out_of_range_offset_still_fails_scan() -> None:
+    """98,765,432 ms exceeds +/-14 h, so it is scanned normally."""
+    findings = scan_text('{"offset": "98765432"}', [])
+    assert any("unredacted phone" in finding for finding in findings)
+
+
+def test_offset_value_under_phone_key_still_fails_scan() -> None:
+    findings = scan_text('{"phone": 19800000}', [])
+    assert any("unredacted phone" in finding for finding in findings)
+
+
 def test_record_then_scrub_is_byte_identical_and_scan_clean(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

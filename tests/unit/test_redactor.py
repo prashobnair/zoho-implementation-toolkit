@@ -246,3 +246,16 @@ def test_local_numbers_gain_no_country_code() -> None:
     assert "98765 43210" not in flat
     assert "********10" in flat
     assert "+987" not in flat
+
+
+def test_structural_tz_offset_survives_redaction() -> None:
+    """In-range ``offset`` integers are time-zone data, not phone numbers."""
+    plain = Redactor()
+    assert plain.redact_value("offset", 19800000) == 19800000
+    assert plain.redact_value("offset", "19800000") == "19800000"
+    assert plain.redact_obj({"users": [{"offset": -18000000}]}) == {
+        "users": [{"offset": -18000000}]
+    }
+    # Anything else under ``offset`` is still masked like a phone number.
+    assert plain.redact_value("offset", "9876543210") == "********10"
+    assert plain.redact_value("phone", "19800000") == "******00"
