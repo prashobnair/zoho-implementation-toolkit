@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -25,8 +26,12 @@ from zohokit.cli.common import (
     resolve_runtime,
 )
 from zohokit.core.context import RunContext
+from zohokit.core.findings import Severity
+from zohokit.core.ids import canonical_json
+from zohokit.modules import Analysis
 from zohokit.modules.migration.engine import run
 from zohokit.modules.migration.models import MigrationInput
+from zohokit.modules.migration.report import build_report
 
 app = typer.Typer(help="Audit a CRM migration source before import.")
 
@@ -159,6 +164,113 @@ def preflight(
         extra = ExtraChecks(default_region=default_region, users=offline_users)
         ctx = fresh_context()
     report = run_preflight(doc, sources, metadata, ctx=ctx, extra=extra)
+    report = apply_baseline_file(report, baseline, now=ctx.now)
+    runtime = resolve_runtime(format_name, out, strict=strict)
+    emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
+
+
+@app.command()
+def plan(
+    mapping: Annotated[Path, typer.Option("--mapping", help="Field-mapping YAML (TK-MIG-F1).")],
+    source: Annotated[
+        Path, typer.Option("--source", help="Source dir holding <source_kind>.csv files.")
+    ],
+    out: Annotated[Path, typer.Option("--out", help="Directory for plan.json + plan.md.")],
+    source_system: Annotated[
+        str | None, typer.Option("--source-system", help="Idempotency key prefix.")
+    ] = None,
+    ai: AiAfter = False,
+    baseline: BaselineAfter = None,
+) -> None:
+    """Write the signed import plan: batches, order, keys and rollback note."""
+    from zohokit.modules.migration.plan import estimated_api_calls, write_plan
+
+    reject_future_flags(ai, baseline)
+    try:
+        from zohokit.modules.migration.mapping import MappingConfigError, load_mapping
+
+        doc = load_mapping(mapping)
+    except MappingConfigError as exc:
+        fail(str(exc))
+    if not source.is_dir():
+        fail(f"--source {source} is not a directory")
+    from zohokit.modules.migration.preflight import SOURCE_FORMATS, SourceSpec, open_entity
+
+    source_format = doc.source if doc.source in SOURCE_FORMATS else "generic"
+    counts: dict[str, int] = {}
+    for entity in doc.entities:
+        candidate = source / f"{entity.source_kind}.csv"
+        if not candidate.is_file():
+            fail(f"--source {source} misses {entity.source_kind}.csv for entity {entity.name}")
+        try:
+            stream = open_entity(source_format, SourceSpec(str(candidate)), entity.source_kind)
+        except ValueError as exc:
+            fail(str(exc))
+        try:
+            counts[entity.name] = sum(
+                1 for _, row, issue in stream.rows() if issue is None and row is not None
+            )
+        finally:
+            stream.close()
+    json_path, md_path, built = write_plan(doc, counts, out, source_system=source_system)
+    typer.echo(f"Wrote {json_path}")
+    typer.echo(f"Wrote {md_path}")
+    typer.echo(f"Plan SHA-256: {built.canonical_hash()}")
+    typer.echo(f"Estimated API calls: {estimated_api_calls(built)}")
+
+
+@app.command()
+def reconcile(
+    mapping: Annotated[Path, typer.Option("--mapping", help="Field-mapping YAML (TK-MIG-F1).")],
+    source: Annotated[
+        Path, typer.Option("--source", help="Source dir holding <source_kind>.csv files.")
+    ],
+    target: Annotated[
+        Path, typer.Option("--target", help="Target dir holding <TargetModule>.csv dumps.")
+    ],
+    workbook: Annotated[Path, typer.Option("--workbook", help="XLSX workbook output path.")],
+    seed: Annotated[int, typer.Option("--seed", help="Deterministic sample seed.")] = 42,
+    strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
+    format_name: Annotated[
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
+    ] = "json",
+    out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
+    ai: AiAfter = False,
+    baseline: BaselineAfter = None,
+) -> None:
+    """Compare sources against target dumps; write the reconcile workbook."""
+    from zohokit.modules.migration.reconcile import recap_findings
+    from zohokit.modules.migration.reconcile import reconcile as run_reconcile
+
+    reject_future_flags(ai, baseline)
+    try:
+        from zohokit.modules.migration.mapping import MappingConfigError, load_mapping
+
+        doc = load_mapping(mapping)
+    except MappingConfigError as exc:
+        fail(str(exc))
+    if not source.is_dir():
+        fail(f"--source {source} is not a directory")
+    if not target.is_dir():
+        fail(f"--target {target} is not a directory")
+    source_paths: dict[str, str] = {}
+    for entity in doc.entities:
+        candidate = source / f"{entity.source_kind}.csv"
+        if not candidate.is_file():
+            fail(f"--source {source} misses {entity.source_kind}.csv for entity {entity.name}")
+        source_paths[entity.name] = str(candidate)
+    recaps, book = run_reconcile(doc, source_paths, str(target), seed=seed)
+    workbook.write_bytes(book)
+    typer.echo(f"Wrote {workbook}")
+    ctx = fresh_context()
+    findings = recap_findings(recaps)
+    ready = not any(item.severity == Severity.ERROR for item in findings)
+    digest = hashlib.sha256(
+        canonical_json({"mapping": doc.model_dump(mode="json"), "seed": seed}).encode()
+    ).hexdigest()
+    report = build_report(
+        Analysis(findings=tuple(findings), legacy={}, ready=ready), ctx=ctx, inputs_sha256=digest
+    )
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
