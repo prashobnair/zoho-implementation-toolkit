@@ -27,7 +27,10 @@
   │ --help          Show this message and exit.                                  │
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
-  │ diff  Diff two manifests and report blocking changes.                        │
+  │ diff      Diff two manifests and report blocking changes.                    │
+  │ snapshot  Snapshot an org to config/zoho (normalized, sorted, redacted).     │
+  │ drift     Diff approved manifests against live (or a file); flag unapproved  │
+  │           drift.                                                             │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   

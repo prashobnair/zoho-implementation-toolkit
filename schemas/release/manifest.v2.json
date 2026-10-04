@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "Component": {
+      "description": "One config component: identity plus comparable attributes.",
+      "properties": {
+        "api_name": {
+          "default": "",
+          "title": "Api Name",
+          "type": "string"
+        },
+        "attributes": {
+          "additionalProperties": true,
+          "title": "Attributes",
+          "type": "object"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "module": {
+          "default": "",
+          "title": "Module",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "source_env": {
+          "default": "",
+          "title": "Source Env",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name"
+      ],
+      "title": "Component",
+      "type": "object"
+    }
+  },
+  "description": "A versioned, sorted component set (one snapshot or diff side).",
+  "properties": {
+    "components": {
+      "items": {
+        "$ref": "#/$defs/Component"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "source_env": {
+      "default": "",
+      "title": "Source Env",
+      "type": "string"
+    },
+    "version": {
+      "const": 2,
+      "default": 2,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "title": "Manifest",
+  "type": "object"
+}

@@ -1,0 +1,311 @@
+"""Release v2 tests: manifest, inference, risk, order, rollback, comment."""
+
+from __future__ import annotations
+
+import itertools
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from zohokit.cli import app
+from zohokit.core.context import RunContext
+from zohokit.core.plan import verify_bundle
+from zohokit.modules.release.comment import COMMENT_MARKER, MAX_COMMENT_CHARS, render_pr_comment
+from zohokit.modules.release.diff import diff_manifests
+from zohokit.modules.release.engine_v2 import analyze_drift, analyze_manifest, run_manifest
+from zohokit.modules.release.infer import infer_edges
+from zohokit.modules.release.manifest import (
+    EXPERIMENTAL_KINDS,
+    coerce_component,
+    coerce_manifest,
+    is_v2_item,
+    manifest_fingerprint,
+)
+from zohokit.modules.release.risk import assess, release_risk
+from zohokit.modules.release.rollback import is_data_losing
+
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
+FIXTURES = ROOT / "fixtures" / "release"
+NOW = datetime(2026, 10, 4, 12, 0, tzinfo=UTC)
+runner = CliRunner()
+
+
+def _ctx() -> RunContext:
+    return RunContext(now=NOW, mode="offline")
+
+
+def _pair() -> tuple[list[object], list[object]]:
+    before = json.loads((FIXTURES / "before.json").read_text())["components"]
+    after = json.loads((FIXTURES / "after.json").read_text())["components"]
+    return before, after
+
+
+def test_legacy_v1_items_coerce_with_defaults() -> None:
+    component = coerce_component({"kind": "field", "name": "Deal.External_Ref"})
+    assert component.attributes == {}
+    assert component.module == ""
+    assert component.component_id() == "field:Deal.External_Ref"
+    assert not is_v2_item({"kind": "field", "name": "x"})
+    assert is_v2_item({"kind": "field", "name": "x", "attributes": {}})
+    assert is_v2_item({"kind": "blueprint", "name": "x"})
+
+
+def test_unknown_kind_and_duplicates_rejected() -> None:
+    with pytest.raises(ValueError, match="unknown component kind"):
+        coerce_component({"kind": "portal", "name": "x"})
+    with pytest.raises(ValueError, match="duplicate component"):
+        coerce_manifest([{"kind": "field", "name": "x"}, {"kind": "field", "name": "x"}])
+
+
+def test_fingerprint_ignores_order_and_env() -> None:
+    before, _ = _pair()
+    first = coerce_manifest(before, source_env="prod")
+    assert manifest_fingerprint(first) == manifest_fingerprint(
+        coerce_manifest(list(reversed(before)), source_env="sandbox")
+    )
+    for ordering in itertools.islice(itertools.permutations(first.components), 0, 20):
+        assert manifest_fingerprint(
+            coerce_manifest([item.model_dump(mode="json") for item in ordering], source_env="prod")
+        ) == manifest_fingerprint(first)
+
+
+def test_attribute_diff_before_after() -> None:
+    before, _ = _pair()
+    changed = [dict(item) for item in before]
+    for item in changed:
+        if item["name"] == "Deals.Main":
+            item["attributes"] = {"enabled": True}
+    mutated = coerce_manifest(changed)
+    flipped = coerce_manifest(
+        [
+            {**item, "attributes": {"enabled": False}} if item["name"] == "Deals.Main" else item
+            for item in (entry.model_dump(mode="json") for entry in mutated.components)
+        ]
+    )
+    diff = diff_manifests(list(mutated.components), list(flipped.components))
+    assert diff.changed == ("layout:Deals.Main",)
+    (entry,) = diff.changes[0].attributes
+    assert entry.attribute == "enabled"
+    assert entry.describe() == "enabled: true → false"
+
+
+def test_inference_edge_types() -> None:
+    _, after = _pair()
+    manifest = coerce_manifest(after)
+    edges = infer_edges(list(manifest.components))
+    heuristic = {(edge.source, edge.target) for edge in edges if edge.confidence == "heuristic"}
+    assert ("layout:Deals.Main", "field:Deals.Amount") in heuristic
+    assert ("workflow:Deals.AutoAssign", "field:Deals.Stage") in heuristic
+    assert ("workflow:Deals.AutoAssign", "field:Deals.New_Score") in heuristic
+    assert ("function:Post_Deal", "field:Deals.Amount") in heuristic
+    assert ("custom_button:Deals.Convert", "field:Deals.Stage") in heuristic
+    declared = [edge for edge in edges if edge.confidence == "declared"]
+    assert [(edge.source, edge.target) for edge in declared] == [
+        ("workflow:Deals.AutoAssign", "function:Missing_Func")
+    ]
+    assert all(edge.confidence in ("declared", "heuristic") for edge in edges)
+
+
+def test_risk_table_per_class() -> None:
+    before, after = _pair()
+    analysis = analyze_manifest(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    levels = {risk.component_id: risk.level for risk in analysis.risks}
+    assert levels == {
+        "custom_button:Deals.Convert": "low",
+        "field:Deals.Close_Date": "high",
+        "field:Deals.External_Ref": "high",
+        "field:Deals.New_Score": "medium",
+        "layout:Deals.Main": "low",
+        "layout_rule:Deals.ShowRef": "low",
+        "picklist_value:Deals.Stage.Negotiation": "high",
+        "workflow:Deals.AutoAssign": "high",
+    }
+    assert analysis.release_risk == "high"
+    assert release_risk(list(analysis.risks)) == "high"
+    picklist = next(
+        risk
+        for risk in analysis.risks
+        if risk.component_id == "picklist_value:Deals.Stage.Negotiation"
+    )
+    assert picklist.reasons == ("removal", "picklist value removed while records use it")
+
+
+def test_finding_codes_and_stable_ids() -> None:
+    before, after = _pair()
+    report, analysis = run_manifest(
+        list(coerce_manifest(before).components),
+        list(coerce_manifest(after).components),
+        ctx=_ctx(),
+    )
+    assert report.ready is False
+    codes = sorted((finding.code, finding.entity_id) for finding in analysis.findings)
+    assert ("behavior_regression_review", "workflow:Deals.AutoAssign") in codes
+    assert ("experimental_kind", "blueprint:Deals.Blueprint") in codes
+    assert ("field_type_change", "field:Deals.Close_Date") in codes
+    assert ("heuristic_dependency", "layout:Deals.Main") in codes
+    assert ("irreversible_change", "field:Deals.External_Ref") in codes
+    assert ("missing_dependency", "workflow:Deals.AutoAssign") in codes
+    assert ("picklist_value_in_use", "picklist_value:Deals.Stage.Negotiation") in codes
+    assert ("removal_review", "field:Deals.External_Ref") in codes
+    assert ("removal_review", "picklist_value:Deals.Stage.Negotiation") in codes
+    assert len(analysis.findings) == 17
+    rerun = analyze_manifest(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    assert [item.id for item in rerun.findings] == [item.id for item in analysis.findings]
+    assert is_data_losing(next(c for c in analysis.diff.changes if c.change == "removed"))
+
+
+def test_golden_deploy_order() -> None:
+    before, after = _pair()
+    analysis = analyze_manifest(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    expected = json.loads((FIXTURES / "expected_deploy_order.json").read_text())
+    assert list(analysis.deploy.deploy) == expected["deploy"]
+    assert list(analysis.deploy.removals) == expected["removals"]
+    assert analysis.deploy.cycles == ()
+    assert {risk.component_id: risk.level for risk in analysis.risks} == expected["risks"]
+
+
+def test_dependency_cycle_error() -> None:
+    payload = json.loads((FIXTURES / "cycle.json").read_text())
+    analysis = analyze_manifest(
+        list(coerce_manifest(payload["before"]).components),
+        list(coerce_manifest(payload["after"]).components),
+    )
+    assert analysis.deploy.deploy == ()
+    assert analysis.release_risk in ("low", "medium", "high")
+    cycles = [finding for finding in analysis.findings if finding.code == "dependency_cycle"]
+    assert len(cycles) == 1
+    assert cycles[0].severity.value == "error"
+    assert analysis.ready is False
+
+
+def test_rollback_plan_inverses_and_signature(tmp_path: Path) -> None:
+    before, after = _pair()
+    analysis = analyze_manifest(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    by_path = {call.path: call for call in analysis.rollback.calls}
+    assert by_path["manifest/field:Deals.External_Ref"].method == "CREATE"
+    assert by_path["manifest/field:Deals.New_Score"].method == "DELETE"
+    assert by_path["manifest/field:Deals.Close_Date"].method == "UPDATE"
+    assert len(analysis.rollback.calls) == len(analysis.diff.changes) == 8
+    from zohokit.core.plan import write_bundle
+
+    json_path, _ = write_bundle(analysis.rollback, tmp_path, note="review only")
+    assert json_path.is_file()
+    assert verify_bundle(tmp_path).canonical_hash() == analysis.rollback.canonical_hash()
+    assert EXPERIMENTAL_KINDS == frozenset({"blueprint", "client_script", "profile_permission"})
+
+
+def test_pr_comment_shape_and_truncation() -> None:
+    before, after = _pair()
+    report, analysis = run_manifest(
+        list(coerce_manifest(before).components),
+        list(coerce_manifest(after).components),
+        ctx=_ctx(),
+    )
+    comment = render_pr_comment(report, analysis.diff, analysis.deploy, analysis.release_risk)
+    assert comment.startswith(COMMENT_MARKER)
+    assert "# Release gate: NOT READY" in comment
+    assert "Risk **high**" in comment
+    assert "<details>" in comment
+    assert "6. `workflow:Deals.AutoAssign`" in comment
+    assert "1. `picklist_value:Deals.Stage.Negotiation`" in comment
+    assert 'data_type: "date" → "datetime"' in comment
+    assert len(comment) <= MAX_COMMENT_CHARS
+    huge = render_pr_comment(report, analysis.diff, analysis.deploy, analysis.release_risk)
+    assert huge == comment
+
+
+def test_pr_comment_truncates_with_note() -> None:
+    before, after = _pair()
+    report, analysis = run_manifest(
+        list(coerce_manifest(before).components),
+        list(coerce_manifest(after).components),
+        ctx=_ctx(),
+    )
+    from zohokit.modules.release import comment as comment_module
+
+    original = comment_module.MAX_COMMENT_CHARS
+    comment_module.MAX_COMMENT_CHARS = 1200
+    try:
+        text = render_pr_comment(report, analysis.diff, analysis.deploy, analysis.release_risk)
+    finally:
+        comment_module.MAX_COMMENT_CHARS = original
+    assert len(text) <= 1200
+    assert "Truncated:" in text
+    assert "findings omitted" in text
+    assert COMMENT_MARKER in text
+    assert "## Deploy order" in text
+
+
+def test_drift_flags_unapproved_changes() -> None:
+    before, after = _pair()
+    analysis = analyze_drift(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    drifted = [finding for finding in analysis.findings if finding.code == "unapproved_drift"]
+    assert len(drifted) == 8
+    assert all(finding.severity.value == "error" for finding in drifted)
+    assert analysis.ready is False
+
+
+def test_cli_v2_outputs(tmp_path: Path) -> None:
+    before, after = _pair()
+    envelope = tmp_path / "envelope.json"
+    envelope.write_text(
+        json.dumps({"before": before, "after": after}, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    comment_out = tmp_path / "comment.md"
+    order_out = tmp_path / "order.json"
+    plan_dir = tmp_path / "rollback"
+    result = runner.invoke(
+        app,
+        [
+            "release",
+            "diff",
+            str(envelope),
+            "--pr-comment-out",
+            str(comment_out),
+            "--deploy-order-out",
+            str(order_out),
+            "--rollback-plan-out",
+            str(plan_dir),
+        ],
+    )
+    assert result.exit_code == 0
+    comment = comment_out.read_text(encoding="utf-8")
+    assert comment.startswith(COMMENT_MARKER)
+    assert "Risk **high**" in comment
+    order = json.loads(order_out.read_text(encoding="utf-8"))
+    expected = json.loads((FIXTURES / "expected_deploy_order.json").read_text())
+    assert order == expected
+    assert verify_bundle(plan_dir).calls[0].method in ("CREATE", "DELETE", "UPDATE")
+
+
+def test_cli_v1_rejects_v2_outputs(tmp_path: Path) -> None:
+    fixture = ROOT / "tests" / "golden" / "legacy" / "release" / "inputs" / "examples.json"
+    result = runner.invoke(
+        app,
+        ["release", "diff", str(fixture), "--deploy-order-out", str(tmp_path / "o.json")],
+    )
+    assert result.exit_code == 1
+    assert "v2 outputs need manifest v2" in result.output
+
+
+def test_assess_unit_levels() -> None:
+    from zohokit.modules.release.diff import ComponentChange
+
+    assert assess(ComponentChange("a", "layout", "L", "changed")).level == "low"
+    assert assess(ComponentChange("b", "field", "F", "added")).level == "medium"
+    assert assess(ComponentChange("c", "workflow", "W", "added")).level == "high"
+    assert assess(ComponentChange("d", "field", "F", "removed")).level == "high"

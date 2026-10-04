@@ -1,0 +1,1 @@
+{"after":[{"api_name":"","attributes":{},"depends_on":["workflow:B"],"kind":"workflow","module":"Deals","name":"A","source_env":"sandbox"},{"api_name":"","attributes":{},"depends_on":["workflow:A"],"kind":"workflow","module":"Deals","name":"B","source_env":"sandbox"}],"before":[]}
