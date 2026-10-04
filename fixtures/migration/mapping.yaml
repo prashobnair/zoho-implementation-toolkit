@@ -1,0 +1,31 @@
+version: 1
+source: pipedrive
+entities:
+  - name: people
+    source_kind: persons
+    target_module: Contacts
+    fields:
+      Last_Name: {from: Name, transform: [trim], required: true}
+      Email: {from: Email, transform: [trim, casefold], pii: true}
+      Phone: {from: Phone, transform: [trim, e164(region=IN)]}
+      Lead_Source: {from: Source, transform: [{map: {values: {web: Web, referral: Referral}}}]}
+    external_id: {field: External_ID__s, from: ID}
+    lookups:
+      Account_Name: {entity: companies, via: Organization ID}
+  - name: companies
+    source_kind: organizations
+    target_module: Accounts
+    fields:
+      Account_Name: {from: Name, transform: [trim], required: true}
+    external_id: {field: External_ID__s, from: ID}
+  - name: deals
+    source_kind: deals
+    target_module: Deals
+    fields:
+      Deal_Name: {from: Title, transform: [trim], required: true}
+      Amount: {from: Value, transform: [money(currency_col=Currency)]}
+      Stage: {from: Stage, transform: [trim], required: true}
+      Closing_Date: {from: Expected_Close, transform: [date(format="%d/%m/%Y")]}
+    external_id: {field: External_ID__s, from: ID}
+    lookups:
+      Account_Name: {entity: companies, via: Organization ID}
