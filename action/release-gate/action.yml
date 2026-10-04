@@ -1,0 +1,112 @@
+# Release gate (composite action)
+#
+# Diffs two Zoho manifests with zohokit, posts (or updates) one sticky PR
+# comment, and uploads SARIF for code scanning. Requires zohokit on PATH
+# (for example `pip install zohokit`, or this repo's `.venv/bin` on PATH).
+#
+# Least privilege for callers:
+#   permissions: {contents: read, pull-requests: write, security-events: write}
+
+name: "Release gate"
+description: "Diff Zoho manifests, maintain one sticky PR comment, upload SARIF."
+
+inputs:
+  before:
+    description: "Path to the before manifest (component list or Manifest envelope)."
+    required: true
+  after:
+    description: "Path to the after manifest (component list or Manifest envelope)."
+    required: true
+  fail-on:
+    description: "Gate strictness: 'error' (default), 'high', 'medium' or 'never'."
+    required: false
+    default: "error"
+  baseline:
+    description: "Optional accepted-findings file (.zohokit-baseline.json)."
+    required: false
+    default: ""
+
+outputs:
+  ready:
+    description: "'true' when the diff is ready, else 'false'."
+    value: ${{ steps.gate.outputs.ready }}
+  risk:
+    description: "Release risk level: low, medium or high."
+    value: ${{ steps.gate.outputs.risk }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run the release diff
+      id: gate
+      shell: bash
+      run: |
+        set +e
+        BASELINE_FLAG=""
+        if [ -n "${{ inputs.baseline }}" ]; then
+          BASELINE_FLAG="--baseline ${{ inputs.baseline }}"
+        fi
+        # shellcheck disable=SC2086
+        zohokit release diff \
+          --before "${{ inputs.before }}" \
+          --after "${{ inputs.after }}" \
+          ${BASELINE_FLAG} \
+          --format json --out gate-report.json \
+          --pr-comment-out gate-comment.md \
+          --deploy-order-out gate-order.json
+        echo "diff_exit=$?" >> "$GITHUB_OUTPUT"
+        zohokit release diff \
+          --before "${{ inputs.before }}" \
+          --after "${{ inputs.after }}" \
+          ${BASELINE_FLAG} \
+          --format sarif --out gate.sarif
+        READY=$(python3 -c "import json; print('true' if json.load(open('gate-report.json'))['ready'] else 'false')")
+        RISK=$(python3 -c "import json; print(json.load(open('gate-order.json'))['release_risk'])")
+        echo "ready=$READY" >> "$GITHUB_OUTPUT"
+        echo "risk=$RISK" >> "$GITHUB_OUTPUT"
+        exit 0
+
+    - name: Post or update the sticky PR comment
+      id: comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const marker = '<!-- zohokit-release-gate -->';
+          const body = fs.readFileSync('gate-comment.md', 'utf8');
+          const { owner, repo } = context.repo;
+          const issue_number = context.payload.pull_request.number;
+          const { data: comments } = await github.rest.issues.listComments({
+            owner, repo, issue_number, per_page: 100,
+          });
+          const prior = comments.find((c) => c.body && c.body.includes(marker));
+          let comment;
+          if (prior) {
+            ({ data: comment } = await github.rest.issues.updateComment({
+              owner, repo, comment_id: prior.id, body,
+            }));
+          } else {
+            ({ data: comment } = await github.rest.issues.createComment({
+              owner, repo, issue_number, body,
+            }));
+          }
+          core.setOutput('comment-url', comment.html_url);
+
+    - name: Upload SARIF
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: gate.sarif
+        category: release-gate
+
+    - name: Enforce the gate
+      shell: bash
+      run: |
+        READY="${{ steps.gate.outputs.ready }}"
+        RISK="${{ steps.gate.outputs.risk }}"
+        case "${{ inputs.fail-on }}" in
+          error) [ "$READY" = "true" ] || { echo "release gate: report is not ready"; exit 1; } ;;
+          high) [ "$RISK" != "high" ] || { echo "release gate: high-risk promotion"; exit 1; } ;;
+          medium) { [ "$RISK" != "high" ] && [ "$RISK" != "medium" ]; } || { echo "release gate: medium-or-higher risk"; exit 1; } ;;
+          never) echo "release gate: comment only (fail-on=never)" ;;
+          *) echo "release gate: unsupported fail-on ${{ inputs.fail-on }} (error|high|medium|never)"; exit 1 ;;
+        esac

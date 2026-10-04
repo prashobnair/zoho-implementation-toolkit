@@ -309,3 +309,40 @@ def test_assess_unit_levels() -> None:
     assert assess(ComponentChange("b", "field", "F", "added")).level == "medium"
     assert assess(ComponentChange("c", "workflow", "W", "added")).level == "high"
     assert assess(ComponentChange("d", "field", "F", "removed")).level == "high"
+
+
+def test_cli_before_after_sides() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "release",
+            "diff",
+            "--before",
+            str(FIXTURES / "before.json"),
+            "--after",
+            str(FIXTURES / "after.json"),
+        ],
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["ready"] is False
+    assert payload["summary"]["error"] >= 1
+    both = runner.invoke(app, ["release", "diff", "--before", str(FIXTURES / "before.json")])
+    assert both.exit_code == 1
+    assert "--before and --after must be passed together" in both.output
+
+
+def test_demo_fixture_pair_is_clean() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "release",
+            "diff",
+            "--before",
+            str(FIXTURES / "demo" / "before.json"),
+            "--after",
+            str(FIXTURES / "demo" / "after.json"),
+        ],
+    )
+    assert result.exit_code == 0
+    assert json.loads(result.output)["ready"] is True

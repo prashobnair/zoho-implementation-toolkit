@@ -61,6 +61,38 @@ def _read_json(path: Path) -> Any:
         fail(f"{path} is not valid JSON")
 
 
+def _load_envelope(
+    fixture: Path | None,
+    before_file: Path | None,
+    after_file: Path | None,
+    input_format: str | None,
+) -> dict[str, Any]:
+    """Load the before/after envelope from one file or two side files."""
+    if before_file is not None or after_file is not None:
+        if fixture is not None:
+            fail("pass either FIXTURE or --before/--after, not both")
+        if before_file is None or after_file is None:
+            fail("--before and --after must be passed together")
+        if input_format is not None:
+            fail("--input-format only applies to the single-file envelope")
+        return {
+            "before": _load_side(before_file),
+            "after": _load_side(after_file),
+        }
+    if fixture is None:
+        fail("missing FIXTURE (or pass --before/--after)")
+    return load_input(fixture, "release", input_format)
+
+
+def _load_side(path: Path) -> list[Any]:
+    """Load one manifest side: a component list or a Manifest envelope."""
+    payload = _read_json(path)
+    items = payload.get("components", payload) if isinstance(payload, dict) else payload
+    if not isinstance(items, list):
+        fail(f"{path} must hold a component list")
+    return items
+
+
 def _is_v2_envelope(data: dict[str, Any]) -> bool:
     items = list(data.get("before", [])) + list(data.get("after", []))
     return any(is_v2_item(item) for item in items)
@@ -75,7 +107,13 @@ def _parse_modules(modules: str) -> tuple[str, ...]:
 
 @app.command()
 def diff(
-    fixture: Annotated[Path, typer.Argument(help="JSON with before/after manifests.")],
+    fixture: Annotated[
+        Path | None, typer.Argument(help="JSON with before/after manifests.")
+    ] = None,
+    before_file: Annotated[
+        Path | None, typer.Option("--before", help="Before manifest file.")
+    ] = None,
+    after_file: Annotated[Path | None, typer.Option("--after", help="After manifest file.")] = None,
     input_format: Annotated[
         str | None, typer.Option("--input-format", help="Only legacy-v1.")
     ] = None,
@@ -105,7 +143,7 @@ def diff(
     """Diff two manifests and report blocking changes."""
     reject_unsupported_live("release", live, profile, max_api_calls)
     reject_future_flags(ai, baseline)
-    data = load_input(fixture, "release", input_format)
+    data = _load_envelope(fixture, before_file, after_file, input_format)
     ctx = fresh_context()
     if _is_v2_envelope(data):
         _diff_v2(
