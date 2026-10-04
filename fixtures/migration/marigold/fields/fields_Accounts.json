@@ -1,0 +1,35 @@
+{
+  "fields": [
+    {
+      "api_name": "Account_Name",
+      "data_type": "text",
+      "field_label": "Account_Name",
+      "json_type": "string",
+      "length": 200,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": true
+    },
+    {
+      "api_name": "External_ID__s",
+      "data_type": "text",
+      "field_label": "External_ID__s",
+      "json_type": "string",
+      "length": 50,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false,
+      "unique": true
+    },
+    {
+      "api_name": "id",
+      "data_type": "bigint",
+      "field_label": "id",
+      "json_type": "string",
+      "length": 18,
+      "pick_list_values": [],
+      "read_only": true,
+      "system_mandatory": false
+    }
+  ]
+}

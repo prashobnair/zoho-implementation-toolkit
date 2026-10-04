@@ -1,0 +1,23 @@
+{
+  "expected": {
+    "fuzzy_duplicate_cluster": 2,
+    "history_type_unsupported": 4,
+    "inactive_owner": 1,
+    "lookup_unresolvable": 1,
+    "mandatory_field_unmapped": 1,
+    "missing_source_column": 1,
+    "owner_unmapped": 1,
+    "picklist_value_missing": 2,
+    "read_only_target_field": 1,
+    "row_parse_error": 2,
+    "stage_probability_mismatch": 1,
+    "target_dedupe_coverage": 4,
+    "type_incompatible": 7,
+    "unique_field_collision_in_batch": 4,
+    "unknown_target_field": 1,
+    "unmapped_stage": 1,
+    "value_too_long": 1,
+    "would_duplicate_existing": 1
+  },
+  "seed": 20261004
+}

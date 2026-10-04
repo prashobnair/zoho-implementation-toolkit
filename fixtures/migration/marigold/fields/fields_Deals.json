@@ -1,0 +1,120 @@
+{
+  "fields": [
+    {
+      "api_name": "Deal_Name",
+      "data_type": "text",
+      "field_label": "Deal_Name",
+      "json_type": "string",
+      "length": 120,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": true
+    },
+    {
+      "api_name": "Amount",
+      "data_type": "currency",
+      "field_label": "Amount",
+      "json_type": "string",
+      "length": 16,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false
+    },
+    {
+      "api_name": "Stage",
+      "data_type": "picklist",
+      "field_label": "Stage",
+      "json_type": "string",
+      "length": 120,
+      "pick_list_values": [
+        {
+          "actual_value": "Qualification"
+        },
+        {
+          "actual_value": "Needs Analysis"
+        },
+        {
+          "actual_value": "Proposal"
+        },
+        {
+          "actual_value": "Closed Won"
+        }
+      ],
+      "read_only": false,
+      "system_mandatory": true
+    },
+    {
+      "api_name": "Closing_Date",
+      "data_type": "date",
+      "field_label": "Closing_Date",
+      "json_type": "string",
+      "length": 20,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false
+    },
+    {
+      "api_name": "Probability",
+      "data_type": "double",
+      "field_label": "Probability",
+      "json_type": "string",
+      "length": 16,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false
+    },
+    {
+      "api_name": "Pipeline",
+      "data_type": "picklist",
+      "field_label": "Pipeline",
+      "json_type": "string",
+      "length": 120,
+      "pick_list_values": [
+        {
+          "actual_value": "Standard"
+        },
+        {
+          "actual_value": "Enterprise"
+        }
+      ],
+      "read_only": false,
+      "system_mandatory": true
+    },
+    {
+      "api_name": "Account_Name",
+      "data_type": "lookup",
+      "field_label": "Account_Name",
+      "json_type": "string",
+      "length": 120,
+      "lookup": {
+        "module": {
+          "api_name": "Accounts"
+        }
+      },
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false
+    },
+    {
+      "api_name": "External_ID__s",
+      "data_type": "text",
+      "field_label": "External_ID__s",
+      "json_type": "string",
+      "length": 50,
+      "pick_list_values": [],
+      "read_only": false,
+      "system_mandatory": false,
+      "unique": true
+    },
+    {
+      "api_name": "id",
+      "data_type": "bigint",
+      "field_label": "id",
+      "json_type": "string",
+      "length": 18,
+      "pick_list_values": [],
+      "read_only": true,
+      "system_mandatory": false
+    }
+  ]
+}

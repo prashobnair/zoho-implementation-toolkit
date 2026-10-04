@@ -22,7 +22,7 @@ into exit code 2.
 | `unknown_target_field` | error | A mapped target field is absent from the target metadata. |
 | `read_only_target_field` | error | A mapped target field is read-only in the target. |
 | `missing_source_column` | error | A mapped source column is absent from the export header. |
-| `type_incompatible` | error | A value cannot be converted for the target field type. |
+| `type_incompatible` | error | A value cannot be converted for the target field type, or a required value is missing. |
 | `value_too_long` | error | A value exceeds the target field length (max in evidence). |
 | `picklist_value_missing` | error | A value is not an allowed target picklist value. |
 | `mandatory_field_unmapped` | error | A mandatory target field has no mapping. |
@@ -35,6 +35,9 @@ into exit code 2.
 | `inactive_owner` | error | An owner email belongs to an inactive target user. |
 | `owner_unmapped` | error | An owner email matches no user in the target org. |
 | `history_type_unsupported` | warning/info | A history type has no target module to hold it; info carries per-parent counts. |
+| `reconcile_count_mismatch` | error | Source and target counts differ for the module. |
+| `reconcile_field_diff` | review | A sampled target record differs from the transformed source. |
+| `reconcile_relationship_gap` | error | A child row references a parent absent from the source. |
 
 ## release
 
