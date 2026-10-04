@@ -333,6 +333,12 @@ def test_cli_before_after_sides() -> None:
 
 
 def test_demo_fixture_pair_is_clean() -> None:
+    """The --before/--after path on an unchanged pair is READY.
+
+    Reads only before.json for both sides: the demo after.json is
+    intentionally dirtied by the demo PR, so no unit test may depend on
+    it staying clean (the demo workflow covers the live pair instead).
+    """
     result = runner.invoke(
         app,
         [
@@ -341,7 +347,7 @@ def test_demo_fixture_pair_is_clean() -> None:
             "--before",
             str(FIXTURES / "demo" / "before.json"),
             "--after",
-            str(FIXTURES / "demo" / "after.json"),
+            str(FIXTURES / "demo" / "before.json"),
         ],
     )
     assert result.exit_code == 0
