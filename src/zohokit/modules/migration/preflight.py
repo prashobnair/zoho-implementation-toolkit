@@ -71,7 +71,7 @@ PHONE_TARGETS = ("Phone", "Mobile", "Home_Phone", "Asst_Phone")
 COMPANY_TARGETS = ("Account_Name", "Company")
 
 
-def _open_entity(source_format: str, spec: SourceSpec, entity_name: str) -> CsvStream:
+def open_entity(source_format: str, spec: SourceSpec, entity_name: str) -> CsvStream:
     """Open one entity file; layout errors propagate as config errors."""
     if source_format == "pipedrive":
         return pipedrive.open_kind(spec.path, kind=spec.kind or entity_name)
@@ -116,9 +116,15 @@ def _signal_columns(
     phone_cols = dedupe_mod.pick_columns(
         header, mapped(PHONE_TARGETS), dedupe_mod.FALLBACK_PHONE_COLS
     )
-    company_cols = dedupe_mod.pick_columns(
-        header, mapped(COMPANY_TARGETS), dedupe_mod.FALLBACK_COMPANY_COLS
-    )
+    company_cols = [
+        col
+        for col in dedupe_mod.pick_columns(
+            header, mapped(COMPANY_TARGETS), dedupe_mod.FALLBACK_COMPANY_COLS
+        )
+        # ID-like columns are keys, not names: fuzzy-matching them would
+        # cluster every row sharing a parent (e.g. one Organization ID).
+        if col not in dedupe_mod.ID_COLS and not col.casefold().endswith((" id", " ids"))
+    ]
     created_cols = [col for col in dedupe_mod.CREATED_COLS if col in header]
     return id_col, email_cols, phone_cols, company_cols, created_cols
 
@@ -166,7 +172,7 @@ def run_preflight(
             )
             continue
         try:
-            stream = _open_entity(source_format, spec, entity.source_kind)
+            stream = open_entity(source_format, spec, entity.source_kind)
         except (pipedrive.PipedriveLayoutError, hubspot.HubSpotLayoutError, ValueError) as exc:
             findings.append(
                 Finding.create(
@@ -304,5 +310,6 @@ __all__: list[str] = [
     "SOURCE_FORMATS",
     "ExtraChecks",
     "SourceSpec",
+    "open_entity",
     "run_preflight",
 ]

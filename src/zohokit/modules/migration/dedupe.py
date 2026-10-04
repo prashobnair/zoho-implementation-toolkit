@@ -37,7 +37,10 @@ ID_COLS = ("ID", "Contact ID", "Deal ID", "Company ID", "id")
 #: Header fallbacks when the mapping names no signal column.
 FALLBACK_EMAIL_COLS = ("Email", "email")
 FALLBACK_PHONE_COLS = ("Phone", "phone", "Phone Number")
-FALLBACK_COMPANY_COLS = ("Company", "Company Name", "Name", "Organization")
+#: Header fallbacks when the mapping names no signal column. ``Name`` is
+#: deliberately absent: bare names collide across unrelated rows, so
+#: company matching needs a mapped company column or an explicit header.
+FALLBACK_COMPANY_COLS = ("Company", "Company Name", "Organization")
 
 _DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M")
 

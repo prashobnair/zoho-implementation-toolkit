@@ -138,7 +138,7 @@ def metadata_from_dir(directory: str | Path) -> TargetMetadata:
     return TargetMetadata(modules=modules)
 
 
-def _mapped_value(
+def mapped_value(
     entity: EntityMapping, target: str, row: dict[str, str]
 ) -> tuple[str | None, TransformError | None]:
     """Apply the field's transforms to one row; capture transform failure."""
@@ -272,7 +272,7 @@ def validate_entity(
                 )
             )
         for index, row in enumerate(sample_rows):
-            value, failed = _mapped_value(entity, target, row)
+            value, failed = mapped_value(entity, target, row)
             row_key = f"row-{index + 1}"
             if failed is not None:
                 findings.append(
@@ -290,6 +290,20 @@ def validate_entity(
                 )
                 continue
             if value is None or value == "":
+                if field_map.required:
+                    findings.append(
+                        Finding.create(
+                            module="migration",
+                            code="type_incompatible",
+                            severity=Severity.ERROR,
+                            entity=entity.name,
+                            entity_id=row_key,
+                            message="Required value is missing for the target field.",
+                            evidence={"target_field": target, "required": True},
+                            remediation="Fill the source value or drop the required flag.",
+                            discriminator=f"value\0{entity.target_module}\0{target}\0{row_key}",
+                        )
+                    )
                 continue
             reason = _check_value(meta, value)
             if reason == "too_long":
@@ -360,7 +374,9 @@ def validate_entity(
         meta = fields.get(target)
         if meta is None:
             continue
-        if meta.data_type.casefold() in ("lookup", "ownerlookup") and target not in entity.lookups:
+        # Record lookups need a resolution entry; owner fields resolve
+        # through target users instead (TK-MIG-F7), never through entities.
+        if meta.data_type.casefold() == "lookup" and target not in entity.lookups:
             findings.append(
                 Finding.create(
                     module="migration",
@@ -375,6 +391,12 @@ def validate_entity(
                 )
             )
     # Unique collisions across the sampled batch (fingerprints only).
+    # The declared external ID is unique by definition, even when it has
+    # no fields entry of its own (it usually does not).
+    external_extra: tuple[str, str] | None = None
+    if entity.external_id is not None and entity.external_id.field not in entity.fields:
+        if entity.external_id.from_col in header:
+            external_extra = (entity.external_id.field, entity.external_id.from_col)
     unique_targets = [
         target
         for target, field_map in entity.fields.items()
@@ -388,7 +410,7 @@ def validate_entity(
     for target in unique_targets:
         seen: dict[str, int] = {}
         for index, row in enumerate(sample_rows):
-            value, failed = _mapped_value(entity, target, row)
+            value, failed = mapped_value(entity, target, row)
             if failed is not None or value is None or value == "":
                 continue
             key = value.casefold()
@@ -410,6 +432,32 @@ def validate_entity(
                     )
             else:
                 seen[key] = index + 1
+    if external_extra is not None:
+        ext_field, ext_col = external_extra
+        seen_ext: dict[str, int] = {}
+        for index, row in enumerate(sample_rows):
+            raw = (row.get(ext_col) or "").strip()
+            if not raw:
+                continue
+            key = raw.casefold()
+            if key in seen_ext:
+                fingerprint = _value_fingerprint(raw)
+                for other in (seen_ext[key], index + 1):
+                    findings.append(
+                        Finding.create(
+                            module="migration",
+                            code="unique_field_collision_in_batch",
+                            severity=Severity.ERROR,
+                            entity=entity.name,
+                            entity_id=f"row-{other}",
+                            message="Two batch rows share one unique target value.",
+                            evidence={"target_field": ext_field, "value_fingerprint": fingerprint},
+                            remediation="Deduplicate the source rows before import.",
+                            discriminator=f"value\0{entity.target_module}\0{ext_field}\0row-{other}",
+                        )
+                    )
+            else:
+                seen_ext[key] = index + 1
     return findings
 
 
@@ -458,6 +506,7 @@ __all__: list[str] = [
     "SAMPLE_ROWS",
     "FieldMeta",
     "TargetMetadata",
+    "mapped_value",
     "metadata_from_cassette_envelope",
     "metadata_from_dir",
     "validate_entity",
