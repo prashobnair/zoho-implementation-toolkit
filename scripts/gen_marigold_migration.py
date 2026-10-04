@@ -233,8 +233,10 @@ def _phone(rng: random.Random, used: set[str]) -> str:
 
 def _write_csv(path: Path, header: list[str], rows: list[list[str]], blank_after: int = -1) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Fixed LF + explicit terminator: csv defaults to CRLF and text mode
+    # follows the platform, either of which would break byte-determinism.
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(header)
         for index, row in enumerate(rows):
             writer.writerow(row)
@@ -246,6 +248,12 @@ def _write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def _write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
 
 
 def build(rng: random.Random) -> dict[str, list[list[str]]]:
@@ -585,7 +593,7 @@ def main() -> None:
     _write_csv(source / "organizations.csv", ORGANIZATIONS_HEADER, tables["organizations"])
     _write_csv(source / "deals.csv", DEALS_HEADER, tables["deals"])
     _write_csv(source / "activities.csv", ACTIVITIES_HEADER, tables["activities"])
-    (out / "mapping.yaml").write_text(MAPPING, encoding="utf-8")
+    _write_text(out / "mapping.yaml", MAPPING)
     for module, fields in metadata().items():
         _write_json(out / "fields" / f"fields_{module}.json", {"fields": fields})
     _write_json(
@@ -614,7 +622,7 @@ def main() -> None:
             ]
         },
     )
-    (out / "EXPECTED.md").write_text(EXPECTED_MD, encoding="utf-8")
+    _write_text(out / "EXPECTED.md", EXPECTED_MD)
     _write_json(out / "answer_key.json", {"seed": SEED, "expected": ANSWER_KEY})
     total = sum(len(tables[key]) for key in ("persons", "organizations", "deals", "activities"))
     print(f"wrote {total} rows to {out}")
