@@ -12,6 +12,7 @@ from typer.testing import CliRunner
 
 from zohokit.cli import app
 from zohokit.core.context import RunContext
+from zohokit.core.ids import finding_id
 from zohokit.core.plan import verify_bundle
 from zohokit.modules.release.comment import COMMENT_MARKER, MAX_COMMENT_CHARS, render_pr_comment
 from zohokit.modules.release.diff import diff_manifests
@@ -90,6 +91,91 @@ def test_attribute_diff_before_after() -> None:
     (entry,) = diff.changes[0].attributes
     assert entry.attribute == "enabled"
     assert entry.describe() == "enabled: true → false"
+
+
+def test_change_findings_carry_attribute_before_after() -> None:
+    """TK-REL-4: each change finding shows exactly what changed, before → after."""
+    before, after = _pair()
+    analysis = analyze_manifest(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    by_key = {(finding.code, finding.entity_id): finding for finding in analysis.findings}
+    type_finding = by_key[("field_type_change", "field:Deals.Close_Date")]
+    assert type_finding.evidence["changes"] == [
+        {"attribute": "data_type", "before": "date", "after": "datetime"}
+    ]
+    assert type_finding.message == (
+        'field_type_change: field:Deals.Close_Date changed type (data_type: "date" → "datetime")'
+    )
+    behavior = by_key[("behavior_regression_review", "workflow:Deals.AutoAssign")]
+    assert behavior.evidence["changes"] == [
+        {"attribute": "enabled", "before": True, "after": False},
+        {
+            "attribute": "target_fields",
+            "before": ["Deals.Amount"],
+            "after": ["Deals.New_Score"],
+        },
+    ]
+    assert behavior.message == (
+        "behavior_regression_review: workflow:Deals.AutoAssign was changed"
+        " (enabled: true → false;"
+        ' target_fields: ["Deals.Amount"] → ["Deals.New_Score"])'
+    )
+    removed = by_key[("removal_review", "field:Deals.External_Ref")]
+    assert removed.evidence["changes"] == []
+    assert removed.message == "removal_review: field:Deals.External_Ref was removed"
+    # IDs stay stable: the new evidence never feeds the discriminator.
+    assert type_finding.id == finding_id(
+        "release",
+        "field_type_change",
+        "manifest",
+        "field:Deals.Close_Date",
+        "field:Deals.Close_Date\x00data_type",
+    )
+    assert behavior.id == finding_id(
+        "release",
+        "behavior_regression_review",
+        "manifest",
+        "workflow:Deals.AutoAssign",
+        "workflow:Deals.AutoAssign",
+    )
+    drifted = analyze_drift(
+        list(coerce_manifest(before).components), list(coerce_manifest(after).components)
+    )
+    drift = next(
+        finding
+        for finding in drifted.findings
+        if finding.code == "unapproved_drift" and finding.entity_id == "field:Deals.Close_Date"
+    )
+    assert drift.evidence["changes"] == [
+        {"attribute": "data_type", "before": "date", "after": "datetime"}
+    ]
+    assert 'data_type: "date" → "datetime"' in drift.message
+
+
+def test_pr_comment_and_html_render_attribute_changes() -> None:
+    """TK-REL-4: the PR comment details and the HTML report show before/after."""
+    from zohokit.reports import render_html
+
+    before, after = _pair()
+    report, analysis = run_manifest(
+        list(coerce_manifest(before).components),
+        list(coerce_manifest(after).components),
+        ctx=_ctx(),
+    )
+    comment = render_pr_comment(report, analysis.diff, analysis.deploy, analysis.release_risk)
+    assert '- `data_type: "date" → "datetime"`' in comment
+    assert "- `enabled: true → false`" in comment
+    field_block = next(
+        block
+        for block in comment.split("<details>")
+        if "field_type_change" in block and "field:Deals.Close_Date" in block
+    )
+    assert 'data_type: "date" → "datetime"' in field_block
+    html = render_html(report)
+    assert "data_type" in html
+    assert "datetime" in html
+    assert "enabled" in html
 
 
 def test_inference_edge_types() -> None:

@@ -10,7 +10,10 @@ find and update its own comment instead of posting a duplicate.
 
 from __future__ import annotations
 
+from typing import Any
+
 from zohokit.core.findings import Report
+from zohokit.core.ids import canonical_json
 from zohokit.modules.release.deploy import DeployPlan
 from zohokit.modules.release.diff import ManifestDiff
 from zohokit.modules.release.risk import RiskLevel
@@ -22,10 +25,35 @@ COMMENT_MARKER = "<!-- zohokit-release-gate -->"
 MAX_COMMENT_CHARS = 65000
 
 
-def _finding_block(finding_id: str, code: str, entity: str, message: str) -> str:
+def _evidence_changes(evidence: dict[str, Any]) -> list[tuple[str, Any, Any]]:
+    """Attribute before/after rows from change-finding evidence (TK-REL-4)."""
+    raw = evidence.get("changes")
+    if not isinstance(raw, list):
+        return []
+    rows: list[tuple[str, Any, Any]] = []
+    for entry in raw:
+        if isinstance(entry, dict) and isinstance(entry.get("attribute"), str):
+            rows.append((entry["attribute"], entry.get("before"), entry.get("after")))
+    return rows
+
+
+def _finding_block(
+    finding_id: str,
+    code: str,
+    entity: str,
+    message: str,
+    changes: list[tuple[str, Any, Any]] | None = None,
+) -> str:
+    body = message
+    if changes:
+        rendered = "\n".join(
+            f"- `{attribute}: {canonical_json(before)} → {canonical_json(after)}`"
+            for attribute, before, after in changes
+        )
+        body = f"{message}\n\n{rendered}"
     return (
         f"<details><summary><code>{code}</code> {entity} <code>{finding_id}</code></summary>\n\n"
-        f"{message}\n\n</details>"
+        f"{body}\n\n</details>"
     )
 
 
@@ -58,6 +86,7 @@ def render_pr_comment(
             finding.code,
             f"{finding.entity}/{finding.entity_id}",
             finding.message,
+            _evidence_changes(dict(finding.evidence)),
         )
         for finding in ordered
     ]
