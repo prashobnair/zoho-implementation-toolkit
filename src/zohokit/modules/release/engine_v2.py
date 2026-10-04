@@ -14,7 +14,7 @@ from zohokit.core.findings import Finding, Report, Severity
 from zohokit.core.ids import canonical_json
 from zohokit.core.plan import Plan
 from zohokit.modules.release.deploy import DeployPlan, plan_deploy
-from zohokit.modules.release.diff import ManifestDiff, diff_manifests
+from zohokit.modules.release.diff import ComponentChange, ManifestDiff, diff_manifests
 from zohokit.modules.release.infer import Edge, infer_edges
 from zohokit.modules.release.manifest import (
     EXPERIMENTAL_KINDS,
@@ -71,6 +71,26 @@ def _positive_count(value: object) -> bool:
     return isinstance(value, (int, float)) and value > 0
 
 
+def _change_entries(change: ComponentChange) -> list[dict[str, object]]:
+    """Attribute before/after list for change-finding evidence (TK-REL-4).
+
+    Already in deterministic order: the diff sorts attributes by name.
+    Added and removed components carry no attribute diff, so the list
+    is empty for them.
+    """
+    return [
+        {"attribute": entry.attribute, "before": entry.before, "after": entry.after}
+        for entry in change.attributes
+    ]
+
+
+def _change_suffix(change: ComponentChange) -> str:
+    """Parenthesised before → after summary appended to change messages."""
+    if not change.attributes:
+        return ""
+    return " (" + "; ".join(entry.describe() for entry in change.attributes) + ")"
+
+
 def analyze_manifest(before: list[Component], after: list[Component]) -> ManifestAnalysis:
     """Diff two manifests and score every change."""
     old = {item.component_id(): item for item in before}
@@ -92,8 +112,9 @@ def analyze_manifest(before: list[Component], after: list[Component]) -> Manifes
                     "removal_review",
                     Severity.ERROR,
                     change.component_id,
-                    f"removal_review: {change.component_id} was removed",
+                    f"removal_review: {change.component_id} was removed{_change_suffix(change)}",
                     change.component_id,
+                    {"changes": _change_entries(change)},
                 )
             )
             if is_data_losing(change):
@@ -103,8 +124,9 @@ def analyze_manifest(before: list[Component], after: list[Component]) -> Manifes
                         Severity.REVIEW,
                         change.component_id,
                         f"irreversible_change: restoring {change.component_id} "
-                        "cannot recover stored values",
+                        f"cannot recover stored values{_change_suffix(change)}",
                         change.component_id,
+                        {"changes": _change_entries(change)},
                     )
                 )
             if change.kind == "picklist_value":
@@ -120,8 +142,9 @@ def analyze_manifest(before: list[Component], after: list[Component]) -> Manifes
                             Severity.ERROR,
                             change.component_id,
                             f"picklist_value_in_use: {change.component_id} "
-                            "is still referenced by records",
+                            f"is still referenced by records{_change_suffix(change)}",
                             change.component_id,
+                            {"changes": _change_entries(change)},
                         )
                     )
         elif change.change in ("added", "changed") and change.kind in _SENSITIVE:
@@ -130,8 +153,10 @@ def analyze_manifest(before: list[Component], after: list[Component]) -> Manifes
                     "behavior_regression_review",
                     Severity.ERROR,
                     change.component_id,
-                    f"behavior_regression_review: {change.component_id} was {change.change}",
+                    f"behavior_regression_review: {change.component_id} "
+                    f"was {change.change}{_change_suffix(change)}",
                     change.component_id,
+                    {"changes": _change_entries(change)},
                 )
             )
         if (
@@ -144,8 +169,10 @@ def analyze_manifest(before: list[Component], after: list[Component]) -> Manifes
                     "field_type_change",
                     Severity.ERROR,
                     change.component_id,
-                    f"field_type_change: {change.component_id} changed type",
+                    f"field_type_change: {change.component_id} "
+                    f"changed type{_change_suffix(change)}",
                     f"{change.component_id}\0data_type",
+                    {"changes": _change_entries(change)},
                 )
             )
     for edge in edges:
@@ -228,8 +255,9 @@ def analyze_drift(approved: list[Component], live: list[Component]) -> ManifestA
                 Severity.ERROR,
                 change.component_id,
                 f"unapproved_drift: {change.component_id} was {change.change} "
-                "outside an approved promotion",
+                f"outside an approved promotion{_change_suffix(change)}",
                 f"{change.component_id}\0{change.change}",
+                {"changes": _change_entries(change)},
             )
             for change in drifted.changes
         ),

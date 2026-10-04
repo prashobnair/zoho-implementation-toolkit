@@ -36,7 +36,10 @@ uv run zohokit release diff before-after.json --pr-comment-out comment.md \
 The pure engine compares two offline manifests and emits findings with
 stable IDs. Manifest v2 components carry `{kind, name, module, api_name,
 attributes, depends_on, source_env}`; legacy v1 items (kind plus name)
-keep working. Render with
+keep working. Every finding raised for a component change carries the
+attribute-level diff in its `changes` evidence (`attribute`/`before`/`after`,
+sorted by attribute), repeated in the message and in the PR-comment details;
+the HTML report shows the same evidence. Render with
 `--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
 
 ## Risk scoring
