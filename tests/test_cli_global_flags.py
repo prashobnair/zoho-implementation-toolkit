@@ -78,10 +78,14 @@ def test_command_format_wins_over_global_default() -> None:
 
 
 def test_completion_script_available() -> None:
+    # `--show-completion` is a flag: Typer detects the parent shell via
+    # shellingham, so the script is bash under bash and PowerShell under
+    # pwsh (notably on the Windows CI job). Accept either script.
     result = runner.invoke(app, ["--show-completion", "bash"])
     assert result.exit_code == 0
-    assert "COMP_WORDS" in result.output
-    assert "complete -o default" in result.output
+    assert result.output.strip()
+    is_bash = "COMP_WORDS" in result.output and "complete -o default" in result.output
+    assert is_bash or "Register-ArgumentCompleter" in result.output
 
 
 def test_live_after_subcommand_refused() -> None:

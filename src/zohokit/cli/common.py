@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
+import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -48,6 +50,26 @@ _RENDERERS = {
 
 #: Accepted ``--format`` values, shared by every command's help text.
 FORMATS_HELP = "json|table|markdown|html|sarif|junit."
+
+
+def ensure_utf8_stdio() -> None:
+    """Force UTF-8 on stdout/stderr so ``→`` never crashes a cp1252 pipe.
+
+    Windows consoles and redirected pipes default to cp1252 unless
+    ``PYTHONIOENCODING``/``PYTHONUTF8`` say otherwise; the release v2
+    attribute diffs intentionally contain ``→`` (U+2192), which cp1252
+    cannot encode. Reconfiguring with ``errors="replace"`` keeps every
+    other platform unchanged (already UTF-8) while guaranteeing the CLI
+    never raises ``UnicodeEncodeError`` on print. No-op when the streams
+    lack ``reconfigure`` (captured test streams, pipes without the API).
+    """
+
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name, None)
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            with contextlib.suppress(Exception):
+                reconfigure(encoding="utf-8", errors="replace")
 
 
 def fail(message: str) -> NoReturn:
@@ -260,6 +282,7 @@ __all__: list[str] = [
     "apply_baseline_file",
     "check_unavailable_globals",
     "emit",
+    "ensure_utf8_stdio",
     "fail",
     "fresh_context",
     "load_input",

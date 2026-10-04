@@ -31,6 +31,7 @@ from zohokit.cli.common import (
     ProfileAfter,
     apply_baseline_file,
     check_unavailable_globals,
+    ensure_utf8_stdio,
     fail,
     reject_future_flags,
     reject_unsupported_live,
@@ -45,6 +46,12 @@ from zohokit.core.diff_reports import (
 from zohokit.core.findings import Report
 from zohokit.modules import MODULES
 from zohokit.modules.plugins import discover_module_apps
+
+# Windows consoles/pipes default to cp1252, which cannot encode the
+# intentional "→" in release attribute diffs. Force UTF-8 at startup so
+# redirected/piped output never raises UnicodeEncodeError (exit 1).
+# Best-effort: no-op where streams lack reconfigure (e.g. test capture).
+ensure_utf8_stdio()
 
 # STD §3.5: input/usage errors (unknown option, missing argument, bad
 # value) exit 1. The framework default is 2, which would be
@@ -215,6 +222,7 @@ app = create_app()
 
 def main() -> None:
     """Console-script entry point."""
+    ensure_utf8_stdio()
     app()
 
 

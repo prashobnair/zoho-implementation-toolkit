@@ -40,6 +40,19 @@ jobs:
           name: coverage-${{ matrix.python-version }}
           path: coverage.xml
 
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --group dev
+      - run: uv run pytest -m "not eval and not bench and not e2e"
+        # No PYTHONIOENCODING here by design: piped output on Windows
+        # defaults to cp1252, so tests/test_cli_utf8.py catches this class of bug.
+
   docs-commands:
     runs-on: ubuntu-latest
     steps:
