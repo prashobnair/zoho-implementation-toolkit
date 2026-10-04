@@ -104,7 +104,8 @@ def preflight(
             fail(f"--source {source} misses {entity.source_kind}.csv for entity {entity.name}")
         sources[entity.name] = SourceSpec(path=str(candidate), kind=entity.source_kind)
     if live:
-        assert profile is not None
+        if not profile:
+            fail("--live requires --profile: there is no default profile")
         from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError
         from zohokit.modules.migration.live import live_metadata
 
