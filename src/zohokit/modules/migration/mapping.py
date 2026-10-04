@@ -41,6 +41,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from zohokit.core import money as money_core
 from zohokit.core import phones as phones_core
+from zohokit.core import time as time_core
 
 #: Transforms the DSL accepts (anything else → config error with a line).
 KNOWN_TRANSFORMS = ("trim", "casefold", "e164", "date", "money", "map", "concat")
@@ -298,8 +299,6 @@ def apply_transforms(
                 if fmt:
                     parsed_dt = datetime.strptime(current.strip(), fmt)
                 else:
-                    from zohokit.core import time as time_core
-
                     parsed_dt = time_core.parse(current.strip())
             except (ValueError, time_core.InvalidTimeError) as exc:
                 raise TransformError("date", "unparseable date") from exc

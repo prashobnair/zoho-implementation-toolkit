@@ -78,6 +78,8 @@ def test_money_uses_core_parser() -> None:
         apply_transforms("nope", {}, [coerce_transform("e164(region=IN)")])
     with pytest.raises(TransformError):
         apply_transforms("zzz", {}, [coerce_transform({"map": {"values": {"a": "b"}}})])
+    with pytest.raises(TransformError):
+        apply_transforms("someday", {}, [coerce_transform('date(format="%d/%m/%Y")')])
 
 
 def test_missing_values_pass_through() -> None:
