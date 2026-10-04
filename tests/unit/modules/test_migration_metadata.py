@@ -1,0 +1,184 @@
+"""Metadata validation tests: one fixture per TK-MIG-F3 code."""
+
+from __future__ import annotations
+
+from zohokit.modules.migration.mapping import MappingDoc
+from zohokit.modules.migration.metadata import (
+    FieldMeta,
+    TargetMetadata,
+    validate_entity,
+    validate_mapping,
+)
+
+FIELDS: dict[str, FieldMeta] = {
+    "Last_Name": FieldMeta(
+        api_name="Last_Name", data_type="text", length=80, system_mandatory=True
+    ),
+    "Email": FieldMeta(api_name="Email", data_type="email", length=100),
+    "Phone": FieldMeta(api_name="Phone", data_type="phone", length=30),
+    "Stage": FieldMeta(
+        api_name="Stage",
+        data_type="picklist",
+        length=120,
+        pick_list_values=("Qualification", "Closed Won"),
+        system_mandatory=True,
+    ),
+    "Amount": FieldMeta(api_name="Amount", data_type="currency", length=16),
+    "Closing_Date": FieldMeta(api_name="Closing_Date", data_type="date", length=20),
+    "Account_Name": FieldMeta(api_name="Account_Name", data_type="lookup", length=120),
+    "External_ID__s": FieldMeta(
+        api_name="External_ID__s", data_type="text", length=50, unique=True
+    ),
+    "id": FieldMeta(api_name="id", data_type="bigint", length=18, read_only=True),
+}
+
+META = TargetMetadata(modules={"Contacts": FIELDS})
+
+
+def _doc(fields: dict[str, dict[str, object]], **extra: object) -> MappingDoc:
+    payload: dict[str, object] = {
+        "version": 1,
+        "entities": [
+            {
+                "name": "people",
+                "source_kind": "persons",
+                "target_module": "Contacts",
+                "fields": fields,
+                **extra,
+            }
+        ],
+    }
+    return MappingDoc.model_validate(payload)
+
+
+def _codes(doc: MappingDoc, rows: list[dict[str, str]], header: list[str]) -> list[str]:
+    entity = doc.entities[0]
+    return sorted(finding.code for finding in validate_entity(entity, FIELDS, header, rows))
+
+
+def test_clean_mapping_has_no_findings() -> None:
+    doc = _doc(
+        {
+            "Last_Name": {"from": "Name"},
+            "Email": {"from": "Email"},
+            "Stage": {"from": "Stage"},
+            "External_ID__s": {"from": "ID"},
+        }
+    )
+    rows = [
+        {"Name": "Aarav", "Email": "aarav@example.invalid", "Stage": "Qualification", "ID": "1"}
+    ]
+    assert _codes(doc, rows, ["Name", "Email", "Stage", "ID"]) == []
+
+
+def test_unknown_target_field() -> None:
+    doc = _doc({"Nope__s": {"from": "Name"}, "Last_Name": {"from": "Name"}})
+    findings = validate_entity(doc.entities[0], FIELDS, ["Name"], [{"Name": "x"}])
+    assert [
+        (item.code, item.entity_id) for item in findings if item.code == "unknown_target_field"
+    ] == [("unknown_target_field", "Nope__s")]
+    assert all(item.severity == "error" for item in findings)
+
+
+def test_read_only_target_field() -> None:
+    doc = _doc({"id": {"from": "ID"}, "Last_Name": {"from": "Name"}, "Stage": {"from": "S"}})
+    rows = [{"ID": "1", "Name": "x", "S": "Qualification"}]
+    assert _codes(doc, rows, ["ID", "Name", "S"]) == ["read_only_target_field"]
+
+
+def test_type_incompatible_email_and_date() -> None:
+    doc = _doc(
+        {
+            "Last_Name": {"from": "Name"},
+            "Email": {"from": "Email"},
+            "Closing_Date": {"from": "Close"},
+            "Stage": {"from": "S"},
+        }
+    )
+    rows = [{"Name": "x", "Email": "not-an-email", "Close": "2026-01-31", "S": "Qualification"}]
+    assert _codes(doc, rows, ["Name", "Email", "Close", "S"]) == ["type_incompatible"]
+
+
+def test_value_too_long_carries_max() -> None:
+    doc = _doc({"Last_Name": {"from": "Name"}, "Stage": {"from": "S"}})
+    rows = [{"Name": "N" * 81, "S": "Qualification"}]
+    findings = validate_entity(doc.entities[0], FIELDS, ["Name", "S"], rows)
+    long = [item for item in findings if item.code == "value_too_long"]
+    assert len(long) == 1
+    assert long[0].evidence["max"] == 80
+    assert long[0].evidence["actual_length"] == 81
+
+
+def test_picklist_value_missing() -> None:
+    doc = _doc({"Last_Name": {"from": "Name"}, "Stage": {"from": "Stage"}})
+    rows = [{"Name": "x", "Stage": "Bogus"}]
+    findings = validate_entity(doc.entities[0], FIELDS, ["Name", "Stage"], rows)
+    missing = [item for item in findings if item.code == "picklist_value_missing"]
+    assert len(missing) == 1
+    assert missing[0].evidence["allowed_count"] == 2
+    # A mapped value passes silently.
+    assert _codes(doc, [{"Name": "x", "Stage": "Closed Won"}], ["Name", "Stage"]) == []
+
+
+def test_mandatory_field_unmapped() -> None:
+    doc = _doc({"Email": {"from": "Email"}})
+    findings = validate_entity(doc.entities[0], FIELDS, ["Email"], [{"Email": "a@example.invalid"}])
+    assert sorted((item.code, item.entity_id) for item in findings) == [
+        ("mandatory_field_unmapped", "Last_Name"),
+        ("mandatory_field_unmapped", "Stage"),
+    ]
+
+
+def test_lookup_unresolvable() -> None:
+    doc = _doc(
+        {"Last_Name": {"from": "Name"}, "Account_Name": {"from": "Org"}, "Stage": {"from": "S"}}
+    )
+    rows = [{"Name": "x", "Org": "Acme", "S": "Qualification"}]
+    findings = validate_entity(doc.entities[0], FIELDS, ["Name", "Org", "S"], rows)
+    assert [item.code for item in findings] == ["lookup_unresolvable"]
+    assert findings[0].severity == "review"
+    # A lookups entry resolves it.
+    resolved = _doc(
+        {"Last_Name": {"from": "Name"}, "Account_Name": {"from": "Org"}, "Stage": {"from": "S"}},
+        lookups={"Account_Name": {"entity": "companies", "via": "Org"}},
+    )
+    assert _codes(resolved, rows, ["Name", "Org", "S"]) == []
+
+
+def test_unique_field_collision_in_batch_uses_fingerprints() -> None:
+    doc = _doc({"Last_Name": {"from": "Name"}, "Email": {"from": "Email"}, "Stage": {"from": "S"}})
+    rows = [
+        {"Name": "a", "Email": "same@example.invalid", "S": "Qualification"},
+        {"Name": "b", "Email": "SAME@example.invalid", "S": "Qualification"},
+    ]
+    findings = validate_entity(doc.entities[0], FIELDS, ["Name", "Email", "S"], rows)
+    collisions = [item for item in findings if item.code == "unique_field_collision_in_batch"]
+    assert sorted(item.entity_id for item in collisions) == ["row-1", "row-2"]
+    assert all("value_fingerprint" in item.evidence for item in collisions)
+    assert all("same@example.invalid" not in str(item.evidence) for item in collisions)
+
+
+def test_missing_source_column() -> None:
+    doc = _doc({"Last_Name": {"from": "Ghost"}, "Stage": {"from": "S"}})
+    rows = [{"Name": "x", "S": "Qualification"}]
+    assert _codes(doc, rows, ["Name", "S"]) == ["missing_source_column"]
+    # The transform failure also surfaces as type-incompatible per row.
+    doc2 = _doc(
+        {
+            "Last_Name": {"from": "Name"},
+            "Stage": {"from": "S"},
+            "Phone": {"from": "Phone", "transform": [{"name": "e164", "args": {}}]},
+        }
+    )
+    assert _codes(
+        doc2, [{"Name": "x", "S": "Qualification", "Phone": "zzz"}], ["Name", "S", "Phone"]
+    ) == ["type_incompatible"]
+
+
+def test_unknown_module_degrades_to_review() -> None:
+    doc = _doc({"Last_Name": {"from": "Name"}})
+    findings = validate_mapping(
+        doc, TargetMetadata(modules={}), {"people": ["Name"]}, {"people": []}
+    )
+    assert [item.code for item in findings] == ["unknown_target_field"]
+    assert findings[0].severity == "review"
