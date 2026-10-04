@@ -1,9 +1,10 @@
-"""Report renderers: JSON, rich table, Markdown, HTML, SARIF, JUnit (TK-CORE-8).
+"""Report renderers: JSON, rich table, Markdown, HTML, SARIF, JUnit, XLSX (TK-CORE-8).
 
 SARIF 2.1.0 and JUnit XML let GitHub render findings in PR checks and the
 tests tab. The HTML report is a single self-contained file: inline CSS/JS
-only, so it works offline and from a file:// URL. XLSX workbooks land with
-later releases.
+only, so it works offline and from a file:// URL. The XLSX workbook
+(openpyxl) carries Summary / Findings / Sign-off sheets for the
+finance/migration review gate.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from rich.table import Table
 from zohokit import __version__
 from zohokit.core.findings import Report
 from zohokit.core.ids import canonical_json
+from zohokit.reports.xlsx import render_xlsx
 
 SARIF_VERSION = "2.1.0"
 SARIF_SCHEMA_URI = "https://json.schemastore.org/sarif-2.1.0.json"
@@ -357,4 +359,5 @@ __all__: list[str] = [
     "render_markdown",
     "render_sarif",
     "render_table",
+    "render_xlsx",
 ]
