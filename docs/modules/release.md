@@ -29,7 +29,7 @@ uv run zohokit release diff before-after.json --strict
 
 The pure engine compares two offline manifest lists and emits findings with
 stable IDs plus a `ready_for_release` flag. Render with
-`--format json|table|markdown|html` and write to a file with `--out`.
+`--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
 
 ## Finding codes
 

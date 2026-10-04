@@ -33,7 +33,7 @@ uv run zohokit lead-routing route leads.json --default-region IN
 
 The pure engine routes one offline lead list in order and emits findings with
 stable IDs; the run is not ready while leads await triage. Render with
-`--format json|table|markdown|html` and write to a file with `--out`.
+`--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
 
 ## Finding codes
 

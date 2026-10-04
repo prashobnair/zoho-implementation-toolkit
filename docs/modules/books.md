@@ -33,7 +33,7 @@ uv run zohokit books reconcile period.json --strict
 
 The pure engine reads one offline envelope (entities, deals, invoices) and
 emits findings with stable IDs plus a `ready_for_sync` flag. Render with
-`--format json|table|markdown|html` and write to a file with `--out`.
+`--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
 
 ## Finding codes
 

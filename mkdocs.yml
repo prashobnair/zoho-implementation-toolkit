@@ -16,6 +16,7 @@ nav:
       - Client Timeline Composer: modules/timeline.md
       - Lead Routing Lab: modules/lead_routing.md
   - Finding codes: finding-codes.md
+  - Accepted findings: baseline.md
   - API contracts: API_CONTRACTS.md
   - Threat model: THREAT_MODEL.md
   - Known issues: KNOWN_ISSUES.md

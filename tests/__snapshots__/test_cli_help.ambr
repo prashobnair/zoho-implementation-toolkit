@@ -152,8 +152,8 @@
   │                                     command.                                 │
   │ --ai                                AI assistance (not available until       │
   │                                     v0.3.0).                                 │
-  │ --baseline                  <path>  Suppression file (not available until    │
-  │                                     v0.2.0).                                 │
+  │ --baseline                  <path>  Accepted-findings file                   │
+  │                                     (.zohokit-baseline.json).                │
   │ --max-api-calls             <int>   API call budget per run (default 200).   │
   │ --install-completion                Install completion for the current       │
   │                                     shell.                                   │
@@ -164,6 +164,7 @@
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
   │ version       Print the package version.                                     │
+  │ diff-reports  Show new, resolved and changed findings between two reports.   │
   │ modules       Inspect available modules.                                     │
   │ migration     Audit a CRM migration source before import.                    │
   │ release       Diff sandbox vs production config manifests.                   │

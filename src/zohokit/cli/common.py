@@ -12,9 +12,17 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from zohokit.cli.exitcodes import resolve
+from zohokit.core.baseline import BaselineError, apply_baseline, load_baseline
 from zohokit.core.context import RunContext
 from zohokit.core.findings import Report
-from zohokit.reports import render_html, render_json, render_markdown, render_table
+from zohokit.reports import (
+    render_html,
+    render_json,
+    render_junit,
+    render_markdown,
+    render_sarif,
+    render_table,
+)
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -34,7 +42,12 @@ _RENDERERS = {
     "table": render_table,
     "markdown": render_markdown,
     "html": render_html,
+    "sarif": render_sarif,
+    "junit": render_junit,
 }
+
+#: Accepted ``--format`` values, shared by every command's help text.
+FORMATS_HELP = "json|table|markdown|html|sarif|junit."
 
 
 def fail(message: str) -> NoReturn:
@@ -50,10 +63,10 @@ class GlobalOptions:
     ``live``, ``profile`` and ``max_api_calls`` are honored by the
     ``auth``, ``doctor`` and ``cache`` commands; per-module live reads are
     not wired yet, so module commands refuse them loudly instead of
-    silently ignoring them. ``ai`` and ``baseline`` name features that do
-    not exist yet; using either fails loudly (exit 1). ``format_name``,
-    ``out`` and ``strict`` act as defaults when the command does not set
-    them.
+    silently ignoring them. ``ai`` names a feature that does not exist
+    yet; using it fails loudly (exit 1). ``baseline`` applies an
+    accepted-findings file. ``format_name``, ``out`` and ``strict`` act
+    as defaults when the command does not set them.
     """
 
     live: bool = False
@@ -72,11 +85,12 @@ _GLOBAL = GlobalOptions()
 # After-subcommand spellings of the root flags (TK-X-1).
 #
 # Click only accepts root options *before* the subcommand, so every leaf
-# command re-declares these flags with identical help text. ``--ai`` and
-# ``--baseline`` name features that do not exist yet and always fail
-# loudly. ``--live``/``--profile``/``--max-api-calls`` are honored by the
-# auth, doctor and cache commands; every other command refuses them loudly
-# (see :func:`reject_unsupported_live`) until its live path is wired.
+# command re-declares these flags with identical help text. ``--ai`` names
+# a feature that does not exist yet and always fails loudly.
+# ``--baseline`` applies an accepted-findings file. ``--live``/``--profile``/
+# ``--max-api-calls`` are honored by the auth, doctor and cache commands;
+# every other command refuses them loudly (see :func:`reject_unsupported_live`)
+# until its live path is wired.
 LiveAfter: TypeAlias = Annotated[
     bool, typer.Option("--live", help="Read from Zoho via a named profile.")
 ]
@@ -89,7 +103,7 @@ AiAfter: TypeAlias = Annotated[
 ]
 BaselineAfter: TypeAlias = Annotated[
     Path | None,
-    typer.Option("--baseline", help="Suppression file (not available until v0.2.0)."),
+    typer.Option("--baseline", help="Accepted-findings file (.zohokit-baseline.json)."),
 ]
 MaxApiCallsAfter: TypeAlias = Annotated[
     int | None,
@@ -103,14 +117,13 @@ def reject_future_flags(
 ) -> None:
     """Fail loudly when an after-subcommand flag names a missing feature.
 
-    Mirrors the root-callback check with the same messages (exit 1).
+    Only ``--ai`` is still gated here. ``--baseline`` is accepted by every
+    command that produces a report; the parameter stays so existing call
+    sites keep working while each command wires it to
+    :func:`apply_baseline_file`.
     """
-    check_unavailable_globals(
-        GlobalOptions(
-            ai=ai,
-            baseline=baseline,
-        )
-    )
+    check_unavailable_globals(GlobalOptions(ai=ai))
+    _ = baseline
 
 
 def reject_unsupported_live(
@@ -142,15 +155,14 @@ def set_global_options(options: GlobalOptions) -> None:
 def check_unavailable_globals(options: GlobalOptions | None = None) -> None:
     """Fail loudly when a flag names a feature that does not exist yet.
 
-    Only ``--ai`` and ``--baseline`` are still gated here: ``--live``,
-    ``--profile`` and ``--max-api-calls`` are honored by the auth, doctor
-    and cache commands, and refused per-command elsewhere.
+    Only ``--ai`` is still gated here: ``--live``, ``--profile`` and
+    ``--max-api-calls`` are honored by the auth, doctor and cache
+    commands, and refused per-command elsewhere; ``--baseline`` applies
+    an accepted-findings file wherever a report is produced.
     """
     active = _GLOBAL if options is None else options
     if active.ai:
         fail("AI assistance is not available until v0.3.0.")
-    if active.baseline is not None:
-        fail("Baseline suppression is not available until v0.2.0.")
 
 
 @dataclass(frozen=True)
@@ -211,7 +223,7 @@ def emit(report: Report, format_name: str, out: Path | None, *, strict: bool) ->
     try:
         render = _RENDERERS[format_name]
     except KeyError:
-        fail(f"unsupported --format {format_name!r} (json|table|markdown|html)")
+        fail(f"unsupported --format {format_name!r} ({FORMATS_HELP.rstrip('.')})")
     text = render(report)
     if out is None:
         typer.echo(text)
@@ -221,7 +233,23 @@ def emit(report: Report, format_name: str, out: Path | None, *, strict: bool) ->
     raise typer.Exit(code=int(resolve(report, strict=strict)))
 
 
+def apply_baseline_file(report: Report, baseline: Path | None, *, now: datetime) -> Report:
+    """Apply an accepted-findings file to a report (no-op when absent).
+
+    A missing reason (or any other validation problem) is an input error
+    (exit 1) with a value-free message.
+    """
+    if baseline is None:
+        return report
+    try:
+        loaded = load_baseline(baseline)
+    except BaselineError as exc:
+        fail(str(exc))
+    return apply_baseline(report, loaded, now=now)
+
+
 __all__: list[str] = [
+    "FORMATS_HELP",
     "AiAfter",
     "BaselineAfter",
     "GlobalOptions",
@@ -229,6 +257,7 @@ __all__: list[str] = [
     "MaxApiCallsAfter",
     "ProfileAfter",
     "RuntimeOptions",
+    "apply_baseline_file",
     "check_unavailable_globals",
     "emit",
     "fail",

@@ -32,7 +32,7 @@ uv run zohokit workflow simulate rules.json --strict
 
 The pure engine replays the offline rules over one offline record and emits
 findings with stable IDs; the run is not ready while findings remain. Render
-with `--format json|table|markdown|html` and write to a file with `--out`.
+with `--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
 
 ## Finding codes
 

@@ -13,6 +13,7 @@ from zohokit.cli.common import (
     LiveAfter,
     MaxApiCallsAfter,
     ProfileAfter,
+    apply_baseline_file,
     emit,
     fresh_context,
     load_input,
@@ -36,7 +37,7 @@ def diff(
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,
@@ -52,7 +53,9 @@ def diff(
     reject_unsupported_live("release", live, profile, max_api_calls)
     reject_future_flags(ai, baseline)
     data = load_input(fixture, "release", input_format)
-    report = run(parse_model(ReleaseInput, data), ctx=fresh_context())
+    ctx = fresh_context()
+    report = run(parse_model(ReleaseInput, data), ctx=ctx)
+    report = apply_baseline_file(report, baseline, now=ctx.now)
     if plan_out is not None:
         json_path, _ = write_bundle(
             Plan(),

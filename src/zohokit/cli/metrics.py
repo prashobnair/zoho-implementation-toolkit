@@ -13,6 +13,7 @@ from zohokit.cli.common import (
     LiveAfter,
     MaxApiCallsAfter,
     ProfileAfter,
+    apply_baseline_file,
     emit,
     fail,
     fresh_context,
@@ -39,7 +40,7 @@ def check(
     ] = "finance",
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,
@@ -54,7 +55,9 @@ def check(
     if audience not in {"sales", "finance", "operations"}:
         fail(f"unsupported --audience {audience!r} (sales|finance|operations)")
     data = load_input(fixture, "metrics", input_format)
-    report = run(parse_model(MetricsInput, data), ctx=fresh_context(), audience=audience)
+    ctx = fresh_context()
+    report = run(parse_model(MetricsInput, data), ctx=ctx, audience=audience)
+    report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 

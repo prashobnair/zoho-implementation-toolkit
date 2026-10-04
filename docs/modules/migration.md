@@ -32,7 +32,7 @@ not-ready run still exits 0 after printing the report.
 
 The pure engine reads one offline JSON envelope (organizations, people, deals,
 activities plus the stage map) and emits findings with stable IDs plus a
-`ready_for_import` flag. Render with `--format json|table|markdown|html` and
+`ready_for_import` flag. Render with `--format json|table|markdown|html|sarif|junit` and
 write to a file with `--out`.
 
 ## Finding codes

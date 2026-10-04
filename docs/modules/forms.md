@@ -33,7 +33,7 @@ uv run zohokit forms parity pair.json --strict
 
 The pure engine runs both offline form definitions over the offline answer
 cases and emits findings with stable IDs; the run is ready only when every
-case passes on both sides. Render with `--format json|table|markdown|html`
+case passes on both sides. Render with `--format json|table|markdown|html|sarif|junit`
 and write to a file with `--out`.
 
 ## Finding codes

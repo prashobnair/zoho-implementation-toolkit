@@ -13,6 +13,7 @@ from zohokit.cli.common import (
     LiveAfter,
     MaxApiCallsAfter,
     ProfileAfter,
+    apply_baseline_file,
     emit,
     fresh_context,
     load_input,
@@ -35,7 +36,7 @@ def reconcile(
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,
@@ -48,7 +49,9 @@ def reconcile(
     reject_unsupported_live("books", live, profile, max_api_calls)
     reject_future_flags(ai, baseline)
     data = load_input(fixture, "books", input_format)
-    report = run(parse_model(BooksInput, data), ctx=fresh_context())
+    ctx = fresh_context()
+    report = run(parse_model(BooksInput, data), ctx=ctx)
+    report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
 

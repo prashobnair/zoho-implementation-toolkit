@@ -34,7 +34,7 @@ uv run zohokit modules list
 
 Then audit a fixture, for example `uv run zohokit migration audit
 tests/golden/legacy/migration/inputs/03_clean.json --strict`. Every module
-renders `--format json|table|markdown|html` and writes to a file with `--out`;
+renders `--format json|table|markdown|html|sarif|junit` and writes to a file with `--out`;
 `--help` works on the root and on every module.
 
 ## Live mode (read-only, your own Zoho Developer Edition org)

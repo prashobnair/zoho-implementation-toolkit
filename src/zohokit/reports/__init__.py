@@ -1,20 +1,35 @@
-"""Report renderers: JSON, rich table, Markdown, HTML (TK-CORE-8).
+"""Report renderers: JSON, rich table, Markdown, HTML, SARIF, JUnit (TK-CORE-8).
 
-SARIF, JUnit and XLSX renderers land with later releases. The HTML
-report is a single self-contained file: inline CSS/JS only, so it works
-offline and from a file:// URL.
+SARIF 2.1.0 and JUnit XML let GitHub render findings in PR checks and the
+tests tab. The HTML report is a single self-contained file: inline CSS/JS
+only, so it works offline and from a file:// URL. XLSX workbooks land with
+later releases.
 """
 
 from __future__ import annotations
 
+import html
+import json
 from typing import Any
 
 from jinja2 import Environment
 from rich.console import Console
 from rich.table import Table
 
+from zohokit import __version__
 from zohokit.core.findings import Report
 from zohokit.core.ids import canonical_json
+
+SARIF_VERSION = "2.1.0"
+SARIF_SCHEMA_URI = "https://json.schemastore.org/sarif-2.1.0.json"
+TOOL_INFORMATION_URI = "https://github.com/prashobnair/zoho-implementation-toolkit"
+
+_SEVERITY_TO_SARIF_LEVEL = {
+    "error": "error",
+    "review": "warning",
+    "warning": "warning",
+    "info": "note",
+}
 
 HTML_TEMPLATE = """\
 <!DOCTYPE html>
@@ -127,6 +142,11 @@ pre { white-space: pre-wrap; word-break: break-word; }
 """
 
 
+def _xml_escape(value: object) -> str:
+    """Escape text for XML element content and double-quoted attributes."""
+    return html.escape(str(value), quote=True)
+
+
 def render_json(report: Report) -> str:
     """Render the report envelope as indented JSON."""
     return report.model_dump_json(indent=2)
@@ -204,4 +224,137 @@ def render_html(report: Report) -> str:
     )
 
 
-__all__: list[str] = ["render_html", "render_json", "render_markdown", "render_table"]
+def render_sarif(report: Report) -> str:
+    """Render the report as SARIF 2.1.0 (one result per finding).
+
+    The location is a file plus JSON pointer when known: findings whose
+    evidence carries a ``file`` key point at that file, otherwise at
+    ``<module>.json``. The pointer and the stable finding ID travel in
+    the location properties and in ``partialFingerprints`` so reruns
+    match across runs.
+    """
+    dumped = _dump(report)
+    rules: dict[str, dict[str, Any]] = {}
+    for finding in dumped["findings"]:
+        code = str(finding["code"])
+        if code not in rules:
+            rules[code] = {
+                "id": f"zohokit/{code}",
+                "name": code,
+                "shortDescription": {"text": f"zohokit finding {code}"},
+                "helpUri": str(finding.get("docs_url") or TOOL_INFORMATION_URI),
+            }
+    rule_index = {code: index for index, code in enumerate(rules)}
+    results = []
+    for position, finding in enumerate(dumped["findings"]):
+        code = str(finding["code"])
+        evidence = finding.get("evidence") or {}
+        uri = str(evidence.get("file", f"{dumped['module']}.json"))
+        suppressed = bool(finding.get("suppressed", False))
+        severity = str(finding["severity"])
+        level = "none" if suppressed else _SEVERITY_TO_SARIF_LEVEL.get(severity, "note")
+        result: dict[str, Any] = {
+            "ruleId": f"zohokit/{code}",
+            "ruleIndex": rule_index[code],
+            "level": level,
+            "message": {"text": str(finding["message"])},
+            "locations": [
+                {
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": uri},
+                        "region": {"startLine": 1},
+                    },
+                    "properties": {
+                        "jsonPointer": f"/findings/{position}",
+                        "entity": str(finding["entity"]),
+                        "entityId": str(finding["entity_id"]),
+                    },
+                }
+            ],
+            "partialFingerprints": {"zohokit-finding-id/v1": str(finding["id"])},
+            "properties": {
+                "severity": str(finding["severity"]),
+                "entity": str(finding["entity"]),
+                "entityId": str(finding["entity_id"]),
+                "suppressed": suppressed,
+            },
+        }
+        if suppressed:
+            result["suppressions"] = [{"kind": "external", "justification": "accepted in baseline"}]
+            result["baselineState"] = "absent"
+        results.append(result)
+    log = {
+        "$schema": SARIF_SCHEMA_URI,
+        "version": SARIF_VERSION,
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "zohokit",
+                        "version": __version__,
+                        "informationUri": TOOL_INFORMATION_URI,
+                        "rules": list(rules.values()),
+                    }
+                },
+                "results": results,
+                "properties": {
+                    "module": dumped["module"],
+                    "runId": dumped["run_id"],
+                    "ready": dumped["ready"],
+                },
+            }
+        ],
+    }
+    return json.dumps(log, indent=2, sort_keys=True) + "\n"
+
+
+def render_junit(report: Report) -> str:
+    """Render the report as JUnit XML (one testcase per finding).
+
+    ``error`` and ``review`` findings become ``<failure>`` entries;
+    suppressed findings become ``<skipped>``; ``warning`` and ``info``
+    findings pass. The stable finding ID is the testcase name so reruns
+    match across runs.
+    """
+    dumped = _dump(report)
+    total = len(dumped["findings"])
+    failures = sum(
+        1
+        for finding in dumped["findings"]
+        if not finding.get("suppressed", False) and str(finding["severity"]) in ("error", "review")
+    )
+    skipped = sum(1 for finding in dumped["findings"] if finding.get("suppressed", False))
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<testsuite name="zohokit {_xml_escape(dumped["module"])}" '
+        f'tests="{total}" failures="{failures}" errors="0" skipped="{skipped}">',
+    ]
+    for finding in dumped["findings"]:
+        classname = f"{dumped['module']}.{finding['code']}"
+        name = str(finding["id"])
+        message = str(finding["message"])
+        lines.append(
+            f'  <testcase classname="{_xml_escape(classname)}" name="{_xml_escape(name)}">'
+        )
+        if finding.get("suppressed", False):
+            lines.append('    <skipped message="accepted in baseline"/>')
+        elif str(finding["severity"]) in ("error", "review"):
+            quoted = _xml_escape(message)
+            lines.append(
+                f'    <failure message="{quoted}"'
+                f' type="{_xml_escape(str(finding["code"]))}">'
+                f"{_xml_escape(message)}</failure>"
+            )
+        lines.append("  </testcase>")
+    lines.append("</testsuite>")
+    return "\n".join(lines) + "\n"
+
+
+__all__: list[str] = [
+    "render_html",
+    "render_json",
+    "render_junit",
+    "render_markdown",
+    "render_sarif",
+    "render_table",
+]

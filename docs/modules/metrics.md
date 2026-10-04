@@ -34,7 +34,7 @@ uv run zohokit metrics check tables.json --audience sales
 
 The pure engine evaluates one offline envelope (accounts, deals, invoices,
 staff plus freshness markers) for the chosen audience and emits findings with
-stable IDs. Render with `--format json|table|markdown|html` and write to a
+stable IDs. Render with `--format json|table|markdown|html|sarif|junit` and write to a
 file with `--out`.
 
 ## Finding codes
