@@ -30,7 +30,7 @@ uv run zohokit timeline compose events.json --audience client
 
 The pure engine composes one offline event list for the chosen audience and
 emits findings with stable IDs; the run is not ready while conflicts remain.
-Render with `--format json|table|markdown|html` and write to a file with
+Render with `--format json|table|markdown|html|sarif|junit` and write to a file with
 `--out`.
 
 ## Finding codes

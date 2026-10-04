@@ -17,6 +17,7 @@ from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 from zohokit.modules.metrics.models import MetricsInput
 from zohokit.modules.migration.models import MigrationInput
+from zohokit.modules.release.manifest import Manifest
 from zohokit.modules.release.models import ReleaseInput
 from zohokit.modules.timeline.models import TimelineInput
 from zohokit.modules.workflow.models import WorkflowInput
@@ -59,3 +60,8 @@ def test_report_schemas_match_envelope() -> None:
     for module in sorted(INPUTS):
         on_disk = (ROOT / "schemas" / module / "report.v1.json").read_text(encoding="utf-8")
         assert on_disk == expected, f"{module} report schema is stale"
+
+
+def test_release_manifest_schema_matches_model() -> None:
+    on_disk = (ROOT / "schemas" / "release" / "manifest.v2.json").read_text(encoding="utf-8")
+    assert on_disk == _dump(Manifest.model_json_schema()), "release manifest.v2 schema is stale"

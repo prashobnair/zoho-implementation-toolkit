@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -27,11 +29,20 @@ from zohokit.cli.common import (
     LiveAfter,
     MaxApiCallsAfter,
     ProfileAfter,
+    apply_baseline_file,
     check_unavailable_globals,
+    fail,
     reject_future_flags,
     reject_unsupported_live,
     set_global_options,
 )
+from zohokit.core.diff_reports import (
+    diff_reports,
+    render_diff_json,
+    render_diff_markdown,
+    render_diff_table,
+)
+from zohokit.core.findings import Report
 from zohokit.modules import MODULES
 from zohokit.modules.plugins import discover_module_apps
 
@@ -48,6 +59,20 @@ _click_exceptions.UsageError.exit_code = 1
 def available_modules() -> list[str]:
     """Built-in modules in canonical order, then third-party plugin names."""
     return [*MODULES, *sorted(discover_module_apps())]
+
+
+def _load_report(path: Path) -> Report:
+    """Read a report envelope; exit 1 with a value-free message on failure."""
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        fail(f"cannot read {path}: {exc.strerror or exc}")
+    except ValueError:
+        fail(f"{path} is not valid JSON")
+    try:
+        return Report.model_validate(raw)
+    except ValueError:
+        fail(f"{path} is not a zohokit report envelope")
 
 
 def create_app() -> typer.Typer:
@@ -92,7 +117,7 @@ def create_app() -> typer.Typer:
         ] = False,
         baseline: Annotated[
             Path | None,
-            typer.Option("--baseline", help="Suppression file (not available until v0.2.0)."),
+            typer.Option("--baseline", help="Accepted-findings file (.zohokit-baseline.json)."),
         ] = None,
         max_api_calls: Annotated[
             int | None,
@@ -123,7 +148,7 @@ def create_app() -> typer.Typer:
     ) -> None:
         """Print the package version."""
         reject_unsupported_live("version", live, profile, max_api_calls)
-        reject_future_flags(ai, baseline)
+        reject_future_flags(ai)
         typer.echo(__version__)
 
     @modules_app.command("list")
@@ -136,12 +161,52 @@ def create_app() -> typer.Typer:
     ) -> None:
         """List the available toolkit modules, including plugins."""
         reject_unsupported_live("modules list", live, profile, max_api_calls)
-        reject_future_flags(ai, baseline)
+        reject_future_flags(ai)
         for name in available_modules():
             typer.echo(name)
 
     for plugin_name, plugin_app in discover_module_apps().items():
         root.add_typer(plugin_app, name=plugin_name)
+
+    @root.command("diff-reports")
+    def diff_reports_cmd(
+        before: Annotated[Path, typer.Argument(help="Earlier report JSON.")],
+        after: Annotated[Path, typer.Argument(help="Later report JSON.")],
+        format_name: Annotated[str, typer.Option("--format", help="json|table|markdown.")] = "json",
+        out: Annotated[Path | None, typer.Option("--out", help="Write the diff to a file.")] = None,
+        strict: Annotated[
+            bool, typer.Option("--strict", help="Exit 2 when new error findings exist.")
+        ] = False,
+        live: LiveAfter = False,
+        profile: ProfileAfter = None,
+        ai: AiAfter = False,
+        baseline: BaselineAfter = None,
+        max_api_calls: MaxApiCallsAfter = None,
+    ) -> None:
+        """Show new, resolved and changed findings between two reports."""
+        reject_unsupported_live("diff-reports", live, profile, max_api_calls)
+        reject_future_flags(ai)
+        old_report = _load_report(before)
+        new_report = _load_report(after)
+        if baseline is not None:
+            new_report = apply_baseline_file(new_report, baseline, now=datetime.now(UTC))
+        diff = diff_reports(old_report, new_report)
+        if format_name == "json":
+            text = render_diff_json(old_report, new_report, diff)
+        elif format_name == "table":
+            text = render_diff_table(diff)
+        elif format_name == "markdown":
+            text = render_diff_markdown(old_report, new_report, diff)
+        else:
+            fail(f"unsupported --format {format_name!r} (json|table|markdown)")
+        if out is None:
+            typer.echo(text)
+        else:
+            out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+            typer.echo(f"Wrote {out}")
+        if strict and diff.new_errors:
+            raise typer.Exit(code=2)
+
     return root
 
 

@@ -1,0 +1,35 @@
+# Demo: release gate on fixture manifests (offline, no Zoho, no secrets).
+#
+# Runs only on pull_request when files under fixtures/release/demo/ change.
+# It diffs the demo fixture pair with the local composite action, posts one
+# sticky PR comment, and uploads SARIF. Never touches Zoho.
+
+name: release-gate-demo
+
+on:
+  pull_request:
+    paths:
+      - "fixtures/release/demo/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked
+      - run: echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+      - name: Release gate on the demo fixtures
+        uses: ./action/release-gate
+        with:
+          before: fixtures/release/demo/before.json
+          after: fixtures/release/demo/after.json
+          fail-on: high

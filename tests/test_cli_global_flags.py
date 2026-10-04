@@ -2,7 +2,8 @@
 
 ``--live``/``--profile``/``--max-api-calls`` are honored by the auth,
 doctor and cache commands; module commands refuse them loudly (their live
-paths are not wired yet). ``--ai``/``--baseline`` still fail everywhere.
+paths are not wired yet). ``--ai`` still fails everywhere; ``--baseline``
+applies an accepted-findings file wherever a report is produced.
 """
 
 from __future__ import annotations
@@ -47,10 +48,10 @@ def test_ai_fails_loudly() -> None:
     assert result.output == "Input error: AI assistance is not available until v0.3.0.\n"
 
 
-def test_baseline_fails_loudly() -> None:
+def test_baseline_ignored_by_version() -> None:
+    """`version` produces no findings, so a baseline is accepted and ignored."""
     result = runner.invoke(app, ["--baseline", ".zohokit-baseline.json", "version"])
-    assert result.exit_code == 1
-    assert result.output == "Input error: Baseline suppression is not available until v0.2.0.\n"
+    assert result.exit_code == 0
 
 
 def test_max_api_calls_refused_on_module() -> None:
@@ -102,12 +103,12 @@ def test_ai_after_subcommand_fails_loudly() -> None:
     assert result.output == "Input error: AI assistance is not available until v0.3.0.\n"
 
 
-def test_baseline_after_subcommand_fails_loudly() -> None:
+def test_baseline_missing_file_fails_loudly() -> None:
     result = runner.invoke(
         app, ["migration", "audit", MIGRATION_FIXTURE, "--baseline", ".zohokit-baseline.json"]
     )
     assert result.exit_code == 1
-    assert result.output == "Input error: Baseline suppression is not available until v0.2.0.\n"
+    assert result.output.startswith("Input error: cannot read baseline file")
 
 
 def test_max_api_calls_after_subcommand_refused() -> None:

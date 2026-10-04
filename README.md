@@ -34,7 +34,7 @@ uv run zohokit modules list
 
 Then audit a fixture, for example `uv run zohokit migration audit
 tests/golden/legacy/migration/inputs/03_clean.json --strict`. Every module
-renders `--format json|table|markdown|html` and writes to a file with `--out`;
+renders `--format json|table|markdown|html|sarif|junit` and writes to a file with `--out`;
 `--help` works on the root and on every module.
 
 ## Live mode (read-only, your own Zoho Developer Edition org)
@@ -62,7 +62,7 @@ flowchart LR
     engine --> ready[ready flag]
     findings --> envelope[versioned report envelope]
     ready --> envelope
-    envelope --> renderers[json / table / markdown / html]
+    envelope --> renderers[json / table / markdown / html / sarif / junit]
 ```
 
 Eight modules (`migration`, `release`, `workflow`, `forms`, `books`,
@@ -72,6 +72,45 @@ Connectors and the CLI are thin adapters. Third-party modules register through
 the `zohokit.modules` entry-point group and appear in `zohokit modules list`.
 
 Differences from the original zoho-* tools: see docs/legacy-parity.md.
+
+## Release gate
+
+`action/release-gate` diffs two manifests on a pull request, maintains
+exactly one sticky PR comment (found by a hidden marker, updated on every
+push), uploads SARIF for code scanning, and fails per `fail-on`
+(`error` | `high` | `medium` | `never`). A demo workflow runs it on the
+fixture pair under `fixtures/release/demo/` — offline, no Zoho, only
+`GITHUB_TOKEN`:
+
+```yaml
+- name: Release gate on the demo fixtures
+  uses: ./action/release-gate
+  with:
+    before: fixtures/release/demo/before.json
+    after: fixtures/release/demo/after.json
+    fail-on: high
+```
+
+A risky change renders like this (collapsible details per finding, then
+the deploy order):
+
+```markdown
+<!-- zohokit-release-gate -->
+# Release gate: NOT READY
+
+Risk **high** — 0 added, 1 removed, 0 changed. Findings: 1 error,
+1 review, 0 warning, 1 info.
+
+## Findings
+
+<details><summary><code>removal_review</code> manifest/field:Deals.External_Ref ...</summary>
+...
+## Deploy order
+
+Removals (dependents first):
+
+1. `field:Deals.External_Ref`
+```
 
 ## Engineering decisions
 

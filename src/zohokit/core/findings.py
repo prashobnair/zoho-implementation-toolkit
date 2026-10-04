@@ -54,6 +54,7 @@ class Finding(BaseModel):
     evidence: dict[str, Any] = Field(default_factory=dict)
     remediation: str = ""
     docs_url: str = ""
+    suppressed: bool = False
 
     @field_validator("id")
     @classmethod
@@ -117,6 +118,7 @@ class ReportSummary(BaseModel):
     review: int = 0
     warning: int = 0
     info: int = 0
+    suppressed: int = 0
 
 
 class ReportSource(BaseModel):
@@ -182,6 +184,7 @@ class Report(BaseModel):
             review=sum(1 for item in ordered if item.severity is Severity.REVIEW),
             warning=sum(1 for item in ordered if item.severity is Severity.WARNING),
             info=sum(1 for item in ordered if item.severity is Severity.INFO),
+            suppressed=sum(1 for item in ordered if item.suppressed),
         )
         return cls(
             module=module,

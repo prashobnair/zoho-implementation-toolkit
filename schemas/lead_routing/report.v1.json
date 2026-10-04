@@ -44,6 +44,11 @@
         },
         "severity": {
           "$ref": "#/$defs/Severity"
+        },
+        "suppressed": {
+          "default": false,
+          "title": "Suppressed",
+          "type": "boolean"
         }
       },
       "required": [
@@ -100,6 +105,11 @@
         "review": {
           "default": 0,
           "title": "Review",
+          "type": "integer"
+        },
+        "suppressed": {
+          "default": 0,
+          "title": "Suppressed",
           "type": "integer"
         },
         "warning": {

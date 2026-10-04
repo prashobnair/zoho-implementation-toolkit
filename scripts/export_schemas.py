@@ -19,6 +19,7 @@ from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 from zohokit.modules.metrics.models import MetricsInput
 from zohokit.modules.migration.models import MigrationInput
+from zohokit.modules.release.manifest import Manifest
 from zohokit.modules.release.models import ReleaseInput
 from zohokit.modules.timeline.models import TimelineInput
 from zohokit.modules.workflow.models import WorkflowInput
@@ -53,7 +54,8 @@ def main() -> None:
         # The report envelope is shared; each module dir carries its own
         # copy so every output model resolves under schemas/<module>/.
         _write(ROOT / "schemas" / module / f"report.v{SCHEMA_VERSION}.json", report_schema)
-    print(f"wrote {2 * len(INPUTS)} schemas (v{SCHEMA_VERSION})")
+    _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
+    print(f"wrote {2 * len(INPUTS) + 1} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":
