@@ -1,4 +1,4 @@
-"""Preflight + CLI tests (TK-MIG-F1..F3, TK-CORE-8 xlsx)."""
+"""Preflight + CLI tests (TK-MIG-F1..F8, TK-CORE-8 xlsx)."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from typer.testing import CliRunner
 
 from zohokit.cli import app
 from zohokit.core.context import RunContext
-from zohokit.modules.migration.mapping import load_mapping
-from zohokit.modules.migration.metadata import metadata_from_dir
+from zohokit.modules.migration.mapping import MappingDoc, load_mapping
+from zohokit.modules.migration.metadata import TargetMetadata, metadata_from_dir
 from zohokit.modules.migration.preflight import SourceSpec, run_preflight
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -165,3 +165,111 @@ def test_cli_legacy_path_unchanged() -> None:
     result = runner.invoke(app, ["migration", "audit", str(fixture), "--format", "json"])
     assert result.exit_code == 0
     assert json.loads(result.output)["ready"] is False
+
+
+def test_preflight_reports_duplicate_cluster_without_merging(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "persons.csv").write_text(
+        "ID,Name,Email,Created\n"
+        "p-1,Aarav Sharma,aarav@example.invalid,2026-01-05\n"
+        "p-2,Aarav S,aarav@example.invalid,2026-01-06\n",
+        encoding="utf-8",
+    )
+    doc = MappingDoc.model_validate(
+        {
+            "version": 1,
+            "source": "generic",
+            "entities": [
+                {
+                    "name": "people",
+                    "source_kind": "persons",
+                    "target_module": "Contacts",
+                    "fields": {"Email": {"from": "Email"}},
+                }
+            ],
+        }
+    )
+    metadata = TargetMetadata(modules={})
+    report = run_preflight(
+        doc,
+        {"people": SourceSpec(path=str(source / "persons.csv"), kind="persons")},
+        metadata,
+        ctx=RunContext(now=datetime(2026, 1, 5, tzinfo=UTC)),
+    )
+    clusters = [item for item in report.findings if item.code == "fuzzy_duplicate_cluster"]
+    assert len(clusters) == 1
+    assert clusters[0].entity_id == "p-1"
+    assert clusters[0].evidence["survivor"] == "p-1"
+    assert clusters[0].severity == "review"
+
+
+def test_cli_users_file_flags_owners(tmp_path: Path) -> None:
+    mapping = tmp_path / "mapping.yaml"
+    mapping.write_text(
+        "version: 1\n"
+        "source: generic\n"
+        "entities:\n"
+        "  - name: people\n"
+        "    source_kind: persons\n"
+        "    target_module: Contacts\n"
+        "    fields:\n"
+        "      Last_Name: {from: Name}\n"
+        "      Owner: {from: Owner}\n"
+        "    lookups:\n"
+        "      Owner: {entity: users, via: Owner}\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "persons.csv").write_text(
+        "Name,Owner\nSharma,active@example.invalid\nRao,gone@example.invalid\n",
+        encoding="utf-8",
+    )
+    users = tmp_path / "users.json"
+    users.write_text(
+        json.dumps(
+            {
+                "users": [
+                    {"email": "active@example.invalid", "status": "active"},
+                    {"email": "gone@example.invalid", "status": "inactive"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    fields = tmp_path / "fields"
+    fields.mkdir()
+    (fields / "fields_Contacts.json").write_text(
+        json.dumps(
+            {
+                "fields": [
+                    {"api_name": "Last_Name", "data_type": "text"},
+                    {"api_name": "Owner", "data_type": "ownerlookup"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app,
+        [
+            "migration",
+            "preflight",
+            "--mapping",
+            str(mapping),
+            "--source",
+            str(source),
+            "--fields-dir",
+            str(fields),
+            "--users-file",
+            str(users),
+            "--default-region",
+            "IN",
+            "--format",
+            "json",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    codes = sorted(item["code"] for item in json.loads(result.output)["findings"])
+    assert codes == ["inactive_owner"]

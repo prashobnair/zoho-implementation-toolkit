@@ -106,6 +106,19 @@ class LookupMapping(BaseModel):
     via: str
 
 
+class HistoryConfig(BaseModel):
+    """Which activity/history types the target can hold (TK-MIG-F8).
+
+    Rows whose ``type_col`` value falls outside ``supported`` yield
+    ``history_type_unsupported`` warnings; the plan then carries them.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    type_col: str
+    supported: list[str] = Field(default_factory=list)
+
+
 class EntityMapping(BaseModel):
     """One source entity (file kind) mapped onto one target module."""
 
@@ -117,6 +130,8 @@ class EntityMapping(BaseModel):
     fields: dict[str, FieldMapping]
     external_id: ExternalId | None = None
     lookups: dict[str, LookupMapping] = Field(default_factory=dict)
+    stage_probabilities: dict[str, float] = Field(default_factory=dict)
+    history: HistoryConfig | None = None
 
 
 class MappingDoc(BaseModel):
@@ -412,6 +427,7 @@ __all__: list[str] = [
     "EntityMapping",
     "ExternalId",
     "FieldMapping",
+    "HistoryConfig",
     "LookupMapping",
     "MappingConfigError",
     "MappingDoc",

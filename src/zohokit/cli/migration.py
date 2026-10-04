@@ -69,6 +69,14 @@ def preflight(
         Path | None,
         typer.Option("--fields-dir", help="Dir of fields_<Module>.json metadata (offline)."),
     ] = None,
+    users_file: Annotated[
+        Path | None,
+        typer.Option("--users-file", help="Target users JSON for owner checks (offline)."),
+    ] = None,
+    default_region: Annotated[
+        str | None,
+        typer.Option("--default-region", help="Phone region for numbers without a code."),
+    ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
         str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
@@ -79,9 +87,12 @@ def preflight(
     ai: AiAfter = False,
     baseline: BaselineAfter = None,
     max_api_calls: MaxApiCallsAfter = None,
+    experimental: Annotated[
+        bool, typer.Option("--experimental", help="Allow unverified target search (TK-MIG-F5).")
+    ] = False,
 ) -> None:
     """Audit CSV exports against a mapping and the target field metadata."""
-    from zohokit.modules.migration.preflight import SourceSpec, run_preflight
+    from zohokit.modules.migration.preflight import ExtraChecks, SourceSpec, run_preflight
 
     reject_future_flags(ai, baseline)
     if live or profile is not None or max_api_calls is not None:
@@ -107,19 +118,28 @@ def preflight(
         if not profile:
             fail("--live requires --profile: there is no default profile")
         from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError
-        from zohokit.modules.migration.live import live_metadata
+        from zohokit.modules.migration.live import live_metadata, live_search_fn, live_users
 
         modules = tuple(sorted({entity.target_module for entity in doc.entities}))
         try:
-            metadata, _ = live_metadata(profile, modules=modules, max_api_calls=max_api_calls)
+            metadata, client = live_metadata(profile, modules=modules, max_api_calls=max_api_calls)
+            users, _ = live_users(profile, max_api_calls=max_api_calls)
         except ValueError as exc:
             fail(str(exc))
         except (ConnectorError, ContractDriftError) as exc:
             typer.echo(f"Connector error: {exc}", err=True)
             raise typer.Exit(code=3) from exc
+        search = live_search_fn(client) if experimental else None
+        extra = ExtraChecks(
+            default_region=default_region,
+            users=users,
+            search=search,
+            search_budget=max_api_calls,
+        )
         ctx = RunContext(now=datetime.now(UTC), mode="live_read")
     else:
         from zohokit.modules.migration.metadata import TargetMetadata, metadata_from_dir
+        from zohokit.modules.migration.owners import users_from_file
 
         if fields_dir is None:
             fail("--preflight needs --fields-dir DIR or --live --profile NAME for target metadata")
@@ -130,8 +150,15 @@ def preflight(
         if not metadata.modules:
             fail(f"--fields-dir {fields_dir} holds no fields_<Module>.json files")
         metadata = TargetMetadata(modules=metadata.modules)
+        offline_users: dict[str, str] | None = None
+        if users_file is not None:
+            try:
+                offline_users = users_from_file(users_file)
+            except ValueError as exc:
+                fail(str(exc))
+        extra = ExtraChecks(default_region=default_region, users=offline_users)
         ctx = fresh_context()
-    report = run_preflight(doc, sources, metadata, ctx=ctx)
+    report = run_preflight(doc, sources, metadata, ctx=ctx, extra=extra)
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
