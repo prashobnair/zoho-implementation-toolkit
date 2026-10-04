@@ -15,6 +15,7 @@
     {
       "api_name": "",
       "attributes": {
+        "description": "demo tweak proving the sticky comment updates",
         "fields": [
           "Deals.Amount",
           "Deals.External_Ref"
