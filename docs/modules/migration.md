@@ -59,6 +59,15 @@ checked against the target metadata: unknown or read-only targets,
 missing source columns, type mismatches, over-length values (with the
 max), missing picklist values, unmapped mandatory fields, unresolvable
 lookups, and unique collisions in the batch (fingerprinted, never raw).
+Duplicate clusters (normalized email, E.164 phone, fuzzy company name at
+token-set ratio 85+) report one suggested survivor per cluster and are
+never merged; survivor choice and finding placement are deterministic
+under input reordering. Deal stages validate against the target Stage
+picklist (with optional expected probabilities per stage); owner emails
+resolve against target users (inactive or unmapped owners are errors,
+emails redacted); history types outside the declared supported list warn.
+Live target duplicate search (`--live --profile NAME --experimental`,
+budget-aware with `checked N / M` coverage) fingerprints matches only.
 
 ## Finding codes
 
@@ -70,7 +79,7 @@ lookups, and unique collisions in the batch (fingerprinted, never raw).
 | `possible_duplicate` | review | Normalized email matches another source person. Never auto-merged. |
 | `orphan_organization` | error | Person references an organization ID absent from the export. |
 | `orphan_person` | error | Deal references a person ID absent from the export. |
-| `unmapped_stage` | error | Deal stage has no approved target mapping. |
+| `unmapped_stage` | error | Deal stage has no approved target mapping (legacy envelope) or no entry in the target Stage picklist (preflight). |
 | `orphan_deal` | error | Activity references a deal ID absent from the export. |
 | `row_parse_error` | error/warning | A source row cannot be parsed; it is excluded from checks. |
 | `unknown_target_field` | error | A mapped target field is absent from the target metadata. |
@@ -82,6 +91,14 @@ lookups, and unique collisions in the batch (fingerprinted, never raw).
 | `mandatory_field_unmapped` | error | A mandatory target field has no mapping. |
 | `lookup_unresolvable` | review | A lookup field has no entity resolution in the mapping. |
 | `unique_field_collision_in_batch` | error | Two batch rows share one unique target value. |
+| `fuzzy_duplicate_cluster` | review | Rows share an email, phone or fuzzy company name; one survivor suggested, never merged. |
+| `would_duplicate_existing` | review | A source row matches an existing target record (fingerprint only). |
+| `target_dedupe_coverage` | info | Target duplicate search coverage (`checked N / M`). |
+| `unmapped_stage` | error | Deal stage has no approved target mapping (legacy envelope) or no entry in the target Stage picklist (preflight). |
+| `stage_probability_mismatch` | warning | A row probability differs from the expected stage probability. |
+| `inactive_owner` | error | An owner email belongs to an inactive target user. |
+| `owner_unmapped` | error | An owner email matches no user in the target org. |
+| `history_type_unsupported` | warning/info | A history type has no target module to hold it; info carries per-parent counts. |
 
 ## Scope & safety
 
