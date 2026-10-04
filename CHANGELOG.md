@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.2.0...v0.2.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **cli:** UTF-8-safe output on every platform; Windows CI ([#37](https://github.com/prashobnair/zoho-implementation-toolkit/issues/37)) ([e3d6c31](https://github.com/prashobnair/zoho-implementation-toolkit/commit/e3d6c317b9648bb6a2fbf6413c5c1c109d30fd28))
+
 ## [0.2.0](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.1.0...v0.2.0) (2026-10-04)
 
 
