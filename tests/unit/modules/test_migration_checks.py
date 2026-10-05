@@ -28,9 +28,9 @@ def test_target_search_fingerprints_and_review() -> None:
         return []
 
     candidates = [
-        ("p-1", "dup@example.invalid", None),
-        ("p-2", None, "+919000000002"),
-        ("p-3", None, None),
+        ("p-1", 2, "dup@example.invalid", None),
+        ("p-2", 3, None, "+919000000002"),
+        ("p-3", 4, None, None),
     ]
     findings, checked, total, truncated = check_against_target(
         "people", "Contacts", candidates, search
@@ -40,6 +40,7 @@ def test_target_search_fingerprints_and_review() -> None:
     ]
     assert findings[0].severity == "review"
     assert findings[0].evidence["matched_on"] == "email"
+    assert findings[0].evidence["line"] == 2
     assert findings[0].evidence["target_fingerprint"].startswith("sha256:")
     assert "1455423000000476001" not in str(findings[0].evidence)
     assert (checked, total, truncated) == (2, 3, False)
@@ -57,11 +58,11 @@ def test_target_search_email_first_and_budget_truncation() -> None:
         return []
 
     candidates = [
-        ("p-1", None, "+919000000001"),
-        ("p-2", "b@example.invalid", None),
-        ("p-3", "c@example.invalid", None),
+        ("p-1", 2, None, "+919000000001"),
+        ("p-2", 3, "b@example.invalid", None),
+        ("p-3", 4, "c@example.invalid", None),
     ]
-    ordered = sorted(candidates, key=lambda item: (item[1] is None, item[2] is None))
+    ordered = sorted(candidates, key=lambda item: (item[2] is None, item[3] is None, item[0]))
     findings, checked, total, truncated = check_against_target(
         "people", "Contacts", ordered, search, budget=1
     )
@@ -105,9 +106,9 @@ def test_stage_picklist_and_probability() -> None:
     entity = doc.entities[0]
     header = ["Title", "Stage", "Prob"]
     rows = [
-        ("d-1", {"Title": "A", "Stage": "Qualification", "Prob": "10"}),
-        ("d-2", {"Title": "B", "Stage": "Bogus", "Prob": "50"}),
-        ("d-3", {"Title": "C", "Stage": "Qualification", "Prob": "80"}),
+        ("d-1", 2, {"Title": "A", "Stage": "Qualification", "Prob": "10"}),
+        ("d-2", 3, {"Title": "B", "Stage": "Bogus", "Prob": "50"}),
+        ("d-3", 4, {"Title": "C", "Stage": "Qualification", "Prob": "80"}),
     ]
     findings = check_stages(entity, rows, header, STAGE_META)
     assert [(item.entity_id, item.code) for item in findings] == [
@@ -116,7 +117,13 @@ def test_stage_picklist_and_probability() -> None:
     ]
     assert findings[0].severity == "error"
     assert findings[1].severity == "warning"
-    assert findings[1].evidence == {"stage": "Qualification", "expected": 10.0, "actual": 80.0}
+    assert findings[0].evidence["line"] == 3
+    assert findings[1].evidence == {
+        "stage": "Qualification",
+        "expected": 10.0,
+        "actual": 80.0,
+        "line": 4,
+    }
 
 
 def test_owners_redacted_and_statuses() -> None:
@@ -145,10 +152,10 @@ def test_owners_redacted_and_statuses() -> None:
     entity = doc.entities[0]
     header = ["Owner Email"]
     rows = [
-        ("p-1", {"Owner Email": "active@example.invalid"}),
-        ("p-2", {"Owner Email": "gone@example.invalid"}),
-        ("p-3", {"Owner Email": "ghost@example.invalid"}),
-        ("p-4", {"Owner Email": ""}),
+        ("p-1", 2, {"Owner Email": "active@example.invalid"}),
+        ("p-2", 3, {"Owner Email": "gone@example.invalid"}),
+        ("p-3", 4, {"Owner Email": "ghost@example.invalid"}),
+        ("p-4", 5, {"Owner Email": ""}),
     ]
     findings = check_owners(entity, rows, header, users)
     assert [(item.entity_id, item.code) for item in findings] == [
@@ -156,8 +163,8 @@ def test_owners_redacted_and_statuses() -> None:
         ("p-3", "owner_unmapped"),
     ]
     assert all(item.severity == "error" for item in findings)
-    assert findings[0].evidence == {"owner": "g***@example.invalid"}
-    assert findings[1].evidence == {"owner": "g***@example.invalid"}
+    assert findings[0].evidence == {"owner": "g***@example.invalid", "line": 3}
+    assert findings[1].evidence == {"owner": "g***@example.invalid", "line": 4}
     assert "ghost@example.invalid" not in str(findings)
 
 
@@ -180,9 +187,9 @@ def test_history_unsupported_and_counts() -> None:
     entity = doc.entities[0]
     header = ["Subject", "Type", "Deal ID"]
     rows = [
-        ("a-1", {"Subject": "Kickoff", "Type": "Call", "Deal ID": "100"}),
-        ("a-2", {"Subject": "Old fax", "Type": "Fax", "Deal ID": "100"}),
-        ("a-3", {"Subject": "Sync", "Type": "Meeting", "Deal ID": "101"}),
+        ("a-1", 2, {"Subject": "Kickoff", "Type": "Call", "Deal ID": "100"}),
+        ("a-2", 3, {"Subject": "Old fax", "Type": "Fax", "Deal ID": "100"}),
+        ("a-3", 4, {"Subject": "Sync", "Type": "Meeting", "Deal ID": "101"}),
     ]
     findings = check_history(entity, rows, header)
     assert [(item.entity_id, item.code, item.severity) for item in findings] == [
@@ -190,4 +197,5 @@ def test_history_unsupported_and_counts() -> None:
         ("counts", "history_type_unsupported", "info"),
     ]
     assert findings[0].evidence["history_type"] == "Fax"
+    assert findings[0].evidence["line"] == 3
     assert findings[1].evidence == {"counts": {"100": 2, "101": 1}, "total": 3}

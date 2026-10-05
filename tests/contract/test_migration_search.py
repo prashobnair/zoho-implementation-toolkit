@@ -86,8 +86,8 @@ def test_search_replay_with_budget_truncation() -> None:
     seen: list[str] = []
     search = live_search_fn(_search_client(seen))
     candidates = [
-        ("p-1", "d@example.invalid", None),
-        ("p-2", "fresh@example.invalid", None),
+        ("p-1", 2, "d@example.invalid", None),
+        ("p-2", 3, "fresh@example.invalid", None),
     ]
     findings, checked, total, truncated = check_against_target(
         "people", "Contacts", candidates, search, budget=1
