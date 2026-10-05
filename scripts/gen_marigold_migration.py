@@ -503,28 +503,32 @@ def metadata() -> dict[str, object]:
 EXPECTED_MD = """# Marigold migration answer key (expected findings)
 
 Seeded defects in the synthetic Pipedrive-shaped export and the finding
-code that must catch each one. The CI test asserts every seeded defect
-is detected with its expected code and that no unexpected
-error-severity finding appears.
+code that must catch each one. Numbers are 1-based physical file lines
+(the header is line 1): every per-record finding carries its line in
+evidence and keys on the stable source record ID (never a position).
+Only `row_parse_error` is positional (a parse fault has no record to
+key on). The CI test asserts exact set equality between the detected
+(entity, code, source_id, line, severity) tuples and `answer_key.json`,
+with zero unexpected error-severity findings.
 
-## Persons (800 rows; numbers are data rows, header excluded)
+## Persons (800 data rows + 1 blank line)
 
 | # | Defect | Expected code |
 |---|---|---|
-| 1 | Row 11 has 2 cells (header needs 8) | `row_parse_error` (error) |
-| 2 | Blank line after row 21 | `row_parse_error` (warning) |
-| 3a | Rows 31+32 share an email | `unique_field_collision_in_batch` x2 |
-| 3b | Survivor of the pair is row 31 | `fuzzy_duplicate_cluster` x1 |
-| 4 | Row 41 email is not an address | `type_incompatible` (error) |
-| 5 | Row 42 name is 81 chars (max 80) | `value_too_long` (error) |
-| 6 | Row 43 phone cannot parse as E.164 | `type_incompatible` (error) |
-| 7 | Rows 51+52 share external ID 9001 | `unique_field_collision_in_batch` x2 (error) |
-| 8 | Row 61 owner is inactive | `inactive_owner` (error) |
-| 9 | Row 62 owner matches no user | `owner_unmapped` (error) |
-| 10 | Row 63 source maps to Pigeon (no such picklist value) | `picklist_value_missing` (error) |
-| 11 | Row 71 email already exists in the target | `would_duplicate_existing` (review) |
-| 12 | Row 72 name is empty (required) | `type_incompatible` (error) |
-| 13a | Mapping targets Mystery__s (absent) | `unknown_target_field` x1 |
+| 1 | Line 12 has 2 cells (header needs 8) | `row_parse_error` (error) |
+| 2 | Line 23 is blank | `row_parse_error` (warning) |
+| 3a | Lines 33+34 (IDs 31+32) share an email | `unique_field_collision_in_batch` x2 |
+| 3b | Survivor of the pair is ID 31 | `fuzzy_duplicate_cluster` x1 |
+| 4 | Line 43 (ID 41) email is not an address | `type_incompatible` (error) |
+| 5 | Line 44 (ID 42) name is 81 chars (max 80) | `value_too_long` (error) |
+| 6 | Line 45 (ID 43) phone cannot parse as E.164 | `type_incompatible` (error) |
+| 7 | Lines 53+54 share external ID 9001 | `unique_field_collision_in_batch` x2 (error) |
+| 8 | Line 63 (ID 61) owner is inactive | `inactive_owner` (error) |
+| 9 | Line 64 (ID 62) owner matches no user | `owner_unmapped` (error) |
+| 10 | Line 65 (ID 63) Pigeon is no picklist value | `picklist_value_missing` (error) |
+| 11 | Line 73 (ID 71) email already exists in the target | `would_duplicate_existing` (review) |
+| 12 | Line 74 (ID 72) name is empty (required) | `type_incompatible` (error) |
+| 13a | Mapping targets Mystery (absent) | `unknown_target_field` x1 |
 | 13b | Mapping writes id (read-only) | `read_only_target_field` x1 |
 | 13c | Nickname column missing from header | `missing_source_column` x1 |
 
@@ -532,19 +536,19 @@ error-severity finding appears.
 
 | # | Defect | Expected code |
 |---|---|---|
-| 14 | Rows 6+7 are fuzzy company duplicates | `fuzzy_duplicate_cluster` x1 (review) |
-| 15 | Row 8 name is empty (required) | `type_incompatible` (error) |
+| 14 | Lines 7+8 (IDs 501+502) are fuzzy duplicates | `fuzzy_duplicate_cluster` x1 (review) |
+| 15 | Line 9 (ID 503) name is empty (required) | `type_incompatible` (error) |
 
 ## Deals (700 rows)
 
 | # | Defect | Expected code |
 |---|---|---|
-| 16a | Row 101 stage Warp Drive is outside the picklist | `picklist_value_missing` x1 |
+| 16a | Line 102 (ID 101) stage Warp Drive is outside the picklist | `picklist_value_missing` x1 |
 | 16b | Same row against the Deals pipeline | `unmapped_stage` x1 |
-| 17 | Row 102 Qualification at 80% (expects 10%) | `stage_probability_mismatch` (warning) |
-| 18 | Row 103 amount has 3 decimals | `type_incompatible` (error) |
-| 19 | Row 104 currency XX is unknown | `type_incompatible` (error) |
-| 20 | Row 105 close date cannot parse | `type_incompatible` (error) |
+| 17 | Line 103 (ID 102) Qualification 80%, expects 10% | `stage_probability_mismatch` (warning) |
+| 18 | Line 104 (ID 103) amount has 3 decimals | `type_incompatible` (error) |
+| 19 | Line 105 (ID 104) currency XX is unknown | `type_incompatible` (error) |
+| 20 | Line 106 (ID 105) close date cannot parse | `type_incompatible` (error) |
 | 21 | Mandatory Pipeline has no mapping | `mandatory_field_unmapped` (error) |
 | 22 | Account_Name lookup has no resolution | `lookup_unresolvable` (review) |
 
@@ -552,33 +556,274 @@ error-severity finding appears.
 
 | # | Defect | Expected code |
 |---|---|---|
-| 23 | Rows 12, 56, 151 are Fax (unsupported) | `history_type_unsupported` x3 + x1 info |
+| 23 | Lines 13, 57, 152 (IDs 12, 56, 151) are Fax | `history_type_unsupported` x3 + x1 info |
 
 ## Coverage
 
 Live-search coverage per entity: `target_dedupe_coverage` (info x4).
 """
 
-ANSWER_KEY = {
-    "row_parse_error": 2,
-    "unknown_target_field": 1,
-    "read_only_target_field": 1,
-    "missing_source_column": 1,
-    "type_incompatible": 7,
-    "value_too_long": 1,
-    "picklist_value_missing": 2,
-    "mandatory_field_unmapped": 1,
-    "lookup_unresolvable": 1,
-    "unique_field_collision_in_batch": 4,
-    "fuzzy_duplicate_cluster": 2,
-    "would_duplicate_existing": 1,
-    "target_dedupe_coverage": 4,
-    "unmapped_stage": 1,
-    "stage_probability_mismatch": 1,
-    "inactive_owner": 1,
-    "owner_unmapped": 1,
-    "history_type_unsupported": 4,
-}
+#: Row-level answer key: one entry per expected finding. Per-record
+#: entries carry the stable source record ID plus the 1-based physical
+#: file line (header is line 1); `row_parse_error` entries carry only
+#: the line (a parse fault has no record to key on); mapping-level,
+#: cluster, coverage and counts entries carry the finding's entity_id
+#: with no single line. The CI test asserts exact set equality between
+#: these tuples and the detected findings.
+ANSWER_KEY = [
+    {
+        "entity": "people",
+        "code": "row_parse_error",
+        "source_id": None,
+        "line": 12,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "row_parse_error",
+        "source_id": None,
+        "line": 23,
+        "severity": "warning",
+    },
+    {
+        "entity": "people",
+        "code": "unique_field_collision_in_batch",
+        "source_id": "31",
+        "line": 33,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "unique_field_collision_in_batch",
+        "source_id": "32",
+        "line": 34,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "fuzzy_duplicate_cluster",
+        "source_id": "31",
+        "line": None,
+        "severity": "review",
+    },
+    {
+        "entity": "people",
+        "code": "type_incompatible",
+        "source_id": "41",
+        "line": 43,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "value_too_long",
+        "source_id": "42",
+        "line": 44,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "type_incompatible",
+        "source_id": "43",
+        "line": 45,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "unique_field_collision_in_batch",
+        "source_id": "9001",
+        "line": 53,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "unique_field_collision_in_batch",
+        "source_id": "9001",
+        "line": 54,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "inactive_owner",
+        "source_id": "61",
+        "line": 63,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "owner_unmapped",
+        "source_id": "62",
+        "line": 64,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "picklist_value_missing",
+        "source_id": "63",
+        "line": 65,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "would_duplicate_existing",
+        "source_id": "71",
+        "line": 73,
+        "severity": "review",
+    },
+    {
+        "entity": "people",
+        "code": "type_incompatible",
+        "source_id": "72",
+        "line": 74,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "unknown_target_field",
+        "source_id": "Mystery",
+        "line": None,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "read_only_target_field",
+        "source_id": "id",
+        "line": None,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "missing_source_column",
+        "source_id": "Nickname",
+        "line": None,
+        "severity": "error",
+    },
+    {
+        "entity": "people",
+        "code": "target_dedupe_coverage",
+        "source_id": "coverage",
+        "line": None,
+        "severity": "info",
+    },
+    {
+        "entity": "companies",
+        "code": "fuzzy_duplicate_cluster",
+        "source_id": "501",
+        "line": None,
+        "severity": "review",
+    },
+    {
+        "entity": "companies",
+        "code": "type_incompatible",
+        "source_id": "503",
+        "line": 9,
+        "severity": "error",
+    },
+    {
+        "entity": "companies",
+        "code": "target_dedupe_coverage",
+        "source_id": "coverage",
+        "line": None,
+        "severity": "info",
+    },
+    {
+        "entity": "deals",
+        "code": "picklist_value_missing",
+        "source_id": "101",
+        "line": 102,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "unmapped_stage",
+        "source_id": "101",
+        "line": 102,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "stage_probability_mismatch",
+        "source_id": "102",
+        "line": 103,
+        "severity": "warning",
+    },
+    {
+        "entity": "deals",
+        "code": "type_incompatible",
+        "source_id": "103",
+        "line": 104,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "type_incompatible",
+        "source_id": "104",
+        "line": 105,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "type_incompatible",
+        "source_id": "105",
+        "line": 106,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "mandatory_field_unmapped",
+        "source_id": "Pipeline",
+        "line": None,
+        "severity": "error",
+    },
+    {
+        "entity": "deals",
+        "code": "lookup_unresolvable",
+        "source_id": "Account_Name",
+        "line": None,
+        "severity": "review",
+    },
+    {
+        "entity": "deals",
+        "code": "target_dedupe_coverage",
+        "source_id": "coverage",
+        "line": None,
+        "severity": "info",
+    },
+    {
+        "entity": "activities",
+        "code": "history_type_unsupported",
+        "source_id": "12",
+        "line": 13,
+        "severity": "warning",
+    },
+    {
+        "entity": "activities",
+        "code": "history_type_unsupported",
+        "source_id": "56",
+        "line": 57,
+        "severity": "warning",
+    },
+    {
+        "entity": "activities",
+        "code": "history_type_unsupported",
+        "source_id": "151",
+        "line": 152,
+        "severity": "warning",
+    },
+    {
+        "entity": "activities",
+        "code": "history_type_unsupported",
+        "source_id": "counts",
+        "line": None,
+        "severity": "info",
+    },
+    {
+        "entity": "activities",
+        "code": "target_dedupe_coverage",
+        "source_id": "coverage",
+        "line": None,
+        "severity": "info",
+    },
+]
 
 
 def main() -> None:

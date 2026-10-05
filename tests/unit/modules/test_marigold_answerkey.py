@@ -2,20 +2,21 @@
 
 Runs preflight over ``fixtures/migration/marigold/`` with a search
 closure built from the checked-in ``target_existing.json`` (offline
-stand-in for the live target). Asserts the per-code counts equal
-``answer_key.json`` exactly: 100% of seeded defects detected with the
-expected code, and zero unexpected error-severity findings.
+stand-in for the live target). Asserts exact set equality between the
+detected ``(entity, code, source_id, line, severity)`` tuples and the
+row-level ``answer_key.json``: 100% of seeded defects detected with the
+expected code and stable source key, and zero unexpected
+error-severity findings.
 """
 
 from __future__ import annotations
 
 import json
-from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
 from zohokit.core.context import RunContext
-from zohokit.core.findings import Severity
+from zohokit.core.findings import Finding, Severity
 from zohokit.modules.migration.mapping import load_mapping
 from zohokit.modules.migration.metadata import metadata_from_dir
 from zohokit.modules.migration.owners import users_from_file
@@ -66,11 +67,35 @@ def _report():  # type: ignore[no-untyped-def]
     )
 
 
+def finding_tuple(finding: Finding) -> tuple[str, str, str | None, int | None, str]:
+    """Row-level identity: stable source key plus the physical file line.
+
+    ``row_parse_error`` findings are positional by design (a parse fault
+    has no record to key on), so their locator is the line; every other
+    finding keys on the stable source record ID with the line alongside.
+    """
+    line = finding.evidence.get("line")
+    assert line is None or isinstance(line, int)
+    if finding.code == "row_parse_error":
+        assert finding.entity_id.startswith("line-")
+        assert isinstance(line, int)
+        return (finding.entity, finding.code, None, line, finding.severity.value)
+    return (finding.entity, finding.code, finding.entity_id, line, finding.severity.value)
+
+
+def expected_tuples() -> set[tuple[str, str, str | None, int | None, str]]:
+    """Answer-key entries as comparable tuples."""
+    payload = json.loads((MARIGOLD / "answer_key.json").read_text(encoding="utf-8"))
+    return {
+        (entry["entity"], entry["code"], entry["source_id"], entry["line"], entry["severity"])
+        for entry in payload["expected"]
+    }
+
+
 def test_marigold_answer_key_exact() -> None:
     report = _report()
-    expected = json.loads((MARIGOLD / "answer_key.json").read_text(encoding="utf-8"))["expected"]
-    detected = Counter(finding.code for finding in report.findings)
-    assert dict(sorted(detected.items())) == dict(sorted(expected.items()))
+    detected = {finding_tuple(finding) for finding in report.findings}
+    assert detected == expected_tuples()
 
 
 #: Codes the answer key allows at error severity (everything else is a regression).
@@ -100,10 +125,12 @@ def test_marigold_no_unexpected_errors() -> None:
         if finding.severity is ERROR and finding.code not in EXPECTED_ERROR_CODES
     ]
     assert unexpected == []
-    expected = json.loads((MARIGOLD / "answer_key.json").read_text(encoding="utf-8"))["expected"]
-    errors = sum(count for code, count in expected.items() if code in EXPECTED_ERROR_CODES)
-    # row_parse_error seeds one warning (the blank line) alongside its error.
-    assert report.summary.error == errors - 1 == 22
+    # The blank-line row_parse_error is a warning, so exactly one expected
+    # entry is not an error.
+    errors = sum(
+        1 for entry in expected_tuples() if entry[4] == "error" and entry[1] in EXPECTED_ERROR_CODES
+    )
+    assert report.summary.error == errors == 22
 
 
 def test_marigold_would_duplicate_fingerprinted() -> None:
@@ -111,5 +138,6 @@ def test_marigold_would_duplicate_fingerprinted() -> None:
     matches = [f for f in report.findings if f.code == "would_duplicate_existing"]
     assert len(matches) == 1
     assert matches[0].entity_id == "71"
+    assert matches[0].evidence["line"] == 73
     assert matches[0].evidence["target_fingerprint"].startswith("sha256:")
     assert "returning@example.invalid" not in str(matches[0].evidence)
