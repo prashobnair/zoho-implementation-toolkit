@@ -91,6 +91,40 @@ def _value_fingerprint(value: str) -> str:
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()[:32]
 
 
+#: Source-ID column fallbacks when the mapping declares no external ID
+#: (mirrors ``dedupe.ID_COLS`` without importing it on this branch).
+STABLE_ID_FALLBACK_COLS = ("ID", "Contact ID", "Deal ID", "Company ID", "id")
+
+
+def _row_content_hash(row: dict[str, str]) -> str:
+    """Content hash for rows with no usable ID column (never a position)."""
+    from zohokit.core.ids import canonical_json
+
+    digest = hashlib.sha256(canonical_json(row).encode("utf-8")).hexdigest()[:12]
+    return f"hash:{digest}"
+
+
+def stable_record_key(entity: EntityMapping, header: list[str], row: dict[str, str]) -> str:
+    """Stable per-record key: external-ID value else a row-content hash.
+
+    Uses the mapping's ``external_id.from`` column when it exists in the
+    header and the row carries a non-empty value; otherwise the first
+    ID-like fallback column present; otherwise a content hash of the row.
+    Never a row index or file position, so prepending or shuffling rows
+    changes no finding ID.
+    """
+    if entity.external_id is not None and entity.external_id.from_col in header:
+        candidate = (row.get(entity.external_id.from_col) or "").strip()
+        if candidate:
+            return candidate
+    for col in STABLE_ID_FALLBACK_COLS:
+        if col in header:
+            candidate = (row.get(col) or "").strip()
+            if candidate:
+                return candidate
+    return _row_content_hash(row)
+
+
 def metadata_from_cassette_envelope(payload: Any) -> dict[str, FieldMeta]:
     """Read ``{"fields": [...]}`` from a cassette envelope or a bare payload.
 
@@ -212,14 +246,18 @@ def validate_entity(
     entity: EntityMapping,
     fields: dict[str, FieldMeta],
     header: list[str],
-    sample_rows: list[dict[str, str]],
+    sample_rows: list[tuple[int, dict[str, str]]],
 ) -> list[Finding]:
     """Validate one mapped entity against its target field list.
 
     Mapping-level problems (unknown/read-only target, mandatory gaps,
     unresolvable lookups) yield one finding per field; value problems
-    (length, picklist, type) yield one finding per sampled row. Findings
-    sort by the shared report order at build time.
+    (length, picklist, type) yield one finding per sampled row. Each
+    per-record finding uses the stable source record key
+    (:func:`stable_record_key`, never a row index) as ``entity_id`` and
+    carries the 1-based physical file line (header is line 1) in
+    ``evidence["line"]`` so humans can find the row. Findings sort by the
+    shared report order at build time.
     """
     findings: list[Finding] = []
     for target, field_map in entity.fields.items():
@@ -271,9 +309,9 @@ def validate_entity(
                     discriminator=f"mapping\0{entity.target_module}\0{target}",
                 )
             )
-        for index, row in enumerate(sample_rows):
+        for line, row in sample_rows:
             value, failed = _mapped_value(entity, target, row)
-            row_key = f"row-{index + 1}"
+            record_key = stable_record_key(entity, header, row)
             if failed is not None:
                 findings.append(
                     Finding.create(
@@ -281,11 +319,15 @@ def validate_entity(
                         code="type_incompatible",
                         severity=Severity.ERROR,
                         entity=entity.name,
-                        entity_id=row_key,
+                        entity_id=record_key,
                         message="Value cannot be converted for target field (transform failed).",
-                        evidence={"target_field": target, "transform": failed.transform},
+                        evidence={
+                            "target_field": target,
+                            "transform": failed.transform,
+                            "line": line,
+                        },
                         remediation="Fix the source value or adjust the mapping transform.",
-                        discriminator=f"value\0{entity.target_module}\0{target}\0{row_key}",
+                        discriminator=f"value\0{entity.target_module}\0{target}\0{record_key}",
                     )
                 )
                 continue
@@ -299,15 +341,16 @@ def validate_entity(
                         code="value_too_long",
                         severity=Severity.ERROR,
                         entity=entity.name,
-                        entity_id=row_key,
+                        entity_id=record_key,
                         message="Value exceeds the target field length.",
                         evidence={
                             "target_field": target,
                             "max": meta.length,
                             "actual_length": len(value),
+                            "line": line,
                         },
                         remediation="Shorten the source value or widen the target field.",
-                        discriminator=f"value\0{entity.target_module}\0{target}\0{row_key}",
+                        discriminator=f"value\0{entity.target_module}\0{target}\0{record_key}",
                     )
                 )
             elif reason == "not_in_picklist":
@@ -317,14 +360,15 @@ def validate_entity(
                         code="picklist_value_missing",
                         severity=Severity.ERROR,
                         entity=entity.name,
-                        entity_id=row_key,
+                        entity_id=record_key,
                         message="Value is not an allowed picklist value in the target.",
                         evidence={
                             "target_field": target,
                             "allowed_count": len(meta.pick_list_values),
+                            "line": line,
                         },
                         remediation="Add the picklist value to the target or map it to one.",
-                        discriminator=f"value\0{entity.target_module}\0{target}\0{row_key}",
+                        discriminator=f"value\0{entity.target_module}\0{target}\0{record_key}",
                     )
                 )
             elif reason == "bad_syntax":
@@ -334,11 +378,15 @@ def validate_entity(
                         code="type_incompatible",
                         severity=Severity.ERROR,
                         entity=entity.name,
-                        entity_id=row_key,
+                        entity_id=record_key,
                         message="Value type does not fit the target field type.",
-                        evidence={"target_field": target, "target_type": meta.data_type},
+                        evidence={
+                            "target_field": target,
+                            "target_type": meta.data_type,
+                            "line": line,
+                        },
                         remediation="Fix the source value or adjust the mapping transform.",
-                        discriminator=f"value\0{entity.target_module}\0{target}\0{row_key}",
+                        discriminator=f"value\0{entity.target_module}\0{target}\0{record_key}",
                     )
                 )
     for api_name, meta in fields.items():
@@ -386,30 +434,36 @@ def validate_entity(
         )
     ]
     for target in unique_targets:
-        seen: dict[str, int] = {}
-        for index, row in enumerate(sample_rows):
+        seen: dict[str, tuple[str, int]] = {}
+        for line, row in sample_rows:
             value, failed = _mapped_value(entity, target, row)
             if failed is not None or value is None or value == "":
                 continue
             key = value.casefold()
+            record_key = stable_record_key(entity, header, row)
             if key in seen:
                 fingerprint = _value_fingerprint(value)
-                for other in (seen[key], index + 1):
+                prior_key, prior_line = seen[key]
+                for other_key, other_line in ((prior_key, prior_line), (record_key, line)):
                     findings.append(
                         Finding.create(
                             module="migration",
                             code="unique_field_collision_in_batch",
                             severity=Severity.ERROR,
                             entity=entity.name,
-                            entity_id=f"row-{other}",
+                            entity_id=other_key,
                             message="Two batch rows share one unique target value.",
-                            evidence={"target_field": target, "value_fingerprint": fingerprint},
+                            evidence={
+                                "target_field": target,
+                                "value_fingerprint": fingerprint,
+                                "line": other_line,
+                            },
                             remediation="Deduplicate the source rows before import.",
-                            discriminator=f"value\0{entity.target_module}\0{target}\0row-{other}",
+                            discriminator=f"value\0{entity.target_module}\0{target}\0{other_key}",
                         )
                     )
             else:
-                seen[key] = index + 1
+                seen[key] = (record_key, line)
     return findings
 
 
@@ -417,7 +471,7 @@ def validate_mapping(
     doc: MappingDoc,
     metadata: TargetMetadata,
     headers: dict[str, list[str]],
-    samples: dict[str, list[dict[str, str]]],
+    samples: dict[str, list[tuple[int, dict[str, str]]]],
 ) -> list[Finding]:
     """Validate every mapped entity; unknown modules yield no value checks.
 
@@ -456,10 +510,12 @@ __all__: list[str] = [
     "DATE_TYPES",
     "NUMBER_TYPES",
     "SAMPLE_ROWS",
+    "STABLE_ID_FALLBACK_COLS",
     "FieldMeta",
     "TargetMetadata",
     "metadata_from_cassette_envelope",
     "metadata_from_dir",
+    "stable_record_key",
     "validate_entity",
     "validate_mapping",
 ]

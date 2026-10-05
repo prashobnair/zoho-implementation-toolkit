@@ -51,6 +51,11 @@ def _doc(fields: dict[str, dict[str, object]]) -> MappingDoc:
     )
 
 
+def _lined(rows: list[dict[str, str]], start: int = 2) -> list[tuple[int, dict[str, str]]]:
+    """Pair rows with physical file lines (header is line 1)."""
+    return [(start + index, row) for index, row in enumerate(rows)]
+
+
 def test_real_stage_picklist_accepts_and_rejects() -> None:
     metadata = _metadata()
     fields = metadata.fields_for("Deals")
@@ -58,9 +63,11 @@ def test_real_stage_picklist_accepts_and_rejects() -> None:
     assert fields["Stage"].system_mandatory is True
     entity = _doc({"Deal_Name": {"from": "Title"}, "Stage": {"from": "Stage"}}).entities[0]
     header = ["Title", "Stage"]
-    ok = validate_entity(entity, fields, header, [{"Title": "Pilot", "Stage": "Qualification"}])
+    ok = validate_entity(
+        entity, fields, header, _lined([{"Title": "Pilot", "Stage": "Qualification"}])
+    )
     assert [item.code for item in ok] == []
-    bad = validate_entity(entity, fields, header, [{"Title": "Pilot", "Stage": "Bogus"}])
+    bad = validate_entity(entity, fields, header, _lined([{"Title": "Pilot", "Stage": "Bogus"}]))
     assert [item.code for item in bad] == ["picklist_value_missing"]
 
 
@@ -80,7 +87,9 @@ def test_real_cassette_codes() -> None:
     ).entities[0]
     codes = sorted(
         item.code
-        for item in validate_entity(entity, fields, [*header, "Org"], [{**rows[0], "Org": "Acme"}])
+        for item in validate_entity(
+            entity, fields, [*header, "Org"], _lined([{**rows[0], "Org": "Acme"}])
+        )
     )
     # Mapping deal text into the bigint `id` is also a genuine type error.
     assert codes == [
@@ -93,7 +102,7 @@ def test_real_cassette_codes() -> None:
     # A 121-char deal name exceeds the recorded length 120 with its max.
     long_entity = _doc({"Deal_Name": {"from": "Title"}, "Stage": {"from": "Stage"}}).entities[0]
     long = validate_entity(
-        long_entity, fields, header, [{"Title": "D" * 121, "Stage": "Qualification"}]
+        long_entity, fields, header, _lined([{"Title": "D" * 121, "Stage": "Qualification"}])
     )
     assert [(item.code, item.evidence["max"]) for item in long] == [("value_too_long", 120)]
 
@@ -116,7 +125,7 @@ def test_contacts_mandatory_last_name_from_cassette() -> None:
             ],
         }
     ).entities[0]
-    findings = validate_entity(entity, fields, ["Email"], [{"Email": "a@example.invalid"}])
+    findings = validate_entity(entity, fields, ["Email"], _lined([{"Email": "a@example.invalid"}]))
     assert [(item.code, item.entity_id) for item in findings] == [
         ("mandatory_field_unmapped", "Last_Name")
     ]
@@ -138,12 +147,17 @@ def test_contacts_mandatory_last_name_from_cassette() -> None:
         dup,
         fields,
         ["N", "E"],
-        [
-            {"N": "a", "E": "dup@example.invalid"},
-            {"N": "b", "E": "dup@example.invalid"},
-        ],
+        _lined(
+            [
+                {"N": "a", "E": "dup@example.invalid"},
+                {"N": "b", "E": "dup@example.invalid"},
+            ]
+        ),
     )
-    assert sorted(item.entity_id for item in collisions) == ["row-1", "row-2"]
+    # No ID column exists, so keys fall back to content hashes (never positions).
+    assert len(collisions) == 2
+    assert all(item.entity_id.startswith("hash:") for item in collisions)
+    assert sorted(item.evidence["line"] for item in collisions) == [2, 3]
     assert all(item.code == "unique_field_collision_in_batch" for item in collisions)
 
 
