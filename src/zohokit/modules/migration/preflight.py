@@ -58,10 +58,16 @@ def run_preflight(
     *,
     ctx: RunContext,
 ) -> Report:
-    """Stream sources, validate, and build the versioned report envelope."""
+    """Stream sources, validate, and build the versioned report envelope.
+
+    Per-record findings use stable source record keys (never row
+    positions) with the physical file line in evidence; only
+    ``row_parse_error`` is positional (a parse fault has no record to
+    key on) and is documented as such.
+    """
     findings: list[Finding] = []
     headers: dict[str, list[str]] = {}
-    samples: dict[str, list[dict[str, str]]] = {}
+    samples: dict[str, list[tuple[int, dict[str, str]]]] = {}
     counts: dict[str, int] = {}
     source_format = doc.source if doc.source in SOURCE_FORMATS else "generic"
     for entity in doc.entities:
@@ -102,7 +108,7 @@ def run_preflight(
         try:
             header = list(stream.dialect.header)
             headers[entity.name] = header
-            rows: list[dict[str, str]] = []
+            rows: list[tuple[int, dict[str, str]]] = []
             total = 0
             for line_number, row, issue in stream.rows():
                 if issue is not None:
@@ -116,7 +122,7 @@ def run_preflight(
                             entity=entity.name,
                             entity_id=f"line-{line_number}",
                             message="Source row cannot be parsed; it is excluded from checks.",
-                            evidence={"reason": issue.reason},
+                            evidence={"reason": issue.reason, "line": line_number},
                             remediation="Fix or remove the row and re-run.",
                             discriminator=f"row\0{issue.reason}\0line-{line_number}",
                         )
@@ -126,7 +132,7 @@ def run_preflight(
                     continue
                 total += 1
                 if len(rows) < SAMPLE_ROWS:
-                    rows.append(row)
+                    rows.append((line_number, row))
             counts[entity.name] = total
             samples[entity.name] = rows
         finally:
