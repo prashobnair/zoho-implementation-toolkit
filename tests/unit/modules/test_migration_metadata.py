@@ -6,6 +6,7 @@ from zohokit.modules.migration.mapping import MappingDoc
 from zohokit.modules.migration.metadata import (
     FieldMeta,
     TargetMetadata,
+    disambiguated_record_keys,
     stable_record_key,
     validate_entity,
     validate_mapping,
@@ -213,14 +214,67 @@ def test_stable_ids_survive_prepend_and_shuffle() -> None:
     ]
     before = validate_entity(entity, FIELDS, header, _lined(base, start=2))
     before_ids = sorted(item.id for item in before)
+    assert len(set(before_ids)) == len(before_ids)  # Invariant: no finding-ID collision.
     # Prepending a valid row shifts physical lines but changes no finding ID.
     prepended = [{"ID": "99", "Name": "z", "Email": "z@example.invalid", "S": "Qualification"}]
     after = validate_entity(entity, FIELDS, header, _lined(prepended + base, start=2))
     after_ids = sorted(item.id for item in after if item.entity_id in {"41", "42"})
     assert after_ids == before_ids
+    assert len({item.id for item in after}) == len(after)
     # Shuffling the rows changes no finding ID.
     shuffled = validate_entity(entity, FIELDS, header, _lined(list(reversed(base)), start=2))
     assert sorted(item.id for item in shuffled) == before_ids
+    assert len({item.id for item in shuffled}) == len(shuffled)
+
+
+def test_duplicate_source_ids_get_distinct_stable_keys() -> None:
+    doc = _doc(
+        {
+            "Last_Name": {"from": "Name"},
+            "Email": {"from": "Email"},
+            "Stage": {"from": "S"},
+        },
+        external_id={"field": "External_ID__s", "from": "ID"},
+    )
+    entity = doc.entities[0]
+    header = ["ID", "Name", "Email", "S"]
+    dup_a = {"ID": "9001", "Name": "Diya", "Email": "diya@example.invalid", "S": "Qualification"}
+    dup_b = {"ID": "9001", "Name": "Riya", "Email": "riya@example.invalid", "S": "Qualification"}
+    solo = {"ID": "41", "Name": "x", "Email": "x@example.invalid", "S": "Qualification"}
+    rows = [dup_a, dup_b, solo]
+    keys = disambiguated_record_keys(entity, header, _lined(rows))
+    assert keys[0] != keys[1]
+    assert keys[0].startswith("9001#") and keys[1].startswith("9001#")
+    # Unique keys are unchanged, so existing finding IDs stay stable.
+    assert keys[2] == "41"
+    assert stable_record_key(entity, header, dup_a) == "9001"
+    # Reordering the batch changes no key; inserting another row neither.
+    assert sorted(disambiguated_record_keys(entity, header, _lined(list(reversed(rows))))) == (
+        sorted(keys)
+    )
+    fresh = {"ID": "99", "Name": "z", "Email": "z@example.invalid", "S": "Qualification"}
+    assert disambiguated_record_keys(entity, header, _lined([fresh, *rows]))[1:] == keys
+
+
+def test_duplicate_source_ids_yield_distinct_collision_findings() -> None:
+    doc = _doc(
+        {"Last_Name": {"from": "Name"}, "Email": {"from": "Email"}, "Stage": {"from": "S"}},
+        external_id={"field": "External_ID__s", "from": "ID"},
+    )
+    entity = doc.entities[0]
+    header = ["ID", "Name", "Email", "S"]
+    rows = [
+        {"ID": "9001", "Name": "Diya", "Email": "same@example.invalid", "S": "Qualification"},
+        {"ID": "9001", "Name": "Riya", "Email": "SAME@example.invalid", "S": "Qualification"},
+    ]
+    findings = validate_entity(entity, FIELDS, header, _lined(rows))
+    collisions = [item for item in findings if item.code == "unique_field_collision_in_batch"]
+    assert len(collisions) == 2
+    assert len({item.entity_id for item in collisions}) == 2
+    assert all(item.entity_id.startswith("9001#") for item in collisions)
+    # Invariant: distinct findings carry distinct finding IDs.
+    assert len({item.id for item in collisions}) == 2
+    assert len({item.id for item in findings}) == len(findings)
 
 
 def test_content_hash_fallback_when_no_id_column() -> None:

@@ -112,6 +112,10 @@ def stable_record_key(entity: EntityMapping, header: list[str], row: dict[str, s
     ID-like fallback column present; otherwise a content hash of the row.
     Never a row index or file position, so prepending or shuffling rows
     changes no finding ID.
+
+    The key is unique only when the source ID is: two batch rows sharing
+    one ID share this key. Use :func:`disambiguated_record_keys` for the
+    batch-aware keys that per-record findings actually carry.
     """
     if entity.external_id is not None and entity.external_id.from_col in header:
         candidate = (row.get(entity.external_id.from_col) or "").strip()
@@ -123,6 +127,41 @@ def stable_record_key(entity: EntityMapping, header: list[str], row: dict[str, s
             if candidate:
                 return candidate
     return _row_content_hash(row)
+
+
+def _row_content_suffix(row: dict[str, str]) -> str:
+    """Short content hash of a row's normalized values (never the values)."""
+    from zohokit.core.ids import canonical_json
+
+    normalized = {
+        key: (value.strip() if isinstance(value, str) else value) for key, value in row.items()
+    }
+    return hashlib.sha256(canonical_json(normalized).encode("utf-8")).hexdigest()[:8]
+
+
+def disambiguated_record_keys(
+    entity: EntityMapping,
+    header: list[str],
+    sample_rows: list[tuple[int, dict[str, str]]],
+) -> list[str]:
+    """Batch-aware record keys, aligned with *sample_rows*.
+
+    A base key (:func:`stable_record_key`) that occurs more than once in
+    the batch becomes ``<key>#<short content hash>`` so each colliding row
+    carries a distinct key while every unique key is returned unchanged
+    (existing finding IDs stay stable). The suffix hashes only the row's
+    own normalized values, so reordering the batch or inserting other rows
+    changes no key. Byte-identical rows share a key: by content they are
+    the same record.
+    """
+    base = [stable_record_key(entity, header, row) for _, row in sample_rows]
+    counts: dict[str, int] = {}
+    for key in base:
+        counts[key] = counts.get(key, 0) + 1
+    return [
+        f"{key}#{_row_content_suffix(row)}" if counts[key] > 1 else key
+        for key, (_, row) in zip(base, sample_rows, strict=True)
+    ]
 
 
 def metadata_from_cassette_envelope(payload: Any) -> dict[str, FieldMeta]:
@@ -253,13 +292,14 @@ def validate_entity(
     Mapping-level problems (unknown/read-only target, mandatory gaps,
     unresolvable lookups) yield one finding per field; value problems
     (length, picklist, type) yield one finding per sampled row. Each
-    per-record finding uses the stable source record key
-    (:func:`stable_record_key`, never a row index) as ``entity_id`` and
-    carries the 1-based physical file line (header is line 1) in
+    per-record finding uses the batch-aware record key
+    (:func:`disambiguated_record_keys`, never a row index) as ``entity_id``
+    and carries the 1-based physical file line (header is line 1) in
     ``evidence["line"]`` so humans can find the row. Findings sort by the
     shared report order at build time.
     """
     findings: list[Finding] = []
+    record_keys = disambiguated_record_keys(entity, header, sample_rows)
     for target, field_map in entity.fields.items():
         meta = fields.get(target)
         if meta is None:
@@ -309,9 +349,8 @@ def validate_entity(
                     discriminator=f"mapping\0{entity.target_module}\0{target}",
                 )
             )
-        for line, row in sample_rows:
+        for (line, row), record_key in zip(sample_rows, record_keys, strict=True):
             value, failed = _mapped_value(entity, target, row)
-            record_key = stable_record_key(entity, header, row)
             if failed is not None:
                 findings.append(
                     Finding.create(
@@ -435,12 +474,11 @@ def validate_entity(
     ]
     for target in unique_targets:
         seen: dict[str, tuple[str, int]] = {}
-        for line, row in sample_rows:
+        for (line, row), record_key in zip(sample_rows, record_keys, strict=True):
             value, failed = _mapped_value(entity, target, row)
             if failed is not None or value is None or value == "":
                 continue
             key = value.casefold()
-            record_key = stable_record_key(entity, header, row)
             if key in seen:
                 fingerprint = _value_fingerprint(value)
                 prior_key, prior_line = seen[key]
@@ -513,6 +551,7 @@ __all__: list[str] = [
     "STABLE_ID_FALLBACK_COLS",
     "FieldMeta",
     "TargetMetadata",
+    "disambiguated_record_keys",
     "metadata_from_cassette_envelope",
     "metadata_from_dir",
     "stable_record_key",
