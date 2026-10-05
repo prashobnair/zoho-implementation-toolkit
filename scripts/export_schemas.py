@@ -18,6 +18,7 @@ from zohokit.modules.books.models import BooksInput
 from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 from zohokit.modules.metrics.models import MetricsInput
+from zohokit.modules.migration.mapping import MappingDoc
 from zohokit.modules.migration.models import MigrationInput
 from zohokit.modules.release.manifest import Manifest
 from zohokit.modules.release.models import ReleaseInput
@@ -42,7 +43,10 @@ INPUTS: dict[str, type[BaseModel]] = {
 
 def _write(path: Path, schema: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(schema, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    # Fixed LF: Path.write_text translates newlines on Windows checkouts,
+    # which would dirty every schema file there (CI runs the LF diff).
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(schema, indent=2, sort_keys=True) + "\n")
 
 
 def main() -> None:
@@ -55,7 +59,8 @@ def main() -> None:
         # copy so every output model resolves under schemas/<module>/.
         _write(ROOT / "schemas" / module / f"report.v{SCHEMA_VERSION}.json", report_schema)
     _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
-    print(f"wrote {2 * len(INPUTS) + 1} schemas (v{SCHEMA_VERSION})")
+    _write(ROOT / "schemas" / "migration" / "mapping.v1.json", MappingDoc.model_json_schema())
+    print(f"wrote {2 * len(INPUTS) + 2} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

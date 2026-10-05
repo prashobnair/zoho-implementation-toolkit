@@ -1,1 +1,3 @@
 * text=auto eol=lf
+# Byte-exact CSV fixtures: BOM/CRLF/embedded newlines must survive checkout.
+fixtures/sources/generic_contacts.csv -text
