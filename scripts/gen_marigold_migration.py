@@ -630,14 +630,16 @@ ANSWER_KEY = [
     {
         "entity": "people",
         "code": "unique_field_collision_in_batch",
-        "source_id": "9001",
+        # Shared external ID 9001: the key carries a row-content suffix so
+        # each colliding row keeps a distinct finding ID.
+        "source_id": "9001#b50fdaec",
         "line": 53,
         "severity": "error",
     },
     {
         "entity": "people",
         "code": "unique_field_collision_in_batch",
-        "source_id": "9001",
+        "source_id": "9001#4a7f2606",
         "line": 54,
         "severity": "error",
     },

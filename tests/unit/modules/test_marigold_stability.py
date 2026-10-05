@@ -89,6 +89,12 @@ def _copy_sources(tmp_path: Path) -> Path:
     return target
 
 
+def _assert_unique_ids(report: Report) -> None:
+    """Invariant: finding IDs are unique within a report."""
+    ids = [finding.id for finding in report.findings]
+    assert len(set(ids)) == len(ids)
+
+
 def test_prepend_row_changes_no_finding_id(tmp_path: Path) -> None:
     source_dir = _copy_sources(tmp_path)
     persons = source_dir / "persons.csv"
@@ -100,6 +106,8 @@ def test_prepend_row_changes_no_finding_id(tmp_path: Path) -> None:
     )
     persons.write_text(header + new_row + "".join(body), encoding="utf-8")
     assert _stable_ids(_report_over(source_dir)) == _stable_ids(_report_over(MARIGOLD / "source"))
+    _assert_unique_ids(_report_over(source_dir))
+    _assert_unique_ids(_report_over(MARIGOLD / "source"))
 
 
 def test_shuffle_rows_changes_no_finding_id_or_survivor(tmp_path: Path) -> None:
@@ -119,6 +127,8 @@ def test_shuffle_rows_changes_no_finding_id_or_survivor(tmp_path: Path) -> None:
     after = _report_over(source_dir)
     assert _stable_ids(after) == _stable_ids(before)
     assert _survivors(after) == _survivors(before) == {"people": "31", "companies": "501"}
+    _assert_unique_ids(after)
+    _assert_unique_ids(before)
 
 
 def _physical_line(source_file: Path, record_id: str) -> int:

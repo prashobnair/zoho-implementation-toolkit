@@ -98,6 +98,18 @@ def test_marigold_answer_key_exact() -> None:
     assert detected == expected_tuples()
 
 
+def test_marigold_finding_ids_unique() -> None:
+    """Invariant: every finding in the report carries a distinct ID.
+
+    Baseline suppression and diff-reports key on finding IDs, so two rows
+    sharing one external ID must still surface two findings (regression:
+    the duplicated 9001 rows once shared one ID).
+    """
+    report = _report()
+    ids = [finding.id for finding in report.findings]
+    assert len(set(ids)) == len(ids)
+
+
 #: Codes the answer key allows at error severity (everything else is a regression).
 EXPECTED_ERROR_CODES = frozenset(
     {
