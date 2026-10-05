@@ -69,16 +69,21 @@ def users_from_file(path: str | Path) -> dict[str, str]:
 
 def check_owners(
     entity: EntityMapping,
-    rows: list[tuple[str, dict[str, str]]],
+    rows: list[tuple[str, int, dict[str, str]]],
     header: list[str],
     users: dict[str, str],
 ) -> list[Finding]:
-    """Resolve each row's owner email; flag inactive and unmapped owners."""
+    """Resolve each row's owner email; flag inactive and unmapped owners.
+
+    *rows* are ``(content key, physical line, row)`` triples: the key is
+    the stable source record key (never a position) and the line lands in
+    evidence only (never in the finding identity).
+    """
     column = owner_column(entity, header)
     if column is None:
         return []
     findings: list[Finding] = []
-    for key, row in rows:
+    for key, line, row in rows:
         raw = (row.get(column) or "").strip()
         if not raw:
             continue
@@ -92,9 +97,9 @@ def check_owners(
                     entity=entity.name,
                     entity_id=key,
                     message="Owner email matches no user in the target org.",
-                    evidence={"owner": mask_email(raw)},
+                    evidence={"owner": mask_email(raw), "line": line},
                     remediation="Add the user to the target org or remap the owner.",
-                    discriminator=f"owner\0{raw.casefold()}",
+                    discriminator=f"owner\0{key}\0{raw.casefold()}",
                 )
             )
         elif status != "active":
@@ -106,9 +111,9 @@ def check_owners(
                     entity=entity.name,
                     entity_id=key,
                     message="Owner email belongs to an inactive target user.",
-                    evidence={"owner": mask_email(raw)},
+                    evidence={"owner": mask_email(raw), "line": line},
                     remediation="Reactivate the user or remap the owner.",
-                    discriminator=f"owner\0{raw.casefold()}",
+                    discriminator=f"owner\0{key}\0{raw.casefold()}",
                 )
             )
     return findings

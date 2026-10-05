@@ -30,22 +30,24 @@ def target_fingerprint(record_id: str) -> str:
 def check_against_target(
     entity_name: str,
     target_module: str,
-    candidates: list[tuple[str, str | None, str | None]],
+    candidates: list[tuple[str, int, str | None, str | None]],
     search: SearchFn,
     *,
     budget: int | None = None,
 ) -> tuple[list[Finding], int, int, bool]:
     """Search the target for each candidate; return findings + coverage.
 
-    *candidates* are ``(row key, email | None, phone | None)`` with email
-    carriers first (callers order them). At most *budget* searches run
-    (None means unbounded). Returns ``(findings, checked, total,
-    truncated)``; callers report coverage from the counts.
+    *candidates* are ``(row key, physical line, email | None, phone |
+    None)`` with email carriers first (callers order them). The key is
+    the stable source record key (never a position); the line lands in
+    evidence only (never in the finding identity). At most *budget*
+    searches run (None means unbounded). Returns ``(findings, checked,
+    total, truncated)``; callers report coverage from the counts.
     """
     findings: list[Finding] = []
     checked = 0
     truncated = False
-    for key, email, phone in candidates:
+    for key, line, email, phone in candidates:
         if email is None and phone is None:
             continue
         if budget is not None and checked >= budget:
@@ -67,6 +69,7 @@ def check_against_target(
                         "target_module": target_module,
                         "target_fingerprint": fingerprint,
                         "matched_on": matched_on,
+                        "line": line,
                     },
                     remediation="Merge in the source, or plan an update instead of a create.",
                     discriminator=f"target\0{target_module}\0{key}",

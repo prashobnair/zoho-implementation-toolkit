@@ -22,10 +22,15 @@ def parent_column(entity: EntityMapping, header: list[str]) -> str | None:
 
 def check_history(
     entity: EntityMapping,
-    rows: list[tuple[str, dict[str, str]]],
+    rows: list[tuple[str, int, dict[str, str]]],
     header: list[str],
 ) -> list[Finding]:
-    """Flag unsupported history types and summarize counts per parent."""
+    """Flag unsupported history types and summarize counts per parent.
+
+    *rows* are ``(content key, physical line, row)`` triples: the key is
+    the stable source record key (never a position) and the line lands in
+    evidence only (never in the finding identity).
+    """
     config = entity.history
     if config is None or config.type_col not in header:
         return []
@@ -33,7 +38,7 @@ def check_history(
     counts: dict[str, int] = {}
     parent_col = parent_column(entity, header)
     findings: list[Finding] = []
-    for key, row in rows:
+    for key, line, row in rows:
         if parent_col is not None:
             parent = (row.get(parent_col) or "").strip() or "unlinked"
             counts[parent] = counts.get(parent, 0) + 1
@@ -51,9 +56,10 @@ def check_history(
                         "history_type": history_type,
                         "type_column": config.type_col,
                         "supported_count": len(supported),
+                        "line": line,
                     },
                     remediation="Carry this history outside the import (notes or files).",
-                    discriminator=f"history\0{history_type}",
+                    discriminator=f"history\0{key}\0{history_type}",
                 )
             )
     findings.append(

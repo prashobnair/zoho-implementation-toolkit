@@ -41,15 +41,18 @@ def _probability_col(entity: EntityMapping, header: list[str]) -> str | None:
 
 def check_stages(
     entity: EntityMapping,
-    rows: list[tuple[str, dict[str, str]]],
+    rows: list[tuple[str, int, dict[str, str]]],
     header: list[str],
     stage_meta: FieldMeta | None,
 ) -> list[Finding]:
     """Validate mapped stage values (and probabilities) per row.
 
-    *rows* are ``(content key, row)`` pairs. Without a mapped stage
-    column there is nothing to check; without picklist metadata the
-    membership check degrades gracefully (no false errors).
+    *rows* are ``(content key, physical line, row)`` triples: the key is
+    the stable source record key (never a position) and the line is the
+    1-based physical file line (header is line 1, evidence only — never
+    part of the finding identity). Without a mapped stage column there
+    is nothing to check; without picklist metadata the membership check
+    degrades gracefully (no false errors).
     """
     staged = _stage_field(entity)
     if staged is None:
@@ -58,7 +61,7 @@ def check_stages(
     prob_col = _probability_col(entity, header)
     allowed = list(stage_meta.pick_list_values) if stage_meta is not None else None
     findings: list[Finding] = []
-    for key, row in rows:
+    for key, line, row in rows:
         raw = row.get(from_col)
         if raw is None or raw == "":
             continue
@@ -77,9 +80,9 @@ def check_stages(
                     entity=entity.name,
                     entity_id=key,
                     message="Deal stage has no entry in the target Stage picklist.",
-                    evidence={"target_field": target, "allowed_count": len(allowed)},
+                    evidence={"target_field": target, "allowed_count": len(allowed), "line": line},
                     remediation="Add the stage to the target pipeline or map it to one.",
-                    discriminator=f"stage\0{value}",
+                    discriminator=f"stage\0{key}\0{value}",
                 )
             )
             continue
@@ -98,9 +101,14 @@ def check_stages(
                         entity=entity.name,
                         entity_id=key,
                         message="Row probability differs from the expected stage probability.",
-                        evidence={"stage": value, "expected": expected, "actual": actual},
+                        evidence={
+                            "stage": value,
+                            "expected": expected,
+                            "actual": actual,
+                            "line": line,
+                        },
                         remediation="Align the source probability with the target pipeline.",
-                        discriminator=f"stage-probability\0{value}",
+                        discriminator=f"stage-probability\0{key}\0{value}",
                     )
                 )
     return findings
