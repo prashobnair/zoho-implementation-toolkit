@@ -26,6 +26,7 @@ from zohokit.modules.migration.suggest import SuggestMappingResult, SuggestTrans
 from zohokit.modules.release.manifest import Manifest
 from zohokit.modules.release.models import ReleaseInput
 from zohokit.modules.timeline.models import TimelineInput
+from zohokit.modules.workflow.language import RulesetV2
 from zohokit.modules.workflow.models import WorkflowInput
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,6 +63,7 @@ def main() -> None:
         # copy so every output model resolves under schemas/<module>/.
         _write(ROOT / "schemas" / module / f"report.v{SCHEMA_VERSION}.json", report_schema)
     _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
+    _write(ROOT / "schemas" / "workflow" / "rule.v2.json", RulesetV2.model_json_schema())
     _write(ROOT / "schemas" / "migration" / "mapping.v1.json", MappingDoc.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "explain.v1.json", ExplainDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "mapping.v1.json", MappingDraft.model_json_schema())
@@ -75,7 +77,7 @@ def main() -> None:
         ROOT / "schemas" / "ai" / "suggest-transform-result.v1.json",
         SuggestTransformResult.model_json_schema(),
     )
-    print(f"wrote {2 * len(INPUTS) + 8} schemas (v{SCHEMA_VERSION})")
+    print(f"wrote {2 * len(INPUTS) + 9} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

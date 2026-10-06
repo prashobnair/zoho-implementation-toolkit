@@ -1,0 +1,314 @@
+{
+  "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "description": "One rule action; external calls are simulated only (TK-WF-F1/F3).",
+      "properties": {
+        "delay_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delay Days"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "function_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Function Name"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "side_effects": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Side Effects",
+          "type": "array"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template"
+        },
+        "type": {
+          "enum": [
+            "field_update",
+            "assign_owner",
+            "create_task",
+            "send_email",
+            "webhook",
+            "function"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "description": "One AND/OR/NOT node or operator leaf (TK-WF-F1).",
+      "properties": {
+        "all": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "title": "All",
+          "type": "array"
+        },
+        "any": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Criterion"
+          },
+          "title": "Any",
+          "type": "array"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "not": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Criterion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "op": {
+          "anyOf": [
+            {
+              "enum": [
+                "eq",
+                "neq",
+                "in",
+                "not_in",
+                "gt",
+                "lt",
+                "is_empty",
+                "changed_to",
+                "changed_from"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Op"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "title": "Criterion",
+      "type": "object"
+    },
+    "Event": {
+      "additionalProperties": false,
+      "description": "Trigger for one rule (TK-WF-F1).",
+      "properties": {
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "offset_days": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Offset Days"
+        },
+        "type": {
+          "enum": [
+            "record_created",
+            "record_edited",
+            "field_changed",
+            "stage_changed",
+            "scheduled",
+            "date_field_reached"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "RuleV2": {
+      "additionalProperties": false,
+      "description": "One v2 automation rule (TK-WF-F1).",
+      "properties": {
+        "actions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "title": "Actions",
+          "type": "array"
+        },
+        "active": {
+          "default": true,
+          "title": "Active",
+          "type": "boolean"
+        },
+        "criteria": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Criterion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "event": {
+          "$ref": "#/$defs/Event"
+        },
+        "execute_on": {
+          "default": "both",
+          "enum": [
+            "create",
+            "edit",
+            "both"
+          ],
+          "title": "Execute On",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "module": {
+          "default": "Deals",
+          "title": "Module",
+          "type": "string"
+        },
+        "priority": {
+          "default": 100,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "repeat": {
+          "default": true,
+          "title": "Repeat",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "event"
+      ],
+      "title": "RuleV2",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A validated v2 rule set; errors name the offending rule IDs.",
+  "properties": {
+    "rules": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/RuleV2"
+      },
+      "title": "Rules",
+      "type": "array"
+    }
+  },
+  "title": "RulesetV2",
+  "type": "object"
+}

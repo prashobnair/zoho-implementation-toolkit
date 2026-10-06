@@ -1,0 +1,36 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/field_updates"
+  },
+  "response": {
+    "body": {
+      "field_updates": [
+        {
+          "associated": true,
+          "field": {
+            "api_name": "Stage",
+            "id": "5550000000000002565"
+          },
+          "id": "5550000000000700001",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Set stage to Negotiation",
+          "type": "static",
+          "value": [
+            "Negotiation"
+          ]
+        }
+      ],
+      "info": {
+        "count": 1,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

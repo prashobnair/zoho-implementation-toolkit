@@ -1,0 +1,40 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/webhook_failures"
+  },
+  "response": {
+    "body": {
+      "info": {
+        "count": 1,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      },
+      "webhook_failures": [
+        {
+          "entity_details": {
+            "id": "5550000000016000001",
+            "module": {
+              "api_name": "Deals",
+              "id": "5550000000000002181"
+            },
+            "name": "[redacted]"
+          },
+          "failure_reason": "timeout",
+          "failure_time": "2026-09-20T10:00:00+05:30",
+          "id": "5550000000016000002",
+          "webhook": {
+            "id": "5550000000000720001",
+            "name": "Sync to billing"
+          },
+          "workflow_rule": {
+            "id": "5550000000011000002",
+            "name": "Follow up on negotiation"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/tasks"
+  },
+  "response": {
+    "body": {
+      "info": {
+        "count": 1,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      },
+      "tasks": [
+        {
+          "id": "5550000000000300002",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Follow up task"
+        }
+      ]
+    }
+  }
+}
