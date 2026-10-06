@@ -45,3 +45,32 @@ below thresholds. The reports measure the pipeline and guardrails, not
 model performance: no model is called without a key. Live re-recording
 is a manual step via the `evals-live` workflow, which refuses when no
 key exists and never runs on pull requests.
+
+## Features
+
+All three read local files only and never touch the network except an
+explicitly configured provider call.
+
+- `zohokit explain <report.json> [--audience internal|client] [--ai]`
+  summarizes a report. Without `--ai` a deterministic template lists
+  severity counts plus one cited line per finding. With `--ai` every
+  sentence cites finding IDs with verbatim quotes and every number/date
+  is verified against the report, otherwise the template runs instead.
+  The client audience drops run IDs, hashes, artifact paths and raw
+  evidence values (finding IDs stay as citable references).
+- `zohokit migration suggest-mapping --csv FILE --target-module MOD
+  --fields-dir DIR --out mapping.draft.yaml [--ai]` proposes mapping
+  entries from headers plus 5 sample values per column. Columns below
+  0.6 confidence are abstained (`null`). The draft is written to a
+  separate file and never overwrites an existing one; invalid proposals
+  are dropped and reported.
+- `zohokit migration suggest-transform --csv FILE --column NAME
+  --target-type text|email|phone|date|currency [--ai]` proposes one
+  value transform. It is applied to the samples first: anything below
+  100% parse success is dropped and reported, with the deterministic
+  guess as fallback.
+
+AI items render with an "AI suggestion" badge plus confidence in HTML
+output (`--format html`). JSON output carries the `ai_usage` block
+(tokens, cost estimate, latency) alongside `ai_status`, `model` and
+the prompt version.

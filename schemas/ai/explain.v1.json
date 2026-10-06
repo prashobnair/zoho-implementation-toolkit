@@ -3,6 +3,13 @@
     "ExplainSentence": {
       "description": "One narrative sentence restating report findings (TK-CORE-9).",
       "properties": {
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
         "finding_ids": {
           "items": {
             "type": "string"

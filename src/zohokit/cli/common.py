@@ -14,7 +14,7 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from zohokit.ai.models import AiConfig
-from zohokit.ai.providers import build_provider
+from zohokit.ai.providers import LLMProvider, build_provider
 from zohokit.cli.exitcodes import resolve
 from zohokit.core.baseline import BaselineError, apply_baseline, load_baseline
 from zohokit.core.context import RunContext
@@ -157,6 +157,49 @@ MaxApiCallsAfter: TypeAlias = Annotated[
 
 #: Note printed when --ai is given but no provider is configured (STD-AI4).
 AI_DISABLED_NOTE = "AI disabled: no provider configured; the deterministic path runs."
+
+
+@dataclass(frozen=True)
+class AiRuntime:
+    """Resolved AI setup for one command invocation (STD-AI4/8/9).
+
+    ``use_ai`` is False (with ``provider`` None) when ``--ai`` was not
+    given or no provider is configured; commands then run their
+    deterministic path. ``allow_pii``/``max_tokens`` merge the command
+    flags over the root defaults.
+    """
+
+    use_ai: bool
+    provider: LLMProvider | None
+    allow_pii: bool
+    max_tokens: int | None
+
+
+def resolve_ai_runtime(
+    *,
+    ai: bool = False,
+    allow_pii: bool = False,
+    max_tokens: int | None = None,
+    live: bool = False,
+) -> AiRuntime:
+    """Merge AI flags and resolve the provider, or fall back loudly.
+
+    ``--ai-allow-pii`` with ``--live`` fails (STD-AI8). With ``--ai``
+    but no provider configured, notes "AI disabled" and returns an
+    inactive runtime so the deterministic path runs (STD-AI4).
+    """
+    use_allow_pii = allow_pii or _GLOBAL.ai_allow_pii
+    if use_allow_pii and (live or _GLOBAL.live):
+        fail("--ai-allow-pii is refused with --live: live prompts stay redacted.")
+    budget = max_tokens if max_tokens is not None else _GLOBAL.ai_max_tokens
+    use_ai = ai or _GLOBAL.ai
+    if not use_ai:
+        return AiRuntime(False, None, use_allow_pii, budget)
+    provider = build_provider(AiConfig.from_env())
+    if provider is None:
+        typer.echo(AI_DISABLED_NOTE, err=True)
+        return AiRuntime(False, None, use_allow_pii, budget)
+    return AiRuntime(True, provider, use_allow_pii, budget)
 
 
 def reject_future_flags(
@@ -315,6 +358,7 @@ __all__: list[str] = [
     "AiAfter",
     "AiAllowPiiAfter",
     "AiMaxTokensAfter",
+    "AiRuntime",
     "BaselineAfter",
     "GlobalOptions",
     "LiveAfter",
@@ -331,6 +375,7 @@ __all__: list[str] = [
     "parse_model",
     "reject_future_flags",
     "reject_unsupported_live",
+    "resolve_ai_runtime",
     "resolve_runtime",
     "set_global_options",
 ]

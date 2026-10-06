@@ -22,6 +22,7 @@ class ExplainSentence(BaseModel):
     text: str = ""
     finding_ids: list[str] = Field(default_factory=list)
     quotes: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class ExplainDraft(BaseModel):

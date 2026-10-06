@@ -69,12 +69,20 @@ def test_release_manifest_schema_matches_model() -> None:
 
 def test_ai_suggestion_schemas_match_models() -> None:
     """AI suggestion outputs export under schemas/ai/ (STD-AI3)."""
+    from zohokit.ai.explain import ExplainResult
     from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+    from zohokit.modules.migration.suggest import (
+        SuggestMappingResult,
+        SuggestTransformResult,
+    )
 
     for name, model in [
         ("explain", ExplainDraft),
         ("mapping", MappingDraft),
         ("transform", TransformDraft),
+        ("explain-result", ExplainResult),
+        ("suggest-mapping-result", SuggestMappingResult),
+        ("suggest-transform-result", SuggestTransformResult),
     ]:
         on_disk = (ROOT / "schemas" / "ai" / f"{name}.v1.json").read_text(encoding="utf-8")
         assert on_disk == _dump(model.model_json_schema()), f"ai {name}.v1 schema is stale"

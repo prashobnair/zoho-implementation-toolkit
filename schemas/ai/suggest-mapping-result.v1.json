@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "AiUsage": {
+      "description": "Token, cost and latency accounting for one AI call (STD-AI9).",
+      "properties": {
+        "estimated_cost_usd": {
+          "default": 0.0,
+          "title": "Estimated Cost Usd",
+          "type": "number"
+        },
+        "input_tokens": {
+          "default": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "latency_ms": {
+          "default": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        },
+        "model": {
+          "default": "",
+          "title": "Model",
+          "type": "string"
+        },
+        "note": {
+          "default": "",
+          "title": "Note",
+          "type": "string"
+        },
+        "output_tokens": {
+          "default": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "prompt_hash": {
+          "default": "",
+          "title": "Prompt Hash",
+          "type": "string"
+        },
+        "prompt_version": {
+          "default": "",
+          "title": "Prompt Version",
+          "type": "string"
+        },
+        "provider": {
+          "default": "",
+          "title": "Provider",
+          "type": "string"
+        },
+        "status": {
+          "default": "disabled",
+          "enum": [
+            "disabled",
+            "ok",
+            "repaired",
+            "fallback"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "AiUsage",
+      "type": "object"
+    },
+    "DroppedSuggestion": {
+      "description": "A proposal removed before display, with a value-free reason.",
+      "properties": {
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        },
+        "source_column": {
+          "default": "",
+          "title": "Source Column",
+          "type": "string"
+        }
+      },
+      "title": "DroppedSuggestion",
+      "type": "object"
+    },
+    "MappingSuggestion": {
+      "description": "One source-column to target-field proposal (AI-MIG-1).",
+      "properties": {
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence_samples_idx": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Evidence Samples Idx",
+          "type": "array"
+        },
+        "rationale": {
+          "default": "",
+          "title": "Rationale",
+          "type": "string"
+        },
+        "source_column": {
+          "default": "",
+          "title": "Source Column",
+          "type": "string"
+        },
+        "target_api_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Api Name"
+        },
+        "transform": {
+          "items": {},
+          "title": "Transform",
+          "type": "array"
+        }
+      },
+      "title": "MappingSuggestion",
+      "type": "object"
+    }
+  },
+  "description": "One mapping-suggestion run: draft entries plus traceability.",
+  "properties": {
+    "ai_status": {
+      "default": "template",
+      "title": "Ai Status",
+      "type": "string"
+    },
+    "dropped": {
+      "items": {
+        "$ref": "#/$defs/DroppedSuggestion"
+      },
+      "title": "Dropped",
+      "type": "array"
+    },
+    "model": {
+      "default": "",
+      "title": "Model",
+      "type": "string"
+    },
+    "prompt_hash": {
+      "default": "",
+      "title": "Prompt Hash",
+      "type": "string"
+    },
+    "prompt_version": {
+      "default": "template",
+      "title": "Prompt Version",
+      "type": "string"
+    },
+    "source": {
+      "default": "ai",
+      "title": "Source",
+      "type": "string"
+    },
+    "suggestions": {
+      "items": {
+        "$ref": "#/$defs/MappingSuggestion"
+      },
+      "title": "Suggestions",
+      "type": "array"
+    },
+    "target_module": {
+      "default": "",
+      "title": "Target Module",
+      "type": "string"
+    },
+    "usage": {
+      "$ref": "#/$defs/AiUsage"
+    }
+  },
+  "title": "SuggestMappingResult",
+  "type": "object"
+}

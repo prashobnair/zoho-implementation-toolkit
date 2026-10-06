@@ -136,9 +136,15 @@ _EXPLAIN_REPORTS: list[list[int]] = [
 ]
 
 
-def _explain_sentence(message: str, finding_id: str) -> dict[str, Any]:
+def _explain_sentence(message: str, finding_id: str, severity: str = "review") -> dict[str, Any]:
     text = message[0].lower() + message[1:] if message[:1].isalpha() else message
-    return {"text": text, "finding_ids": [finding_id], "quotes": [message]}
+    confidence = {"error": 0.95, "review": 0.9, "warning": 0.85, "info": 0.8}[severity]
+    return {
+        "text": text,
+        "finding_ids": [finding_id],
+        "quotes": [message],
+        "confidence": confidence,
+    }
 
 
 def build_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
@@ -188,7 +194,9 @@ def build_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
             for item in report["findings"]
             if audience == "internal" or not item["internal_only"]
         ]
-        sentences = [_explain_sentence(item["message"], item["id"]) for item in visible]
+        sentences = [
+            _explain_sentence(item["message"], item["id"], item["severity"]) for item in visible
+        ]
         responses[case_id] = _dump_json({"sentences": sentences})
 
     for number, indexes in enumerate(_EXPLAIN_REPORTS, start=1):
@@ -213,7 +221,9 @@ def build_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
             for item in case["input"]["report"]["findings"]
             if case["input"]["audience"] == "internal" or not item["internal_only"]
         ]
-        sentences = [_explain_sentence(item["message"], item["id"]) for item in visible]
+        sentences = [
+            _explain_sentence(item["message"], item["id"], item["severity"]) for item in visible
+        ]
         responses[case["case_id"]] = _dump_json({"sentences": sentences})
     for number in range(21, 26):
         empty: dict[str, Any] = {"findings": []}

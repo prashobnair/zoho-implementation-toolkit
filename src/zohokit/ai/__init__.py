@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from zohokit.ai.badge import AI_BADGE_CSS, ai_badge_html
 from zohokit.ai.evalharness import (
     ORIGIN_LABEL,
     EvalHarnessError,
@@ -9,6 +10,17 @@ from zohokit.ai.evalharness import (
     load_dataset,
     load_recordings,
     load_thresholds,
+)
+from zohokit.ai.explain import (
+    ExplainResult,
+    explain_variables,
+    filter_for_audience,
+    render_explain_html,
+    render_explain_markdown,
+    render_explain_table,
+    run_explain,
+    template_summary,
+    validate_explain_draft,
 )
 from zohokit.ai.injection import DATA_BEGIN, DATA_END, SYSTEM_STATEMENT, wrap_data
 from zohokit.ai.models import AiConfig, AiStatus, AiUsage, Prompt, StructuredResult
@@ -57,6 +69,7 @@ from zohokit.ai.validators import (
 )
 
 __all__: list[str] = [
+    "AI_BADGE_CSS",
     "DATA_BEGIN",
     "DATA_END",
     "ORIGIN_LABEL",
@@ -73,6 +86,7 @@ __all__: list[str] = [
     "CitationCheck",
     "EvalHarnessError",
     "ExplainDraft",
+    "ExplainResult",
     "ExplainSentence",
     "FakeProvider",
     "FakeProviderError",
@@ -89,6 +103,7 @@ __all__: list[str] = [
     "SchemaParseError",
     "StructuredResult",
     "TransformDraft",
+    "ai_badge_html",
     "build_prompt",
     "build_provider",
     "check_citations",
@@ -96,9 +111,11 @@ __all__: list[str] = [
     "check_thresholds",
     "estimate_cost_usd",
     "estimate_tokens",
+    "explain_variables",
     "extract_dates",
     "extract_numbers",
     "extract_report_tokens",
+    "filter_for_audience",
     "load_dataset",
     "load_recordings",
     "load_template",
@@ -107,9 +124,15 @@ __all__: list[str] = [
     "prompt_path",
     "read_api_key",
     "redact_variables",
+    "render_explain_html",
+    "render_explain_markdown",
+    "render_explain_table",
     "render_template",
     "repair_prompt_text",
     "run_ai",
+    "run_explain",
+    "template_summary",
+    "validate_explain_draft",
     "within_budget",
     "wrap_data",
 ]

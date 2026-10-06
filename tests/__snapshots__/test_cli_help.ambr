@@ -10,13 +10,18 @@
   │ --help          Show this message and exit.                                  │
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
-  │ audit      Audit a source export and report what would break on import.      │
-  │ preflight  Audit CSV exports against a mapping and the target field          │
-  │            metadata.                                                         │
-  │ plan       Write the signed import plan: batches, order, keys and rollback   │
-  │            note.                                                             │
-  │ reconcile  Compare sources against target dumps; write the reconcile         │
-  │            workbook.                                                         │
+  │ audit              Audit a source export and report what would break on      │
+  │                    import.                                                   │
+  │ preflight          Audit CSV exports against a mapping and the target field  │
+  │                    metadata.                                                 │
+  │ plan               Write the signed import plan: batches, order, keys and    │
+  │                    rollback note.                                            │
+  │ reconcile          Compare sources against target dumps; write the reconcile │
+  │                    workbook.                                                 │
+  │ suggest-mapping    Propose a mapping draft for review (AI-MIG-1, suggestions │
+  │                    only).                                                    │
+  │ suggest-transform  Propose one value transform, validated on the samples     │
+  │                    (AI-MIG-2).                                               │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   
@@ -177,6 +182,8 @@
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
   │ version       Print the package version.                                     │
   │ diff-reports  Show new, resolved and changed findings between two reports.   │
+  │ explain       Summarize a report in plain English (template, or AI with      │
+  │               --ai).                                                         │
   │ modules       Inspect available modules.                                     │
   │ migration     Audit a CRM migration source before import.                    │
   │ release       Diff sandbox vs production config manifests.                   │

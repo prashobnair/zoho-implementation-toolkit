@@ -24,6 +24,8 @@ from zohokit.cli import timeline as timeline_cli
 from zohokit.cli import workflow as workflow_cli
 from zohokit.cli.common import (
     AiAfter,
+    AiAllowPiiAfter,
+    AiMaxTokensAfter,
     BaselineAfter,
     GlobalOptions,
     LiveAfter,
@@ -35,6 +37,7 @@ from zohokit.cli.common import (
     fail,
     reject_future_flags,
     reject_unsupported_live,
+    resolve_ai_runtime,
     set_global_options,
 )
 from zohokit.core.diff_reports import (
@@ -227,6 +230,60 @@ def create_app() -> typer.Typer:
             typer.echo(f"Wrote {out}")
         if strict and diff.new_errors:
             raise typer.Exit(code=2)
+
+    @root.command("explain")
+    def explain_cmd(
+        report_path: Annotated[Path, typer.Argument(help="Report JSON to explain.")],
+        audience: Annotated[str, typer.Option("--audience", help="internal|client.")] = "internal",
+        format_name: Annotated[
+            str, typer.Option("--format", help="json|table|markdown|html.")
+        ] = "json",
+        out: Annotated[Path | None, typer.Option("--out", help="Write to a file.")] = None,
+        ai: AiAfter = False,
+        ai_allow_pii: AiAllowPiiAfter = False,
+        ai_max_tokens: AiMaxTokensAfter = None,
+        live: LiveAfter = False,
+        profile: ProfileAfter = None,
+        baseline: BaselineAfter = None,
+        max_api_calls: MaxApiCallsAfter = None,
+    ) -> None:
+        """Summarize a report in plain English (template, or AI with --ai)."""
+        from zohokit.ai.explain import (
+            render_explain_html,
+            render_explain_markdown,
+            render_explain_table,
+            run_explain,
+        )
+
+        reject_unsupported_live("explain", live, profile, max_api_calls)
+        if audience not in ("internal", "client"):
+            fail("--audience must be internal|client")
+        if baseline is not None:
+            fail("explain takes no --baseline (it reads one report, it suppresses none)")
+        runtime = resolve_ai_runtime(ai=ai, allow_pii=ai_allow_pii, max_tokens=ai_max_tokens)
+        report = _load_report(report_path)
+        result = run_explain(
+            report,
+            "client" if audience == "client" else "internal",
+            provider=runtime.provider,
+            allow_pii=runtime.allow_pii,
+            budget_tokens=runtime.max_tokens,
+        )
+        if format_name == "json":
+            text = result.model_dump_json(indent=2) + "\n"
+        elif format_name == "table":
+            text = render_explain_table(result)
+        elif format_name == "markdown":
+            text = render_explain_markdown(result)
+        elif format_name == "html":
+            text = render_explain_html(result)
+        else:
+            fail(f"unsupported --format {format_name!r} (json|table|markdown|html)")
+        if out is None:
+            typer.echo(text)
+        else:
+            out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+            typer.echo(f"Wrote {out}")
 
     return root
 
