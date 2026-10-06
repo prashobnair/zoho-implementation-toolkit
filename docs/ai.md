@@ -12,10 +12,14 @@ suggestion carries its source, model and prompt version for review.
   deterministic path.
 - **Redact before send.** The shared redactor runs on every prompt, so
   personal data never leaves the process. Sample values from
-  person-name columns (`Name`, `First/Last/Full Name`, `Contact`,
-  `Contact Person`, `Owner`, `Customer`, `Person`, plus any column the
-  mapping marks `pii: true`) are replaced by shape hints
+  person-name columns are replaced by shape hints
   (`<name: 2 words>`, header kept) before the prompt is built.
+  Matching is per header word (spaces, underscores, hyphens and
+  camelCase): person-role words (`Owner`, `Manager`, `Contact`,
+  `Customer`, `Rep`, `Assignee`, ...) and `First/Last/Full/Given/`
+  `Family/Sur` + `Name` mask — so `Account Manager` and
+  `Deal Owner Name` mask — while `Account/Company/Deal/Product Name`
+  stay visible, plus any column the mapping marks `pii: true`.
   `--ai-allow-pii` skips redaction for synthetic-only local runs and is
   refused with `--live`.
 - **Grounding.** Every AI sentence cites finding IDs, and every number

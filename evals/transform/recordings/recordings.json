@@ -87,7 +87,7 @@
     },
     "transform-good-11": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "6d180160793fe11457879cb862134013cf3137bd9ea1785f36a25642fc9ca081",
+      "prompt_hash": "9c8525df5501d36a75fec5f7bf44d8c1084ca521873defc2d2b71fabb453e4b6",
       "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
     },
     "transform-good-12": {

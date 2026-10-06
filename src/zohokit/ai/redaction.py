@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Collection, Sequence
 
 from zohokit.ai.injection import SYSTEM_STATEMENT, wrap_data
@@ -14,7 +15,9 @@ from zohokit.core.redact import Redactor
 #: (case-folded, non-alphanumeric stripped), so "First Name",
 #: "firstname" and "FIRST_NAME" all match — but matching is an exact
 #: set hit, never a substring: "Company Name" and "Deal Name" are not
-#: person columns and keep their values.
+#: person columns and keep their values. Compound headers ("Account
+#: Manager", "Deal Owner Name") are caught by the word rules in
+#: :func:`is_name_like_column`, not by this set.
 NAME_LIKE_COLUMNS = frozenset(
     {
         "name",
@@ -29,14 +32,95 @@ NAME_LIKE_COLUMNS = frozenset(
     }
 )
 
+#: Header words marking a person-role column (matched per word, casefolded).
+_PERSON_ROLE_WORDS = frozenset(
+    {
+        "owner",
+        "manager",
+        "contact",
+        "person",
+        "customer",
+        "rep",
+        "representative",
+        "agent",
+        "assignee",
+        "salesperson",
+        "surname",
+    }
+)
+
+#: Qualifier words that mark a person name only together with "name"
+#: ("First Name", "last_name", "FullName", "Given Name", ...).
+_NAME_QUALIFIERS = frozenset(
+    {
+        "first",
+        "last",
+        "full",
+        "given",
+        "family",
+        "sur",
+        "surname",
+    }
+)
+
+#: Business-entity words that exempt an "... Name" header from masking
+#: ("Account Name", "Company Name", "Deal Name", ... stay visible).
+_BUSINESS_ENTITY_WORDS = frozenset(
+    {
+        "account",
+        "company",
+        "organization",
+        "org",
+        "business",
+        "deal",
+        "product",
+        "campaign",
+        "pipeline",
+        "stage",
+        "module",
+        "field",
+        "file",
+        "domain",
+    }
+)
+
+_CAMEL_BEFORE_UPPER = re.compile(r"(?<=[a-z])(?=[A-Z])")
+_CAMEL_ACRONYM = re.compile(r"(?<=[A-Z])(?=[A-Z][a-z])")
+
 
 def normalize_column_header(name: str) -> str:
     """Header-normalize a CSV column name for the name-like comparison."""
     return "".join(char for char in name.casefold() if char.isalnum())
 
 
+def header_words(name: str) -> tuple[str, ...]:
+    """Split a column header into casefolded words.
+
+    Splits on spaces, underscores and hyphens, then on camelCase
+    boundaries, so "FullName" reads as ("full", "name") while
+    "Account_Manager" reads as ("account", "manager").
+    """
+    words: list[str] = []
+    for part in re.split(r"[\s_\-]+", name):
+        if not part:
+            continue
+        spaced = _CAMEL_ACRONYM.sub(" ", _CAMEL_BEFORE_UPPER.sub(" ", part))
+        for token in spaced.split():
+            folded = token.casefold()
+            if folded:
+                words.append(folded)
+    return tuple(words)
+
+
 def is_name_like_column(name: str, *, pii_columns: Collection[str] = ()) -> bool:
     """True when *name* is a person-name column (or mapping-marked PII).
+
+    Matching is per header word (split on spaces, underscores, hyphens
+    and camelCase, casefolded): any person-role word masks (``lead``
+    only together with ``name``/``owner``), as does a ``first/last/``
+    ``full/given/family/sur/surname`` qualifier together with ``name``,
+    or a bare ``name`` word with none of the business-entity words
+    (so "Account Name" stays visible but "Account Manager" masks).
 
     ``pii_columns`` carries source-column names the mapping marks
     ``pii: true``; they are matched header-normalized too, so the
@@ -46,7 +130,18 @@ def is_name_like_column(name: str, *, pii_columns: Collection[str] = ()) -> bool
     if normalized in NAME_LIKE_COLUMNS:
         return True
     flagged = {normalize_column_header(item) for item in pii_columns}
-    return normalized in flagged
+    if normalized in flagged:
+        return True
+    words = set(header_words(name))
+    if not words:
+        return False
+    if words & _PERSON_ROLE_WORDS:
+        return True
+    if "lead" in words and ("name" in words or "owner" in words):
+        return True
+    if "name" in words and (words & _NAME_QUALIFIERS):
+        return True
+    return "name" in words and not (words & _BUSINESS_ENTITY_WORDS)
 
 
 def mask_name_sample(value: str) -> str:
@@ -121,6 +216,7 @@ def build_prompt(
 __all__: list[str] = [
     "NAME_LIKE_COLUMNS",
     "build_prompt",
+    "header_words",
     "is_name_like_column",
     "mask_column_samples",
     "mask_name_sample",

@@ -62,7 +62,7 @@
     },
     "mapping-good-05": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "542ead08f6ebac58a3f74922b7864a6b2ffd2aeca014cd439a3cc40b7ca2f77c",
+      "prompt_hash": "0aa910cc3b3d67673436e755390a823c47edb89c8bda66a1747bac7e32add180",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.97,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Email' resembles Email; samples read as email addresses.\",\n      \"source_column\": \"Email\",\n      \"target_api_name\": \"Email\",\n      \"transform\": [\n        \"trim\",\n        \"casefold\"\n      ]\n    },\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Phone' resembles Phone; samples read as phone numbers.\",\n      \"source_column\": \"Phone\",\n      \"target_api_name\": \"Phone\",\n      \"transform\": [\n        \"trim\",\n        \"e164(region=IN)\"\n      ]\n    },\n    {\n      \"confidence\": 0.15,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Pet_Name' resembles no target; samples read as free text with no target.\",\n      \"source_column\": \"Pet_Name\",\n      \"target_api_name\": null,\n      \"transform\": []\n    },\n    {\n      \"confidence\": 0.1,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Legacy_Row_Hash' resembles no target; samples read as opaque codes with no target.\",\n      \"source_column\": \"Legacy_Row_Hash\",\n      \"target_api_name\": null,\n      \"transform\": []\n    }\n  ]\n}\n"
     },
     "mapping-good-06": {
@@ -77,7 +77,7 @@
     },
     "mapping-good-08": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "9931160a85334a74c53915d1721705b0a84ae15fc40ca09f523a1b9419bf7f38",
+      "prompt_hash": "184e4d7b6485bd5cc133358f2509d7e4a5b213c9f25d358d29863742a65a4a5f",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'GivenName' resembles First_Name; samples read as given names.\",\n      \"source_column\": \"GivenName\",\n      \"target_api_name\": \"First_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'FamilyName' resembles Last_Name; samples read as family names.\",\n      \"source_column\": \"FamilyName\",\n      \"target_api_name\": \"Last_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.94,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'EmailId' resembles Email; samples read as email addresses.\",\n      \"source_column\": \"EmailId\",\n      \"target_api_name\": \"Email\",\n      \"transform\": [\n        \"trim\",\n        \"casefold\"\n      ]\n    },\n    {\n      \"confidence\": 0.88,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'ContactPhone' resembles Phone; samples read as phone numbers.\",\n      \"source_column\": \"ContactPhone\",\n      \"target_api_name\": \"Phone\",\n      \"transform\": [\n        \"trim\",\n        \"e164(region=IN)\"\n      ]\n    },\n    {\n      \"confidence\": 0.85,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Organization' resembles Account_Name; samples read as company names.\",\n      \"source_column\": \"Organization\",\n      \"target_api_name\": \"Account_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    }\n  ]\n}\n"
     },
     "mapping-good-09": {
@@ -87,7 +87,7 @@
     },
     "mapping-good-10": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "b8ad1acd4cc94fd6dbbb9bf2fd4fd76ada16e4b908e6657fd57f43ed024c3450",
+      "prompt_hash": "11850a4ad47d04e89b6b7dd84dd2832844b72de507976b01fbe817d295b59fd3",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.95,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'First Name' resembles First_Name; samples read as given names.\",\n      \"source_column\": \"First Name\",\n      \"target_api_name\": \"First_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.15,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Pet_Name' resembles no target; samples read as free text with no target.\",\n      \"source_column\": \"Pet_Name\",\n      \"target_api_name\": null,\n      \"transform\": []\n    },\n    {\n      \"confidence\": 0.1,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Legacy_Row_Hash' resembles no target; samples read as opaque codes with no target.\",\n      \"source_column\": \"Legacy_Row_Hash\",\n      \"target_api_name\": null,\n      \"transform\": []\n    },\n    {\n      \"confidence\": 0.2,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Preferred_Color' resembles no target; samples read as free text with no target.\",\n      \"source_column\": \"Preferred_Color\",\n      \"target_api_name\": null,\n      \"transform\": []\n    }\n  ]\n}\n"
     },
     "mapping-good-11": {
@@ -137,7 +137,7 @@
     },
     "mapping-good-20": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "30afe9354a13070704407344bba3eaddfd11af4a208ab8691fd55856f384827e",
+      "prompt_hash": "970228617b9b38f998cefe64085e779dc849fc0e5dedc1e0119ab35062781376",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.92,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Deal Name' resembles Deal_Name; samples read as deal titles.\",\n      \"source_column\": \"Deal Name\",\n      \"target_api_name\": \"Deal_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.15,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Discount_Code' resembles no target; samples read as opaque codes with no target.\",\n      \"source_column\": \"Discount_Code\",\n      \"target_api_name\": null,\n      \"transform\": []\n    },\n    {\n      \"confidence\": 0.1,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Old_Owner' resembles no target; samples read as free text with no target.\",\n      \"source_column\": \"Old_Owner\",\n      \"target_api_name\": null,\n      \"transform\": []\n    }\n  ]\n}\n"
     },
     "mapping-good-21": {
@@ -147,7 +147,7 @@
     },
     "mapping-good-22": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "93ac4625aadb37e9a2e2d4b5b40e7b89f3a375dec78d1a73a4cf8edc272a3b99",
+      "prompt_hash": "1df242c687220ae087a6282942c574d77dc483f3c09939d8b89b6f30120d29cf",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Contact First' resembles First_Name; samples read as given names.\",\n      \"source_column\": \"Contact First\",\n      \"target_api_name\": \"First_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Contact Last' resembles Last_Name; samples read as family names.\",\n      \"source_column\": \"Contact Last\",\n      \"target_api_name\": \"Last_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.94,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Contact Email' resembles Email; samples read as email addresses.\",\n      \"source_column\": \"Contact Email\",\n      \"target_api_name\": \"Email\",\n      \"transform\": [\n        \"trim\",\n        \"casefold\"\n      ]\n    },\n    {\n      \"confidence\": 0.88,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Deal Title' resembles Deal_Name; samples read as deal titles.\",\n      \"source_column\": \"Deal Title\",\n      \"target_api_name\": \"Deal_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.15,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Lucky_Number' resembles no target; samples read as free text with no target.\",\n      \"source_column\": \"Lucky_Number\",\n      \"target_api_name\": null,\n      \"transform\": []\n    }\n  ]\n}\n"
     },
     "mapping-good-23": {
@@ -162,7 +162,7 @@
     },
     "mapping-good-25": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "89edb1f434dab1279bf482244f7f624a3e7db3263377fa92711a993107380cfc",
+      "prompt_hash": "973186ddb6a09d5f343dce158928b31ef3a4296ad519118616c99e4f73546919",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Given Name' resembles First_Name; samples read as given names.\",\n      \"source_column\": \"Given Name\",\n      \"target_api_name\": \"First_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.9,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Surname' resembles Last_Name; samples read as family names.\",\n      \"source_column\": \"Surname\",\n      \"target_api_name\": \"Last_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.85,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Cell' resembles Phone; samples read as phone numbers.\",\n      \"source_column\": \"Cell\",\n      \"target_api_name\": \"Phone\",\n      \"transform\": [\n        \"trim\",\n        \"e164(region=IN)\"\n      ]\n    },\n    {\n      \"confidence\": 0.94,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'E-mail' resembles Email; samples read as email addresses.\",\n      \"source_column\": \"E-mail\",\n      \"target_api_name\": \"Email\",\n      \"transform\": [\n        \"trim\",\n        \"casefold\"\n      ]\n    }\n  ]\n}\n"
     },
     "mapping-good-26": {
@@ -197,7 +197,7 @@
     },
     "mapping-good-32": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "8d7256aac3080733159c71f3ae3d520953f7e342e79a763fd7c7a39a79fc0ba3",
+      "prompt_hash": "0bf2e7d2d537cba0a8f4c1460e9f938388bd07e04fdbc0bb5b6687e28e43d956",
       "response": "{\n  \"suggestions\": [\n    {\n      \"confidence\": 0.88,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Deal' resembles Deal_Name; samples read as deal titles.\",\n      \"source_column\": \"Deal\",\n      \"target_api_name\": \"Deal_Name\",\n      \"transform\": [\n        \"trim\"\n      ]\n    },\n    {\n      \"confidence\": 0.94,\n      \"evidence_samples_idx\": [\n        0,\n        1\n      ],\n      \"rationale\": \"Header 'Contact Email' resembles Email; samples read as email addresses.\",\n      \"source_column\": \"Contact Email\",\n      \"target_api_name\": \"Email\",\n      \"transform\": [\n        \"trim\",\n        \"casefold\"\n      ]\n    },\n    {\n      \"confidence\": 0.25,\n      \"evidence_samples_idx\": [\n        0\n      ],\n      \"rationale\": \"Header 'Signup Hint' resembles no target; samples read as instruction-like text with no target.\",\n      \"source_column\": \"Signup Hint\",\n      \"target_api_name\": null,\n      \"transform\": []\n    }\n  ]\n}\n"
     }
   },
