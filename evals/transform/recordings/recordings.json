@@ -7,7 +7,7 @@
     },
     "transform-bad-evidence": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "d33ab07d920cbf2399bdf70fabf2d39de6e9ff8abf41f572fa7cde3cc3d5521a",
+      "prompt_hash": "8729d972e6fb420857d22685f1a591bdfbe1b678ff011eb057486417dfcff031",
       "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"trim\"\n}\n"
     },
     "transform-bad-injection": {
@@ -37,7 +37,7 @@
     },
     "transform-good-01": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "634f6fbe719f5d986c5e78841215705c3c13dfd006e450b821744a39df145c97",
+      "prompt_hash": "667064e2e863b66b2027d6c7891a272e2411953fc0a5d0da79b82c5493789554",
       "response": "{\n  \"confidence\": 0.95,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
     },
     "transform-good-02": {

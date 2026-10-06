@@ -2,16 +2,18 @@
 
 Dataset cases carry a column name, sample values (plus sibling columns
 when the transform needs them, e.g. a currency column) and a target
-type. ``validate_response`` coerces the proposed transform and applies
-it to every sample: anything less than 100% parse success is a
-violation, and failures are dropped before they are ever shown. A null
-proposal is the honest abstention and must carry low confidence.
+type. ``case_variables`` renders the prompt variables exactly the way
+the suggester does — values of name-like columns masked to shape hints
+(STD-AI8), the column name kept — while validation still applies the
+proposal to the original samples. A null proposal is the honest
+abstention and must carry low confidence.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from zohokit.ai.redaction import mask_column_samples
 from zohokit.ai.schemas import TransformDraft
 from zohokit.modules.migration.mapping import TransformError, apply_transforms, coerce_transform
 
@@ -21,9 +23,10 @@ ABSTAIN_BELOW = 0.6
 
 def case_variables(case: dict[str, Any]) -> dict[str, str]:
     """Render deterministic prompt variables for a dataset case."""
+    column = str(case["input"]["column"])
     return {
-        "column": str(case["input"]["column"]),
-        "samples": "\n".join(case["input"]["samples"]),
+        "column": column,
+        "samples": "\n".join(mask_column_samples(column, case["input"]["samples"])),
         "target_type": str(case["input"]["target_type"]),
     }
 

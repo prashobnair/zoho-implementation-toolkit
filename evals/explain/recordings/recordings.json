@@ -30,6 +30,16 @@
       "prompt_hash": "ff9e3571ef71b8fe50c2d09e2d0ea12f40dca173e12c13bc3eabc033c86b83f7",
       "response": "{\n  \"sentences\": [\n    {\n      \"finding_ids\": [\n        \"00000000000000000000004f\"\n      ],\n      \"quotes\": [\n        \"2 contacts share one normalized email and need duplicate review.\"\n      ],\n      \"text\": \"11 more deals are also missing from the export\"\n    }\n  ]\n}\n"
     },
+    "explain-bad-number-words": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "1dd6d57e97f7c166b176daa44a5b5f847c38544cf40981fea3260956f4bd82b1",
+      "response": "{\n  \"sentences\": [\n    {\n      \"finding_ids\": [\n        \"00000000000000000000005c\"\n      ],\n      \"quotes\": [\n        \"Deal D-1042 references person P-9007 who is not present in the export.\"\n      ],\n      \"text\": \"There are seven errors and nine reviews.\"\n    }\n  ]\n}\n"
+    },
+    "explain-bad-ordinal-words": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "bd7f24517560e87adecd461de4dc0e9be1bd70a17329b2835384234bf940f3b8",
+      "response": "{\n  \"sentences\": [\n    {\n      \"finding_ids\": [\n        \"000000000000000000000064\"\n      ],\n      \"quotes\": [\n        \"The owner of 3 deals is inactive in the target org.\"\n      ],\n      \"text\": \"The tenth review took twice as long; a dozen errors remain.\"\n    }\n  ]\n}\n"
+    },
     "explain-bad-quote": {
       "origin": "hand-authored synthetic",
       "prompt_hash": "34bea77cf7021ffbba9f2d4893102a4b7bcbfcd06cad4315eb87b1c7b7cb2176",
