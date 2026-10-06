@@ -32,12 +32,12 @@
     },
     "explain-bad-number-words": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "1dd6d57e97f7c166b176daa44a5b5f847c38544cf40981fea3260956f4bd82b1",
+      "prompt_hash": "0f5f4e116a2bc85ad423e1abe9941c8093b31f737493e007d2b1e4e42df52244",
       "response": "{\n  \"sentences\": [\n    {\n      \"finding_ids\": [\n        \"00000000000000000000005c\"\n      ],\n      \"quotes\": [\n        \"Deal D-1042 references person P-9007 who is not present in the export.\"\n      ],\n      \"text\": \"There are seven errors and nine reviews.\"\n    }\n  ]\n}\n"
     },
     "explain-bad-ordinal-words": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "bd7f24517560e87adecd461de4dc0e9be1bd70a17329b2835384234bf940f3b8",
+      "prompt_hash": "038053a88077e73b698006a86d8f7a7caeec5d7f9f2f958f1099cc037f03d63d",
       "response": "{\n  \"sentences\": [\n    {\n      \"finding_ids\": [\n        \"000000000000000000000064\"\n      ],\n      \"quotes\": [\n        \"The owner of 3 deals is inactive in the target org.\"\n      ],\n      \"text\": \"The tenth review took twice as long; a dozen errors remain.\"\n    }\n  ]\n}\n"
     },
     "explain-bad-quote": {

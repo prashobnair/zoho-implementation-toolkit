@@ -336,8 +336,9 @@ def _transform_provider(column: str, samples: list[str], raw: str) -> FakeProvid
     from zohokit.ai.prompts import load_template
     from zohokit.ai.redaction import build_prompt
     from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import transform_variables
 
-    variables = {"column": column, "samples": "\n".join(samples), "target_type": "date"}
+    variables = transform_variables(column, samples, "date")
     prompt = build_prompt(load_template("transform"), variables, redactor=Redactor())
     return FakeProvider({prompt.prompt_hash: raw}, model="test-fake")
 
@@ -388,3 +389,188 @@ def test_suggest_transform_ai_failure_dropped_and_reported() -> None:
     assert result.suggestion.transform == "date(format=%d/%m/%Y)"
     assert result.dropped[0].reason == "reference: transform does not parse"
     assert "dropped Close_Date" in render_transform_table(result)
+
+
+class _CapturingProvider(FakeProvider):
+    """FakeProvider that records every prompt it receives (STD-AI8 tests)."""
+
+    def __init__(self, recordings: dict[str, str]) -> None:
+        super().__init__(recordings, model="test-fake")
+        self.prompts: list[object] = []
+
+    def complete_structured(  # type: ignore[override]
+        self, prompt: object, schema: object, *, max_tokens: int, temperature: float = 0.0
+    ) -> object:
+        self.prompts.append(prompt)
+        return super().complete_structured(
+            prompt,  # type: ignore[arg-type]
+            schema,  # type: ignore[arg-type]
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+
+
+def _prompt_text(provider: _CapturingProvider) -> str:
+    assert len(provider.prompts) == 1
+    prompt = provider.prompts[0]
+    assert hasattr(prompt, "text")
+    text = prompt.text  # type: ignore[attr-defined]
+    assert isinstance(text, str)
+    return text
+
+
+def test_mapping_prompt_carries_no_person_names() -> None:
+    """STD-AI8: a planted name from a name-like column never reaches the model."""
+    from zohokit.ai.prompts import load_template
+    from zohokit.ai.redaction import build_prompt
+    from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import mapping_variables
+
+    names = ("Asha Rao", "Dev Patel", "Rani Iyer", "Kabir Shah", "Meera Nair")
+    columns = [
+        ColumnSamples(name="Contact Person", samples=names),
+        ColumnSamples(
+            name="Email",
+            samples=(
+                "a@example.invalid",
+                "b@example.invalid",
+                "c@example.invalid",
+                "d@example.invalid",
+                "e@example.invalid",
+            ),
+        ),
+    ]
+    fields = {
+        "Last_Name": FieldMeta(api_name="Last_Name", data_type="string"),
+        "Email": FieldMeta(api_name="Email", data_type="email"),
+    }
+    raw = json.dumps(
+        {
+            "suggestions": [
+                {
+                    "source_column": "Contact Person",
+                    "target_api_name": "Last_Name",
+                    "transform": ["trim"],
+                    "confidence": 0.65,
+                    "rationale": "header match",
+                    "evidence_samples_idx": [0, 1],
+                },
+                {
+                    "source_column": "Email",
+                    "target_api_name": "Email",
+                    "transform": ["trim", "casefold"],
+                    "confidence": 0.97,
+                    "rationale": "shape match",
+                    "evidence_samples_idx": [0, 1],
+                },
+            ]
+        }
+    )
+    variables = mapping_variables(columns, fields)
+    prompt = build_prompt(load_template("mapping"), variables, redactor=Redactor())
+    provider = _CapturingProvider({prompt.prompt_hash: raw})
+    result = suggest_mapping(columns, fields, "Contacts", provider=provider)
+    assert result.ai_status == "ok"
+    text = _prompt_text(provider)
+    for name in names:
+        assert name not in text
+    assert "<name: 2 words>" in text
+    assert "Contact Person:" in text
+
+
+def test_mapping_prompt_masks_pii_flagged_columns() -> None:
+    """STD-AI8: columns the mapping marks pii:true mask like name columns."""
+    from zohokit.ai.prompts import load_template
+    from zohokit.ai.redaction import build_prompt
+    from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import mapping_variables
+
+    columns = [
+        ColumnSamples(name="Notes", samples=("Asha Rao", "tall", "short", "none", "later")),
+        ColumnSamples(
+            name="Email",
+            samples=(
+                "a@example.invalid",
+                "b@example.invalid",
+                "c@example.invalid",
+                "d@example.invalid",
+                "e@example.invalid",
+            ),
+        ),
+    ]
+    fields = {
+        "Description": FieldMeta(api_name="Description", data_type="string"),
+        "Email": FieldMeta(api_name="Email", data_type="email"),
+    }
+    raw = json.dumps(
+        {
+            "suggestions": [
+                {
+                    "source_column": "Notes",
+                    "target_api_name": "Description",
+                    "transform": ["trim"],
+                    "confidence": 0.7,
+                    "rationale": "header match",
+                    "evidence_samples_idx": [0, 1],
+                },
+                {
+                    "source_column": "Email",
+                    "target_api_name": "Email",
+                    "transform": ["trim", "casefold"],
+                    "confidence": 0.97,
+                    "rationale": "shape match",
+                    "evidence_samples_idx": [0, 1],
+                },
+            ]
+        }
+    )
+    variables = mapping_variables(columns, fields, pii_columns={"Notes"})
+    prompt = build_prompt(load_template("mapping"), variables, redactor=Redactor())
+    provider = _CapturingProvider({prompt.prompt_hash: raw})
+    result = suggest_mapping(columns, fields, "Leads", provider=provider, pii_columns={"Notes"})
+    assert result.ai_status == "ok"
+    text = _prompt_text(provider)
+    assert "Asha Rao" not in text
+    assert "Notes: <name: 2 words>" in text
+
+
+def test_pii_source_columns_reads_mapping_flags() -> None:
+    from zohokit.modules.migration.mapping import FieldMapping
+    from zohokit.modules.migration.suggest import pii_source_columns
+
+    fields = {
+        "Email": FieldMapping(**{"from": "Email", "pii": True}),
+        "Phone": FieldMapping(**{"from": "Phone"}),
+        "Notes": FieldMapping(**{"from": None, "pii": True}),
+    }
+    assert pii_source_columns(fields) == frozenset({"Email"})
+
+
+def test_transform_prompt_carries_no_person_names() -> None:
+    """STD-AI8: a planted name from a name-like column never reaches the model."""
+    from zohokit.ai.prompts import load_template
+    from zohokit.ai.redaction import build_prompt
+    from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import transform_variables
+
+    samples = ["  Asha Rao ", "Rani Iyer  ", "  Kabir Shah", "Meera Nair ", " Dev Patel  "]
+    raw = json.dumps(
+        {
+            "transform": "trim",
+            "confidence": 0.95,
+            "rationale": "trims every sample",
+            "evidence_samples_idx": [0, 1, 2, 3, 4],
+        }
+    )
+    variables = transform_variables("Full Name", samples, "text")
+    prompt = build_prompt(load_template("transform"), variables, redactor=Redactor())
+    provider = _CapturingProvider({prompt.prompt_hash: raw})
+    result = suggest_transform("Full Name", samples, "text", provider=provider)
+    assert result.ai_status == "ok"
+    text = _prompt_text(provider)
+    for name in ("Asha Rao", "Rani Iyer", "Kabir Shah", "Meera Nair", "Dev Patel"):
+        assert name not in text
+    assert "<name: 2 words>" in text
+
+    flagged = transform_variables("Nickname", ["Asha Rao"], "text", pii_columns={"Nickname"})
+    assert flagged["samples"] == "<name: 2 words>"

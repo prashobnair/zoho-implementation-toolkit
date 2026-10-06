@@ -11,6 +11,7 @@ success is dropped and reported.
 
 from __future__ import annotations
 
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -23,10 +24,16 @@ from zohokit.ai.models import AiUsage
 from zohokit.ai.pipeline import AiRequest, run_ai
 from zohokit.ai.prompts import load_template
 from zohokit.ai.providers import LLMProvider
+from zohokit.ai.redaction import mask_column_samples
 from zohokit.ai.schemas import MappingDraft, MappingSuggestion, TransformDraft
 from zohokit.connectors.sources import csv_reader
 from zohokit.core.redact import Redactor
-from zohokit.modules.migration.mapping import TransformError, apply_transforms, coerce_transform
+from zohokit.modules.migration.mapping import (
+    FieldMapping,
+    TransformError,
+    apply_transforms,
+    coerce_transform,
+)
 from zohokit.modules.migration.metadata import FieldMeta
 
 #: Samples shown per column (prompt input and validation set alike).
@@ -118,11 +125,51 @@ def target_field_lines(fields: dict[str, FieldMeta]) -> tuple[str, set[str]]:
     return "\n".join(lines), set(fields)
 
 
-def mapping_variables(columns: list[ColumnSamples], fields: dict[str, FieldMeta]) -> dict[str, str]:
-    """Render deterministic mapping prompt variables."""
-    column_lines = [f"{column.name}: {' | '.join(column.samples)}" for column in columns]
+def mapping_variables(
+    columns: list[ColumnSamples],
+    fields: dict[str, FieldMeta],
+    *,
+    pii_columns: Collection[str] = (),
+) -> dict[str, str]:
+    """Render deterministic mapping prompt variables.
+
+    Sample values of person-name columns (header-normalized, plus any
+    ``pii_columns`` the mapping flags ``pii: true``) are masked to
+    shape hints before the prompt is built, so no person name reaches
+    the model; headers stay so mapping still works (STD-AI8).
+    """
+    column_lines = [
+        f"{column.name}: "
+        f"{' | '.join(mask_column_samples(column.name, column.samples, pii_columns=pii_columns))}"
+        for column in columns
+    ]
     target_lines, _ = target_field_lines(fields)
     return {"source_columns": "\n".join(column_lines), "target_fields": target_lines}
+
+
+def transform_variables(
+    column: str,
+    samples: list[str],
+    target_type: str,
+    *,
+    pii_columns: Collection[str] = (),
+) -> dict[str, str]:
+    """Render deterministic transform prompt variables (masked, STD-AI8)."""
+    return {
+        "column": column,
+        "samples": "\n".join(mask_column_samples(column, samples, pii_columns=pii_columns)),
+        "target_type": target_type,
+    }
+
+
+def pii_source_columns(fields: Mapping[str, FieldMapping]) -> frozenset[str]:
+    """Source-column names a mapping flags ``pii: true`` (STD-AI8).
+
+    Pass the result as ``pii_columns`` to :func:`suggest_mapping` /
+    :func:`suggest_transform` so flagged columns mask exactly like
+    person-name columns.
+    """
+    return frozenset(item.from_col for item in fields.values() if item.pii and item.from_col)
 
 
 def _normalize_header(name: str) -> str:
@@ -263,9 +310,10 @@ def suggest_mapping(
     budget_tokens: int | None = None,
     default_region: str | None = None,
     redactor: Redactor | None = None,
+    pii_columns: Collection[str] = (),
 ) -> SuggestMappingResult:
     """Propose mapping entries; invalid ones are dropped and reported."""
-    variables = mapping_variables(columns, fields)
+    variables = mapping_variables(columns, fields, pii_columns=pii_columns)
     if provider is None:
         draft = heuristic_mapping(columns, fields, default_region=default_region)
         return SuggestMappingResult(
@@ -435,14 +483,11 @@ def suggest_transform(
     default_region: str | None = None,
     currency_col: str | None = None,
     redactor: Redactor | None = None,
+    pii_columns: Collection[str] = (),
 ) -> SuggestTransformResult:
     """Propose one transform; failures are dropped and reported (AI-MIG-2)."""
     check_rows = rows if rows is not None else [{} for _ in samples]
-    variables = {
-        "column": column,
-        "samples": "\n".join(samples),
-        "target_type": target_type,
-    }
+    variables = transform_variables(column, samples, target_type, pii_columns=pii_columns)
     if provider is None:
         draft = guess_transform(
             samples,
@@ -675,6 +720,7 @@ __all__: list[str] = [
     "guess_transform",
     "heuristic_mapping",
     "mapping_variables",
+    "pii_source_columns",
     "read_column_samples",
     "render_mapping_html",
     "render_mapping_table",
@@ -683,6 +729,7 @@ __all__: list[str] = [
     "suggest_mapping",
     "suggest_transform",
     "target_field_lines",
+    "transform_variables",
     "validate_mapping",
     "validate_transform",
 ]
