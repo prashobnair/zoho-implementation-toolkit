@@ -574,3 +574,106 @@ def test_transform_prompt_carries_no_person_names() -> None:
 
     flagged = transform_variables("Nickname", ["Asha Rao"], "text", pii_columns={"Nickname"})
     assert flagged["samples"] == "<name: 2 words>"
+
+
+_MASKED_HEADERS = (
+    "Name",
+    "First Name",
+    "last_name",
+    "FullName",
+    "Contact Person",
+    "Account Manager",
+    "Deal Owner Name",
+    "Sales Rep",
+    "Assignee",
+    "Owner Email",
+)
+
+_VISIBLE_HEADERS = (
+    "Account Name",
+    "Company Name",
+    "Deal Name",
+    "Product Name",
+    "Stage",
+    "Amount",
+)
+
+
+def test_mapping_prompt_masks_compound_person_headers() -> None:
+    """STD-AI8 probe: compound person headers mask, business names stay visible."""
+    from zohokit.ai.prompts import load_template
+    from zohokit.ai.redaction import build_prompt
+    from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import mapping_variables
+
+    planted_names = ("Asha Rao", "Ravi Kumar Iyer")
+    planted_email = "asha.rao@example.invalid"
+    columns = [
+        ColumnSamples(
+            name=header,
+            samples=(
+                (planted_names[0], planted_email) if header == "Owner Email" else planted_names
+            ),
+        )
+        for header in (*_MASKED_HEADERS, *_VISIBLE_HEADERS)
+    ]
+    # Visible business columns carry company values, not person names.
+    columns = [
+        (
+            ColumnSamples(name=column.name, samples=("Marigold Labs", "Lotus Traders"))
+            if column.name in _VISIBLE_HEADERS
+            else column
+        )
+        for column in columns
+    ]
+    fields = {
+        "First_Name": FieldMeta(api_name="First_Name", data_type="string"),
+        "Email": FieldMeta(api_name="Email", data_type="email"),
+    }
+    prompt = build_prompt(
+        load_template("mapping"),
+        mapping_variables(columns, fields),
+        redactor=Redactor(),
+    )
+    for header in _MASKED_HEADERS:
+        assert f"{header}:" in prompt.text
+    for name in planted_names:
+        assert name not in prompt.text
+    assert planted_email not in prompt.text
+    assert "<name:" in prompt.text
+    assert "Marigold Labs" in prompt.text
+    assert "Lotus Traders" in prompt.text
+
+
+def test_transform_prompt_masks_compound_person_headers() -> None:
+    """STD-AI8 probe: every transform prompt masks the same way as mapping."""
+    from zohokit.ai.prompts import load_template
+    from zohokit.ai.redaction import build_prompt
+    from zohokit.core.redact import Redactor
+    from zohokit.modules.migration.suggest import transform_variables
+
+    planted_names = ("Asha Rao", "Ravi Kumar Iyer")
+    planted_email = "asha.rao@example.invalid"
+    for header in _MASKED_HEADERS:
+        samples = (
+            ["Asha Rao", planted_email]
+            if header == "Owner Email"
+            else ["Asha Rao", "Ravi Kumar Iyer"]
+        )
+        prompt = build_prompt(
+            load_template("transform"),
+            transform_variables(header, samples, "text"),
+            redactor=Redactor(),
+        )
+        for name in planted_names:
+            assert name not in prompt.text, header
+        assert planted_email not in prompt.text, header
+        assert "<name:" in prompt.text, header
+    for header in _VISIBLE_HEADERS:
+        prompt = build_prompt(
+            load_template("transform"),
+            transform_variables(header, ["Marigold Labs", "Lotus Traders"], "text"),
+            redactor=Redactor(),
+        )
+        assert "Marigold Labs" in prompt.text, header
+        assert "Lotus Traders" in prompt.text, header
