@@ -313,7 +313,8 @@ def lint(
     if unsupported:
         findings.extend(unsupported_constructs(unsupported))
     ids = [item.id for item in findings]
-    assert len(ids) == len(set(ids)), "lint finding IDs must be unique"
+    if len(ids) != len(set(ids)):
+        raise ValueError("lint finding IDs must be unique")
     return sorted(findings, key=lambda item: item.sort_key())
 
 
