@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.2.1...v0.3.0) (2026-10-06)
+
+
+### Features
+
+* **ai:** guarded AI foundation; explain reports, mapping and transform suggesters [STD-AI1..AI13, TK-CORE-9, AI-MIG-1, AI-MIG-2] ([#48](https://github.com/prashobnair/zoho-implementation-toolkit/issues/48)) ([ecd1d2f](https://github.com/prashobnair/zoho-implementation-toolkit/commit/ecd1d2f894ffe1767bc504fd71cc97f1d3692d1c))
+* **migration:** migration preflight v2: mapping DSL, metadata validation, dedupe, import plan, reconcile workbook [TK-MIG-F1..F11, TK-CORE-8] ([#41](https://github.com/prashobnair/zoho-implementation-toolkit/issues/41)) ([76ed944](https://github.com/prashobnair/zoho-implementation-toolkit/commit/76ed94498e9abe7b71d89fb15a8879e555e97125))
+
 ## [0.2.1](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.2.0...v0.2.1) (2026-10-04)
 
 
