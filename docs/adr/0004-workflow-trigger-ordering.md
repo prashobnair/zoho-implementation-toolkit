@@ -24,7 +24,9 @@ The simulator uses a documented approximation:
 2. Field writes enqueue `record_edited` / `field_changed` /
    `stage_changed` follow-up events processed FIFO by `(day, seq)` on
    a virtual clock; timer rules (`scheduled`, `date_field_reached`)
-   are pre-enqueued at their offset day.
+   are pre-enqueued at their offset day. Identical follow-up events
+   already queued are coalesced (one evaluation per event shape),
+   and no-op writes enqueue nothing — only real changes re-trigger.
 3. Cycles are cut on first state-signature revisit (`cycle_detected`);
    external calls only reach the duplicate-detecting ledger
    (`external_actions: 0` always).

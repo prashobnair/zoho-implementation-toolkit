@@ -1,11 +1,30 @@
 {
   "additionalProperties": true,
-  "description": "One record, its rules, and the triggering event.",
+  "description": "One record, its rules, and the triggering event.\n\n``initial_fields_changed`` / ``event_field`` describe the trigger\nitself (which fields the edit touched); v2 ``changed_to`` /\n``changed_from`` criteria and ``field_changed(field)`` events read\nthem. The legacy v1 path ignores both.",
   "properties": {
+    "event_field": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Event Field"
+    },
     "initial_event": {
       "default": "deal_created",
       "title": "Initial Event",
       "type": "string"
+    },
+    "initial_fields_changed": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Initial Fields Changed",
+      "type": "array"
     },
     "max_steps": {
       "default": 20,

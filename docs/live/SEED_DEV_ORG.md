@@ -36,6 +36,36 @@
 4. Verify: Accounts shows 5 rows, Contacts shows 6 (incl. the duplicate
    pair), Deals shows 5, Leads shows 5.
 
+## Workflow rules with 4 seeded issues (manual, UI only)
+
+Seed these six Deals rules through **Setup → Automation → Workflow
+Rules** (create each rule, its field-update action, then activate).
+They mirror the synthetic cassette set at
+`tests/contract/cassettes/crm_workflow_seeded.json`, so
+`zohokit workflow lint --live --profile dev-in --experimental --module Deals`
+must report exactly one `potential_loop`, one
+`conflicting_field_updates`, one `stale_field_reference` and one
+`empty_rule`. The live lint needs the read-only
+`ZohoCRM.settings.workflow_rules.READ` and
+`ZohoCRM.settings.automation_actions.READ` scopes on the profile.
+
+1. **Seed loop A** — trigger: field update on `Owner`; instant action:
+   field update `Stage` → `Negotiation`.
+2. **Seed loop B** — trigger: field update on `Stage`; instant action:
+   field update `Owner` → the sales owner. (A writes what B listens
+   to and back: one `potential_loop` with the two-rule path.)
+3. **Seed conflict A / B** — two rules, both trigger on record
+   creation; instant actions set `Stage` → `Negotiation` vs
+   `Proposal`. (One `conflicting_field_updates` on `Deals.Stage`.)
+4. **Seed stale field** — trigger on creation with a condition on a
+   field you then delete (or rename) in Setup → Customization; the
+   rule keeps referencing it. (One `stale_field_reference`.)
+5. **Seed empty rule** — trigger on creation with a condition on
+   `Stage`, but attach no actions. (One `empty_rule`.)
+6. Use only synthetic values (Marigold Labs) and leave every other
+   Deals rule inactive while verifying, so the linter reports exactly
+   the 4 seeded findings.
+
 ## After seeding
 
 - Run `zohokit auth login --profile dev-in --dc in --scopes

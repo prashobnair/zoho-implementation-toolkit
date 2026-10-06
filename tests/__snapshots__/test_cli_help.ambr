@@ -52,13 +52,16 @@
                                                                                   
    Usage: root workflow [OPTIONS] COMMAND [ARGS]...                               
                                                                                   
-   Trace workflow rules over a record.                                            
+   Trace, lint and scenario-test workflow rules.                                  
                                                                                   
   ┌─ Options ────────────────────────────────────────────────────────────────────┐
   │ --help          Show this message and exit.                                  │
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
   │ simulate  Simulate rules against one record and report the trace.            │
+  │ lint      Lint workflow rules for conflicts, loops, stale fields and dead    │
+  │           rules.                                                             │
+  │ test      Run a directory of given/when/then rule scenarios (UC-WF-2).       │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   
@@ -187,7 +190,7 @@
   │ modules       Inspect available modules.                                     │
   │ migration     Audit a CRM migration source before import.                    │
   │ release       Diff sandbox vs production config manifests.                   │
-  │ workflow      Trace workflow rules over a record.                            │
+  │ workflow      Trace, lint and scenario-test workflow rules.                  │
   │ forms         Prove a rebuilt form behaves like the original.                │
   │ books         Reconcile Books invoices against CRM deals.                    │
   │ metrics       Check metric contracts over CRM/Books/People data.             │

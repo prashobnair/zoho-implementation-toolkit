@@ -26,13 +26,28 @@ admin.
 ```sh
 uv run zohokit workflow simulate rules.json
 uv run zohokit workflow simulate rules.json --strict
+uv run zohokit workflow lint --rules rules.json --metadata fields.json
+uv run zohokit workflow test scenarios/marigold-labs/rules/
 ```
+
+`lint` also reads the live org (read-only, unverified endpoints):
+`zohokit workflow lint --live --profile dev-in --experimental --module Deals`.
+`test` prints per-suite case counts plus rule/branch coverage and renders
+JUnit/HTML through the standard `--format/--out` flags.
 
 ## How it works
 
 The pure engine replays the offline rules over one offline record and emits
 findings with stable IDs; the run is not ready while findings remain. Render
 with `--format json|table|markdown|html|sarif|junit` and write to a file with `--out`.
+
+The linter translates real v8 rules into the v2 language first
+(`import_real`); constructs with no representation surface as
+`unsupported_construct` instead of being approximated. Loop detection
+walks the rule → written-fields → edit-triggered-rules graph and reports
+cycles with their paths. Scenario files (`rules` + given/when/then
+`cases`, with `params` expansion) run through the same deterministic
+simulator; rules that never fire become `uncovered_rule` info findings.
 
 ## Finding codes
 
@@ -43,6 +58,17 @@ with `--format json|table|markdown|html|sarif|junit` and write to a file with `-
 | `missing_owner` | error | An assign-owner action has no usable owner value. |
 | `no_op_stage` | error | A set-stage action targets the stage already set. |
 | `duplicate_followup` | error | The same follow-up would fire twice for one record. |
+| `duplicate_side_effect` | error | A simulated call would repeat for one record, action, template/url and day. |
+| `conflicting_field_updates` | error | Two rules on the same trigger update one field differently. |
+| `potential_loop` | error | A write chain can re-fire; the path is reported. |
+| `stale_field_reference` | error | A rule references a field absent from the metadata. |
+| `empty_rule` | warning | A rule has no actions. |
+| `dead_rule` | warning | An inactive rule never fires. |
+| `webhook_failing` | error | A rule webhook has recent execution failures. |
+| `near_limit` | warning | Action usage is at 80%+ of the configured limit. |
+| `unsupported_construct` | review | A real-rule construct has no simulator form. |
+| `uncovered_rule` | info | No scenario case exercised the rule. |
+| `scenario_case_failed` | error | A scenario case assertion mismatched (runner only). |
 
 ## Scope & safety
 

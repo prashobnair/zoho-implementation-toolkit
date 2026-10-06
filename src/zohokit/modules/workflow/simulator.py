@@ -114,6 +114,8 @@ def simulate_v2(
     record: dict[str, Any],
     initial_event: str = "record_created",
     max_steps: int = 20,
+    initial_fields_changed: list[str] | None = None,
+    event_field: str | None = None,
 ) -> dict[str, Any]:
     """Run the v2 simulation; same input yields a byte-identical trace."""
     if not isinstance(record, dict):
@@ -151,10 +153,23 @@ def simulate_v2(
             entry["field"] = field
         if rule_id is not None:
             entry["rule_id"] = rule_id
+        for queued in pending:
+            if (
+                queued["type"] == entry["type"]
+                and queued.get("field") == entry.get("field")
+                and queued["fields_changed"] == entry["fields_changed"]
+                and queued["day"] == entry["day"]
+                and queued.get("rule_id") == entry.get("rule_id")
+            ):
+                return
         seq += 1
         pending.append(entry)
 
     enqueue(initial_event, day=0, caused_by="input")
+    first = pending[0]
+    first["fields_changed"] = list(initial_fields_changed or [])
+    if event_field is not None:
+        first["field"] = event_field
     for rule in rules:
         if rule.event.type in _TIMER_EVENTS:
             enqueue(
@@ -241,6 +256,8 @@ def simulate_v2(
                             "detail": {"field": written[0]},
                         }
                     )
+                    # No-op writes fire (they count for coverage) but
+                    # enqueue nothing: only real changes can re-trigger.
                     if changed_now:
                         enqueue(
                             "record_edited",

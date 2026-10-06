@@ -2,7 +2,7 @@
   "$defs": {
     "Action": {
       "additionalProperties": false,
-      "description": "One rule action; external calls are simulated only (TK-WF-F1/F3).",
+      "description": "One rule action; external calls are simulated only (TK-WF-F1/F3).\n\n``ref_id`` optionally carries the real Zoho action ID a translated\nrule came from, so the linter can join webhooks to failure reports.",
       "properties": {
         "delay_days": {
           "anyOf": [
@@ -51,6 +51,18 @@
           ],
           "default": null,
           "title": "Owner"
+        },
+        "ref_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ref Id"
         },
         "side_effects": {
           "default": [],

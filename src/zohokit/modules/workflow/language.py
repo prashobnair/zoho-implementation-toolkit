@@ -140,7 +140,11 @@ Criterion.model_rebuild()
 
 
 class Action(BaseModel):
-    """One rule action; external calls are simulated only (TK-WF-F1/F3)."""
+    """One rule action; external calls are simulated only (TK-WF-F1/F3).
+
+    ``ref_id`` optionally carries the real Zoho action ID a translated
+    rule came from, so the linter can join webhooks to failure reports.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -153,6 +157,7 @@ class Action(BaseModel):
     function_name: str | None = None
     side_effects: tuple[str, ...] = ()
     delay_days: int | None = None
+    ref_id: str | None = None
 
     @model_validator(mode="after")
     def _check_params(self) -> Action:

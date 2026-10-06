@@ -183,6 +183,8 @@ def analyze(inputs: WorkflowInput) -> Analysis:
             copy.deepcopy(inputs.record),
             event,
             inputs.max_steps,
+            list(inputs.initial_fields_changed),
+            inputs.event_field,
         )
         record_id = str(inputs.record.get("id", "record"))
         created = tuple(

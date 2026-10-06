@@ -17,3 +17,4 @@
 | `near_limit` | warning | Per-module rule/action counts approach the configured limits. |
 | `unsupported_construct` | review | A real-rule construct has no simulator representation; listed, never approximated. |
 | `uncovered_rule` | info | No scenario case exercised the rule. |
+| `scenario_case_failed` | error | A scenario case assertion mismatched (runner only). |

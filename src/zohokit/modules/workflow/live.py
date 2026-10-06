@@ -14,14 +14,30 @@ no call here can write (GET-only client).
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
+import httpx
 from pydantic import Field
 
+from zohokit.connectors.zoho.auth import TokenManager
+from zohokit.connectors.zoho.budget import DEFAULT_MAX_API_CALLS, CallBudget
 from zohokit.connectors.zoho.client import ZohoClient
+from zohokit.connectors.zoho.dc import DC_TABLE
 from zohokit.connectors.zoho.errors import ContractDriftError
-from zohokit.connectors.zoho.models import ZohoResponse, validate_response
-from zohokit.connectors.zoho.readers import raise_for_zoho_error
+from zohokit.connectors.zoho.models import (
+    FieldsResponse,
+    ZohoResponse,
+    unwrap_fields,
+    validate_response,
+)
+from zohokit.connectors.zoho.profiles import load_profile
+from zohokit.connectors.zoho.readers import (
+    authenticated_client,
+    raise_for_zoho_error,
+    read_model,
+)
+from zohokit.modules.workflow.import_real import ACTION_MAP
 
 #: Workflow + actions endpoints (all unverified; experimental only).
 WORKFLOW_RULES_PATH = "/crm/v8/settings/automation/workflow_rules"
@@ -159,10 +175,98 @@ def read_workflow_configurations(client: ZohoClient, *, module: str) -> Workflow
     )
 
 
+#: Inner transport factory for API reads (tests inject a mock).
+TRANSPORT_FACTORY: Callable[[], httpx.BaseTransport] = httpx.HTTPTransport
+
+
+def live_lint_bundle(
+    profile: str,
+    *,
+    module: str = "Deals",
+    max_api_calls: int | None = None,
+    transport_factory: Callable[[], httpx.BaseTransport] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any], set[str], dict[str, str], dict[str, dict[str, int]]]:
+    """Read rules, actions, failures, fields and limits behind *profile*.
+
+    Every workflow endpoint is `unverified`, so this bundle exists only
+    behind ``--experimental``; the fields read uses the verified fields
+    endpoint. Returns ``(rules_payload, action_maps, field_names,
+    failures, limits)``; callers translate with
+    :mod:`zohokit.modules.workflow.import_real`. GET-only, budgeted.
+    """
+    current = load_profile(profile)
+    budget = CallBudget(max_calls=max_api_calls or DEFAULT_MAX_API_CALLS)
+    dc = DC_TABLE[current.dc]
+    factory = transport_factory or TRANSPORT_FACTORY
+    manager = TokenManager(dc=current.dc, profile=current.name, transport_factory=factory)
+    client = authenticated_client(dc.api_base, manager, budget, factory())
+    rules = read_workflow_rules(client, module=module)
+    updates = read_field_updates(client)
+    emails = read_email_notifications(client)
+    tasks = read_automation_tasks(client)
+    webhooks = read_webhooks(client)
+    failures_page = read_webhook_failures(client)
+    configs = read_workflow_configurations(client, module=module)
+    field_entries = unwrap_fields(
+        read_model(
+            client, "/crm/v8/settings/fields", FieldsResponse, params={"module": module}
+        ).model_dump(),
+        endpoint="/crm/v8/settings/fields",
+    )
+    field_names = {
+        str(entry.get("api_name", "")) for entry in field_entries if entry.get("api_name")
+    }
+    maps: dict[str, Any] = {
+        "field_updates": {
+            str(item.get("id", "")): {
+                "field": str((item.get("field") or {}).get("api_name", "")),
+                "value": (item.get("value") or [None])[0],
+            }
+            for item in updates.field_updates
+            if isinstance(item, dict)
+        },
+        "emails": {
+            str(item.get("id", "")): str(item.get("name", ""))
+            for item in emails.email_notifications
+            if isinstance(item, dict)
+        },
+        "tasks": {
+            str(item.get("id", "")): str(item.get("name", ""))
+            for item in tasks.tasks
+            if isinstance(item, dict)
+        },
+        "webhooks": {
+            str(item.get("id", "")): str(item.get("url", ""))
+            for item in webhooks.webhooks
+            if isinstance(item, dict)
+        },
+        "functions": {},
+    }
+    failures = {
+        str((item.get("webhook") or {}).get("id", "")): str(item.get("failure_reason", ""))
+        for item in failures_page.webhook_failures
+        if isinstance(item, dict)
+    }
+    by_v2: dict[str, int] = {}
+    actions_cfg = configs.workflow_configurations.get("actions", [])
+    inverse = {real: v2 for v2, real in ACTION_MAP.items()}
+    for entry in actions_cfg if isinstance(actions_cfg, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        v2_name = inverse.get(str(entry.get("api_name", "")), "")
+        if v2_name and isinstance(entry.get("limit"), int):
+            by_v2[v2_name] = int(entry["limit"])
+    rules_payload: dict[str, Any] = {
+        "workflow_rules": [dict(rule) for rule in rules.workflow_rules]
+    }
+    return rules_payload, maps, field_names, failures, {module: by_v2}
+
+
 __all__: list[str] = [
     "AUTOMATION_TASKS_PATH",
     "EMAIL_NOTIFICATIONS_PATH",
     "FIELD_UPDATES_PATH",
+    "TRANSPORT_FACTORY",
     "WEBHOOKS_PATH",
     "WEBHOOK_FAILURES_PATH",
     "WORKFLOW_CONFIGURATIONS_PATH",
@@ -174,6 +278,7 @@ __all__: list[str] = [
     "WebhooksPage",
     "WorkflowConfigurations",
     "WorkflowRulesPage",
+    "live_lint_bundle",
     "read_automation_tasks",
     "read_email_notifications",
     "read_field_updates",
