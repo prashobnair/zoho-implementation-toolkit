@@ -1,5 +1,115 @@
-"""AI provider interface and guardrails (foundation, planned for v0.3.0)."""
+"""AI provider interface and guardrails (STD §5)."""
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from zohokit.ai.evalharness import (
+    ORIGIN_LABEL,
+    EvalHarnessError,
+    check_thresholds,
+    load_dataset,
+    load_recordings,
+    load_thresholds,
+)
+from zohokit.ai.injection import DATA_BEGIN, DATA_END, SYSTEM_STATEMENT, wrap_data
+from zohokit.ai.models import AiConfig, AiStatus, AiUsage, Prompt, StructuredResult
+from zohokit.ai.pipeline import AiOutcome, AiRequest, run_ai
+from zohokit.ai.prompts import (
+    PROMPTS_DIR,
+    PromptFileError,
+    PromptTemplate,
+    load_template,
+    prompt_path,
+    render_template,
+)
+from zohokit.ai.providers import (
+    AiConfigError,
+    AiError,
+    AnthropicProvider,
+    FakeProvider,
+    FakeProviderError,
+    LLMProvider,
+    OpenAICompatibleProvider,
+    ProviderError,
+    SchemaParseError,
+    build_provider,
+    parse_structured,
+    read_api_key,
+    repair_prompt_text,
+)
+from zohokit.ai.redaction import build_prompt, redact_variables
+from zohokit.ai.schemas import (
+    ExplainDraft,
+    ExplainSentence,
+    MappingDraft,
+    MappingSuggestion,
+    TransformDraft,
+)
+from zohokit.ai.usage import estimate_cost_usd, estimate_tokens, within_budget
+from zohokit.ai.validators import (
+    CitationCheck,
+    GroundingCheck,
+    NumberDateSets,
+    check_citations,
+    check_grounded,
+    extract_dates,
+    extract_numbers,
+    extract_report_tokens,
+)
+
+__all__: list[str] = [
+    "DATA_BEGIN",
+    "DATA_END",
+    "ORIGIN_LABEL",
+    "PROMPTS_DIR",
+    "SYSTEM_STATEMENT",
+    "AiConfig",
+    "AiConfigError",
+    "AiError",
+    "AiOutcome",
+    "AiRequest",
+    "AiStatus",
+    "AiUsage",
+    "AnthropicProvider",
+    "CitationCheck",
+    "EvalHarnessError",
+    "ExplainDraft",
+    "ExplainSentence",
+    "FakeProvider",
+    "FakeProviderError",
+    "GroundingCheck",
+    "LLMProvider",
+    "MappingDraft",
+    "MappingSuggestion",
+    "NumberDateSets",
+    "OpenAICompatibleProvider",
+    "Prompt",
+    "PromptFileError",
+    "PromptTemplate",
+    "ProviderError",
+    "SchemaParseError",
+    "StructuredResult",
+    "TransformDraft",
+    "build_prompt",
+    "build_provider",
+    "check_citations",
+    "check_grounded",
+    "check_thresholds",
+    "estimate_cost_usd",
+    "estimate_tokens",
+    "extract_dates",
+    "extract_numbers",
+    "extract_report_tokens",
+    "load_dataset",
+    "load_recordings",
+    "load_template",
+    "load_thresholds",
+    "parse_structured",
+    "prompt_path",
+    "read_api_key",
+    "redact_variables",
+    "render_template",
+    "repair_prompt_text",
+    "run_ai",
+    "within_budget",
+    "wrap_data",
+]

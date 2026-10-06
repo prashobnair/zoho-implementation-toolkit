@@ -106,12 +106,10 @@ jobs:
         with:
           python-version: "3.11"
       - run: uv sync --locked --group dev
-      - run: |
-          if uv run pytest --collect-only -q -m eval | grep -q "::"; then
-            uv run pytest -m eval
-          else
-            echo "No eval suites yet; passing by default."
-          fi
+      # Recorded eval suites (STD-AI11..13): FakeProvider replays
+      # hand-authored synthetic recordings, so no key is needed and no
+      # network call happens. Fails below thresholds.toml gates.
+      - run: uv run pytest -m eval
 
   demo:
     runs-on: ubuntu-latest

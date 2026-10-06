@@ -13,6 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
 from zohokit.core.findings import Report
 from zohokit.modules.books.models import BooksInput
 from zohokit.modules.forms.models import FormsInput
@@ -60,7 +61,10 @@ def main() -> None:
         _write(ROOT / "schemas" / module / f"report.v{SCHEMA_VERSION}.json", report_schema)
     _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
     _write(ROOT / "schemas" / "migration" / "mapping.v1.json", MappingDoc.model_json_schema())
-    print(f"wrote {2 * len(INPUTS) + 2} schemas (v{SCHEMA_VERSION})")
+    _write(ROOT / "schemas" / "ai" / "explain.v1.json", ExplainDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "mapping.v1.json", MappingDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "transform.v1.json", TransformDraft.model_json_schema())
+    print(f"wrote {2 * len(INPUTS) + 5} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

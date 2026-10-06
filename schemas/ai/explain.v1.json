@@ -1,0 +1,42 @@
+{
+  "$defs": {
+    "ExplainSentence": {
+      "description": "One narrative sentence restating report findings (TK-CORE-9).",
+      "properties": {
+        "finding_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Finding Ids",
+          "type": "array"
+        },
+        "quotes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Quotes",
+          "type": "array"
+        },
+        "text": {
+          "default": "",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "title": "ExplainSentence",
+      "type": "object"
+    }
+  },
+  "description": "Full narrative draft: one sentence per important point (TK-CORE-9).",
+  "properties": {
+    "sentences": {
+      "items": {
+        "$ref": "#/$defs/ExplainSentence"
+      },
+      "title": "Sentences",
+      "type": "array"
+    }
+  },
+  "title": "ExplainDraft",
+  "type": "object"
+}

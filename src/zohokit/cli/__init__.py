@@ -120,8 +120,20 @@ def create_app() -> typer.Typer:
             bool, typer.Option("--strict", help="Exit 2 on blocking findings, every command.")
         ] = False,
         ai: Annotated[
-            bool, typer.Option("--ai", help="AI assistance (not available until v0.3.0).")
+            bool,
+            typer.Option("--ai", help="AI suggestions (says 'AI disabled' when unconfigured)."),
         ] = False,
+        ai_allow_pii: Annotated[
+            bool,
+            typer.Option(
+                "--ai-allow-pii",
+                help="Send unredacted values to the AI provider (synthetic data only).",
+            ),
+        ] = False,
+        ai_max_tokens: Annotated[
+            int | None,
+            typer.Option("--ai-max-tokens", help="Cap estimated AI prompt tokens."),
+        ] = None,
         baseline: Annotated[
             Path | None,
             typer.Option("--baseline", help="Accepted-findings file (.zohokit-baseline.json)."),
@@ -139,6 +151,8 @@ def create_app() -> typer.Typer:
             out=out,
             strict=strict,
             ai=ai,
+            ai_allow_pii=ai_allow_pii,
+            ai_max_tokens=ai_max_tokens,
             baseline=baseline,
             max_api_calls=max_api_calls,
         )

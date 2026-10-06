@@ -49,6 +49,9 @@ lead-routing = "zohokit.cli.lead_routing:app"
 Homepage = "https://github.com/prashobnair/zoho-implementation-toolkit"
 Changelog = "https://github.com/prashobnair/zoho-implementation-toolkit/blob/main/CHANGELOG.md"
 
+[project.optional-dependencies]
+ai = ["anthropic>=0.40"]
+
 [dependency-groups]
 dev = [
   "bandit>=1.7",
@@ -90,7 +93,7 @@ warn_unused_ignores = true
 warn_return_any = true
 
 [[tool.mypy.overrides]]
-module = ["phonenumbers.*", "pycountry.*", "yaml.*", "openpyxl.*"]
+module = ["phonenumbers.*", "pycountry.*", "yaml.*", "openpyxl.*", "anthropic.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

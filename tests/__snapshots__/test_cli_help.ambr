@@ -159,8 +159,11 @@
   │ --out                       <path>  Default report file for every command.   │
   │ --strict                            Exit 2 on blocking findings, every       │
   │                                     command.                                 │
-  │ --ai                                AI assistance (not available until       │
-  │                                     v0.3.0).                                 │
+  │ --ai                                AI suggestions (says 'AI disabled' when  │
+  │                                     unconfigured).                           │
+  │ --ai-allow-pii                      Send unredacted values to the AI         │
+  │                                     provider (synthetic data only).          │
+  │ --ai-max-tokens             <int>   Cap estimated AI prompt tokens.          │
   │ --baseline                  <path>  Accepted-findings file                   │
   │                                     (.zohokit-baseline.json).                │
   │ --max-api-calls             <int>   API call budget per run (default 200).   │

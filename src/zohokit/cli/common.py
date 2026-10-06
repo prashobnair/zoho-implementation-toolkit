@@ -13,6 +13,8 @@ from typing import Annotated, Any, NoReturn, TypeAlias, TypeVar
 import typer
 from pydantic import BaseModel, ValidationError
 
+from zohokit.ai.models import AiConfig
+from zohokit.ai.providers import build_provider
 from zohokit.cli.exitcodes import resolve
 from zohokit.core.baseline import BaselineError, apply_baseline, load_baseline
 from zohokit.core.context import RunContext
@@ -86,10 +88,15 @@ class GlobalOptions:
     ``live``, ``profile`` and ``max_api_calls`` are honored by the
     ``auth``, ``doctor`` and ``cache`` commands; per-module live reads are
     not wired yet, so module commands refuse them loudly instead of
-    silently ignoring them. ``ai`` names a feature that does not exist
-    yet; using it fails loudly (exit 1). ``baseline`` applies an
-    accepted-findings file. ``format_name``, ``out`` and ``strict`` act
-    as defaults when the command does not set them.
+    silently ignoring them. ``ai`` opts into AI suggestions: with no
+    provider configured the tool says "AI disabled" and runs its
+    deterministic path (STD-AI4). ``ai_allow_pii`` skips prompt
+    redaction for synthetic-only local runs and is refused with
+    ``--live`` (STD-AI8). ``ai_max_tokens`` caps estimated prompt
+    tokens before the deterministic fallback runs (STD-AI9).
+    ``baseline`` applies an accepted-findings file. ``format_name``,
+    ``out`` and ``strict`` act as defaults when the command does not
+    set them.
     """
 
     live: bool = False
@@ -98,6 +105,8 @@ class GlobalOptions:
     out: Path | None = None
     strict: bool = False
     ai: bool = False
+    ai_allow_pii: bool = False
+    ai_max_tokens: int | None = None
     baseline: Path | None = None
     max_api_calls: int | None = None
 
@@ -108,12 +117,12 @@ _GLOBAL = GlobalOptions()
 # After-subcommand spellings of the root flags (TK-X-1).
 #
 # Click only accepts root options *before* the subcommand, so every leaf
-# command re-declares these flags with identical help text. ``--ai`` names
-# a feature that does not exist yet and always fails loudly.
-# ``--baseline`` applies an accepted-findings file. ``--live``/``--profile``/
-# ``--max-api-calls`` are honored by the auth, doctor and cache commands;
-# every other command refuses them loudly (see :func:`reject_unsupported_live`)
-# until its live path is wired.
+# command re-declares these flags with identical help text.
+# ``--ai-allow-pii``/``--ai-max-tokens`` are re-declared only by commands
+# that run AI features; ``--baseline`` applies an accepted-findings file.
+# ``--live``/``--profile``/``--max-api-calls`` are honored by the auth,
+# doctor and cache commands; every other command refuses them loudly
+# (see :func:`reject_unsupported_live`) until its live path is wired.
 LiveAfter: TypeAlias = Annotated[
     bool, typer.Option("--live", help="Read from Zoho via a named profile.")
 ]
@@ -122,7 +131,19 @@ ProfileAfter: TypeAlias = Annotated[
     typer.Option("--profile", help="Named auth profile (see `zohokit auth login`)."),
 ]
 AiAfter: TypeAlias = Annotated[
-    bool, typer.Option("--ai", help="AI assistance (not available until v0.3.0).")
+    bool,
+    typer.Option("--ai", help="AI suggestions (says 'AI disabled' when unconfigured)."),
+]
+AiAllowPiiAfter: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--ai-allow-pii",
+        help="Send unredacted values to the AI provider (synthetic data only).",
+    ),
+]
+AiMaxTokensAfter: TypeAlias = Annotated[
+    int | None,
+    typer.Option("--ai-max-tokens", help="Cap estimated AI prompt tokens."),
 ]
 BaselineAfter: TypeAlias = Annotated[
     Path | None,
@@ -134,18 +155,27 @@ MaxApiCallsAfter: TypeAlias = Annotated[
 ]
 
 
+#: Note printed when --ai is given but no provider is configured (STD-AI4).
+AI_DISABLED_NOTE = "AI disabled: no provider configured; the deterministic path runs."
+
+
 def reject_future_flags(
     ai: bool = False,
     baseline: Path | None = None,
 ) -> None:
-    """Fail loudly when an after-subcommand flag names a missing feature.
+    """Accept the after-subcommand flags every command declares.
 
-    Only ``--ai`` is still gated here. ``--baseline`` is accepted by every
-    command that produces a report; the parameter stays so existing call
-    sites keep working while each command wires it to
+    ``--ai`` is opt-in (STD-AI4): with no provider configured the tool
+    notes "AI disabled" on stderr and runs its deterministic path. AI
+    features themselves consume the flag; commands without one simply
+    run deterministically. ``--baseline`` is accepted by every command
+    that produces a report; the parameter stays so existing call sites
+    keep working while each command wires it to
     :func:`apply_baseline_file`.
     """
-    check_unavailable_globals(GlobalOptions(ai=ai))
+    active = ai or _GLOBAL.ai
+    if active and build_provider(AiConfig.from_env()) is None:
+        typer.echo(AI_DISABLED_NOTE, err=True)
     _ = baseline
 
 
@@ -176,16 +206,18 @@ def set_global_options(options: GlobalOptions) -> None:
 
 
 def check_unavailable_globals(options: GlobalOptions | None = None) -> None:
-    """Fail loudly when a flag names a feature that does not exist yet.
+    """Fail loudly when a flag combination is not allowed.
 
-    Only ``--ai`` is still gated here: ``--live``, ``--profile`` and
-    ``--max-api-calls`` are honored by the auth, doctor and cache
-    commands, and refused per-command elsewhere; ``--baseline`` applies
-    an accepted-findings file wherever a report is produced.
+    ``--ai-allow-pii`` is refused with ``--live`` (STD-AI8): prompts
+    built from live reads must always pass the redactor first.
+    ``--live``, ``--profile`` and ``--max-api-calls`` are honored by the
+    auth, doctor and cache commands, and refused per-command elsewhere;
+    ``--baseline`` applies an accepted-findings file wherever a report
+    is produced; ``--ai`` opts in per command (STD-AI4).
     """
     active = _GLOBAL if options is None else options
-    if active.ai:
-        fail("AI assistance is not available until v0.3.0.")
+    if active.ai_allow_pii and active.live:
+        fail("--ai-allow-pii is refused with --live: live prompts stay redacted.")
 
 
 @dataclass(frozen=True)
@@ -278,8 +310,11 @@ def apply_baseline_file(report: Report, baseline: Path | None, *, now: datetime)
 
 
 __all__: list[str] = [
+    "AI_DISABLED_NOTE",
     "FORMATS_HELP",
     "AiAfter",
+    "AiAllowPiiAfter",
+    "AiMaxTokensAfter",
     "BaselineAfter",
     "GlobalOptions",
     "LiveAfter",

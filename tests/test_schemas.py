@@ -42,7 +42,7 @@ def _dump(schema: dict[str, Any]) -> str:
 
 def test_every_module_has_input_and_report_schemas() -> None:
     assert sorted(path.name for path in (ROOT / "schemas").iterdir() if path.is_dir()) == sorted(
-        INPUTS
+        [*INPUTS, "ai"]
     )
     for module in sorted(INPUTS):
         assert (ROOT / "schemas" / module / "input.v1.json").is_file()
@@ -65,3 +65,16 @@ def test_report_schemas_match_envelope() -> None:
 def test_release_manifest_schema_matches_model() -> None:
     on_disk = (ROOT / "schemas" / "release" / "manifest.v2.json").read_text(encoding="utf-8")
     assert on_disk == _dump(Manifest.model_json_schema()), "release manifest.v2 schema is stale"
+
+
+def test_ai_suggestion_schemas_match_models() -> None:
+    """AI suggestion outputs export under schemas/ai/ (STD-AI3)."""
+    from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+
+    for name, model in [
+        ("explain", ExplainDraft),
+        ("mapping", MappingDraft),
+        ("transform", TransformDraft),
+    ]:
+        on_disk = (ROOT / "schemas" / "ai" / f"{name}.v1.json").read_text(encoding="utf-8")
+        assert on_disk == _dump(model.model_json_schema()), f"ai {name}.v1 schema is stale"
