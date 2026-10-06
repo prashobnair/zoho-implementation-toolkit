@@ -1,0 +1,27 @@
+name: evals-live
+
+# Manual re-recordings with the real provider (STD-AI13). This workflow
+# NEVER runs on pushes or pull requests: workflow_dispatch only, behind
+# the ai-eval environment (required reviewers + secrets). The script
+# refuses when no key exists, and committed recordings are never
+# overwritten (live output goes to gitignored scratch only).
+on:
+  workflow_dispatch:
+
+jobs:
+  evals-live:
+    runs-on: ubuntu-latest
+    environment: ai-eval
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: uv sync --locked --group dev
+      - run: uv run python scripts/run_live_evals.py
+        env:
+          ZOHOKIT_AI_PROVIDER: ${{ secrets.ZOHOKIT_AI_PROVIDER }}
+          ZOHOKIT_AI_MODEL: ${{ secrets.ZOHOKIT_AI_MODEL }}
+          ZOHOKIT_AI_API_KEY: ${{ secrets.ZOHOKIT_AI_API_KEY }}
+          ZOHOKIT_AI_BASE_URL: ${{ secrets.ZOHOKIT_AI_BASE_URL }}

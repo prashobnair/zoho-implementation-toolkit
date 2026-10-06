@@ -1,18 +1,22 @@
-"""Global-flag tests: shared rendering flags work; future flags fail loudly (TK-X-1).
+"""Global-flag tests: shared rendering flags work; live stays loud; AI opts in (TK-X-1).
 
 ``--live``/``--profile``/``--max-api-calls`` are honored by the auth,
 doctor and cache commands; module commands refuse them loudly (their live
-paths are not wired yet). ``--ai`` still fails everywhere; ``--baseline``
-applies an accepted-findings file wherever a report is produced.
+paths are not wired yet). ``--ai`` is opt-in everywhere: with no provider
+configured the tool notes "AI disabled" and runs its deterministic path
+(STD-AI4). ``--baseline`` applies an accepted-findings file wherever a
+report is produced.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
 from zohokit.cli import app
+from zohokit.cli.common import AI_DISABLED_NOTE
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLDEN_INPUTS = ROOT / "tests" / "golden" / "legacy"
@@ -42,10 +46,24 @@ def test_profile_refused_on_module() -> None:
     assert "touched no network" in result.output
 
 
-def test_ai_fails_loudly() -> None:
+def _clear_ai_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No provider configured: the deterministic path must run (STD-AI4)."""
+    for name in (
+        "ZOHOKIT_AI_PROVIDER",
+        "ZOHOKIT_AI_MODEL",
+        "ZOHOKIT_AI_API_KEY",
+        "ZOHOKIT_AI_BASE_URL",
+        "ANTHROPIC_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_ai_disabled_runs_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--ai with no provider configured: "AI disabled", exit 0 (STD-AI4)."""
+    _clear_ai_env(monkeypatch)
     result = runner.invoke(app, ["--ai", "version"])
-    assert result.exit_code == 1
-    assert result.output == "Input error: AI assistance is not available until v0.3.0.\n"
+    assert result.exit_code == 0
+    assert AI_DISABLED_NOTE in result.output
 
 
 def test_baseline_ignored_by_version() -> None:
@@ -101,10 +119,27 @@ def test_profile_after_subcommand_refused() -> None:
     assert "not available for `migration` yet" in result.output
 
 
-def test_ai_after_subcommand_fails_loudly() -> None:
+def test_ai_after_subcommand_runs_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Same opt-in from the after-subcommand position: note plus report."""
+    _clear_ai_env(monkeypatch)
     result = runner.invoke(app, ["migration", "audit", MIGRATION_FIXTURE, "--ai"])
+    assert result.exit_code == 0
+    assert AI_DISABLED_NOTE in result.output
+    assert "orphan_person" in result.output
+
+
+def test_ai_allow_pii_refused_with_live() -> None:
+    """--ai-allow-pii with --live fails before anything runs (STD-AI8)."""
+    result = runner.invoke(app, ["--live", "--ai-allow-pii", "version"])
     assert result.exit_code == 1
-    assert result.output == "Input error: AI assistance is not available until v0.3.0.\n"
+    assert "--ai-allow-pii is refused with --live" in result.output
+
+
+def test_ai_max_tokens_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--ai-max-tokens parses and the command still runs (STD-AI9)."""
+    _clear_ai_env(monkeypatch)
+    result = runner.invoke(app, ["--ai-max-tokens", "500", "version"])
+    assert result.exit_code == 0
 
 
 def test_baseline_missing_file_fails_loudly() -> None:

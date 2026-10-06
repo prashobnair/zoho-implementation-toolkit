@@ -1,0 +1,175 @@
+{
+  "cases": {
+    "transform-bad-confident-null": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "ce1b30215402a06274a9c8a50cf26a05f88e601840805ccea992052841ea2137",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-bad-evidence": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "8729d972e6fb420857d22685f1a591bdfbe1b678ff011eb057486417dfcff031",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"trim\"\n}\n"
+    },
+    "transform-bad-injection": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "de8d5d9d7b810dc37b3744ffb373d95bdc2154d7604d1ed2cb2f89b43dac1535",
+      "response": "{\n  \"confidence\": 0.95,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"DROP\"\n}\n"
+    },
+    "transform-bad-json": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "8022664424e0a0a670542e1964a424f217700259210a0db798c035d8f5100174",
+      "response": "half a json {{{"
+    },
+    "transform-bad-partial": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "0b449e87df1ae079a5997c8b682a9b602840abbfb87382dbf81570a361b7b82f",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"date(format=%Y-%m-%d)\"\n}\n"
+    },
+    "transform-bad-region": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "18c62145f6f040fb80b4f6fe130fb3c685dedb62f0fc71a586c8fae7d14e9e5a",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"e164\"\n}\n"
+    },
+    "transform-bad-syntax": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "fe45ed06e0be5ec8d6dd731e293cb5b80fafb4e2662aeabc673d53105b23d4a7",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"transform\": \"teleport\"\n}\n"
+    },
+    "transform-good-01": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "667064e2e863b66b2027d6c7891a272e2411953fc0a5d0da79b82c5493789554",
+      "response": "{\n  \"confidence\": 0.95,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
+    },
+    "transform-good-02": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "562562a1b85193277ac5c587e800dcaa30c0c0fb8c6bb57d4fffe2a4f1fffbe8",
+      "response": "{\n  \"confidence\": 0.95,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"casefold\"\n}\n"
+    },
+    "transform-good-03": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "2de5ec9f675dd2297ba56c7e653014a1fbea1c0412eff91159dcb261eb2d6406",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164(region=IN)\"\n}\n"
+    },
+    "transform-good-04": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "9652c5ad88ae403665e830b58d7166c6b7556cbb677b7d4e349e11a66f5234d4",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164\"\n}\n"
+    },
+    "transform-good-05": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "16cd37b2be3df36478435a86ee02b7ec43ee2890c3b5c19ea043c1c3bb5bb1a6",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"date(format=%d/%m/%Y)\"\n}\n"
+    },
+    "transform-good-06": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "74b621a9ee1ea75ce0a8af630c975aa5c94c7271695b4dc621d683b51a6e74a4",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"date\"\n}\n"
+    },
+    "transform-good-07": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "9774e61e41d3c2b953a17854b918eff4722c49f3ac0ea5e472a38c32fb89267c",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"money(currency_col=Currency)\"\n}\n"
+    },
+    "transform-good-08": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c14414a4f9c835da19554cfba78e1cc9e887304dd8d8895f4f99ad66263b1a98",
+      "response": "{\n  \"confidence\": 0.85,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"casefold\"\n}\n"
+    },
+    "transform-good-09": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c3ae0056e98973c04971b54e93b01173b82ca36eff6d362b4e4fb01f9aa90349",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
+    },
+    "transform-good-10": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "ac61147bcc21a3376b270862103c4ef03f3f14d5d2f1b4d09dc678ead7329d5f",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164\"\n}\n"
+    },
+    "transform-good-11": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "9c8525df5501d36a75fec5f7bf44d8c1084ca521873defc2d2b71fabb453e4b6",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
+    },
+    "transform-good-12": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "fd878dc5e272d87d4da7e4bed43dc8bbe1c83ac22e053c90de0cbd05210c3a61",
+      "response": "{\n  \"confidence\": 0.85,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"casefold\"\n}\n"
+    },
+    "transform-good-13": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "801656362b8be2b75c6145bfcb023d4f937f345a68516d1b7694dab197dcc1d8",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164(region=IN)\"\n}\n"
+    },
+    "transform-good-14": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "b241c2a4f0a595c36833309c60fe30a95bbec8c1cc74898bc42f12718d295da6",
+      "response": "{\n  \"confidence\": 0.85,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164\"\n}\n"
+    },
+    "transform-good-15": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "7bdf4dafc20b577cd51bb97b2b46378b36549211c79275eff902100fca4e51b4",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"date(format=%d/%m/%Y)\"\n}\n"
+    },
+    "transform-good-16": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "fd485852a3af500b745c74005109e79c8373d0bfce4d959584500f2479aae245",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"date\"\n}\n"
+    },
+    "transform-good-17": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "18841899ca22d4271d015ccc6c1604de1f660c5fba061cc94e39affa2b1def43",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"money(currency_col=Currency)\"\n}\n"
+    },
+    "transform-good-18": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "1964bb760992951e774df4996dcfb0011bfadf6b0c0184780052ab69df19679e",
+      "response": "{\n  \"confidence\": 0.8,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"casefold\"\n}\n"
+    },
+    "transform-good-19": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "abb6d59335ac0275440bec4f7495e21772b18d1408f3084a17c1e3a91a2b32a5",
+      "response": "{\n  \"confidence\": 0.85,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"e164\"\n}\n"
+    },
+    "transform-good-20": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "2f87e6f62ad4054248c07288103c99a2f32881042b848a5b78419a28b0f19df5",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"date(format=%d/%m/%Y)\"\n}\n"
+    },
+    "transform-good-21": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "a183e453bde685634c0dc52b7643ec79f626f6009b472906e8011d0de4968244",
+      "response": "{\n  \"confidence\": 0.2,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-good-22": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "a54c3683ec40927f9d37c8db37805139ed3fcff04fdd6f63ca99c13af3513d41",
+      "response": "{\n  \"confidence\": 0.2,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-good-23": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "8f2406ee4fddc800ad4f588496a0afc88c4583e8136cd69710a075a7c1012833",
+      "response": "{\n  \"confidence\": 0.2,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-good-24": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c18f25ccd2020c7217cec735d19d6672db117838329a1acb29dc37249bf9245c",
+      "response": "{\n  \"confidence\": 0.2,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-good-25": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "3e1556b82edb2c5bc2c0db4a47543826126c50c0d12ff1c08f26867d713468a6",
+      "response": "{\n  \"confidence\": 0.2,\n  \"evidence_samples_idx\": [],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": null\n}\n"
+    },
+    "transform-good-26": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "913f054d18f82496590207fa0fd5e2113995d6b85fca4e797e82629b4993a2ef",
+      "response": "{\n  \"confidence\": 0.9,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
+    },
+    "transform-good-27": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "1cebd4bb30cb3df75d5c797eb745802e5e68dbc79843ddb25b3764b708b6c52d",
+      "response": "{\n  \"confidence\": 0.85,\n  \"evidence_samples_idx\": [\n    0,\n    1,\n    2,\n    3,\n    4\n  ],\n  \"rationale\": \"recorded for the eval harness.\",\n  \"transform\": \"trim\"\n}\n"
+    }
+  },
+  "origin": "hand-authored synthetic"
+}

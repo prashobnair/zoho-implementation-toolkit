@@ -1,0 +1,64 @@
+{
+  "$defs": {
+    "MappingSuggestion": {
+      "description": "One source-column to target-field proposal (AI-MIG-1).",
+      "properties": {
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence_samples_idx": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Evidence Samples Idx",
+          "type": "array"
+        },
+        "rationale": {
+          "default": "",
+          "title": "Rationale",
+          "type": "string"
+        },
+        "source_column": {
+          "default": "",
+          "title": "Source Column",
+          "type": "string"
+        },
+        "target_api_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Api Name"
+        },
+        "transform": {
+          "items": {},
+          "title": "Transform",
+          "type": "array"
+        }
+      },
+      "title": "MappingSuggestion",
+      "type": "object"
+    }
+  },
+  "description": "Full mapping proposal: one entry per source column (AI-MIG-1).",
+  "properties": {
+    "suggestions": {
+      "items": {
+        "$ref": "#/$defs/MappingSuggestion"
+      },
+      "title": "Suggestions",
+      "type": "array"
+    }
+  },
+  "title": "MappingDraft",
+  "type": "object"
+}

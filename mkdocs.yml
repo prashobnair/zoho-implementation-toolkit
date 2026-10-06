@@ -17,6 +17,7 @@ nav:
       - Lead Routing Lab: modules/lead_routing.md
   - Finding codes: finding-codes.md
   - Accepted findings: baseline.md
+  - AI suggestions: ai.md
   - API contracts: API_CONTRACTS.md
   - Threat model: THREAT_MODEL.md
   - Known issues: KNOWN_ISSUES.md

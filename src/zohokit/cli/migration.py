@@ -11,6 +11,8 @@ import typer
 
 from zohokit.cli.common import (
     AiAfter,
+    AiAllowPiiAfter,
+    AiMaxTokensAfter,
     BaselineAfter,
     LiveAfter,
     MaxApiCallsAfter,
@@ -23,6 +25,7 @@ from zohokit.cli.common import (
     parse_model,
     reject_future_flags,
     reject_unsupported_live,
+    resolve_ai_runtime,
     resolve_runtime,
 )
 from zohokit.core.context import RunContext
@@ -274,6 +277,166 @@ def reconcile(
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
+
+
+@app.command("suggest-mapping")
+def suggest_mapping(
+    csv: Annotated[Path, typer.Option("--csv", help="Source CSV file.")],
+    target_module: Annotated[
+        str, typer.Option("--target-module", help="Target module (e.g. Contacts).")
+    ],
+    fields_dir: Annotated[
+        Path, typer.Option("--fields-dir", help="Dir of fields_<Module>.json metadata.")
+    ],
+    out: Annotated[Path, typer.Option("--out", help="Draft YAML output path.")] = Path(
+        "mapping.draft.yaml"
+    ),
+    default_region: Annotated[
+        str | None,
+        typer.Option("--default-region", help="Phone region for numbers without a code."),
+    ] = None,
+    ai: AiAfter = False,
+    ai_allow_pii: AiAllowPiiAfter = False,
+    ai_max_tokens: AiMaxTokensAfter = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
+) -> None:
+    """Propose a mapping draft for review (AI-MIG-1, suggestions only)."""
+    from zohokit.modules.migration.metadata import metadata_from_dir
+    from zohokit.modules.migration.suggest import (
+        draft_yaml,
+        read_column_samples,
+        render_mapping_table,
+    )
+    from zohokit.modules.migration.suggest import (
+        suggest_mapping as run_suggest,
+    )
+
+    reject_unsupported_live("migration", live, profile, max_api_calls)
+    if baseline is not None:
+        fail("suggest-mapping takes no --baseline (it proposes, it suppresses none)")
+    if out.exists():
+        fail(f"--out {out} exists; drafts never overwrite (choose another path)")
+    if not csv.is_file():
+        fail(f"--csv {csv} is not a file")
+    runtime = resolve_ai_runtime(ai=ai, allow_pii=ai_allow_pii, max_tokens=ai_max_tokens)
+    try:
+        columns = read_column_samples(str(csv))
+    except ValueError as exc:
+        fail(str(exc))
+    try:
+        metadata = metadata_from_dir(fields_dir)
+    except ValueError as exc:
+        fail(str(exc))
+    fields = metadata.fields_for(target_module)
+    if not fields:
+        fail(f"--fields-dir {fields_dir} has no fields for module {target_module!r}")
+    result = run_suggest(
+        columns,
+        fields,
+        target_module,
+        provider=runtime.provider,
+        allow_pii=runtime.allow_pii,
+        budget_tokens=runtime.max_tokens,
+        default_region=default_region,
+    )
+    out.write_text(draft_yaml(result), encoding="utf-8")
+    typer.echo(render_mapping_table(result))
+    typer.echo(f"Wrote {out}")
+
+
+@app.command("suggest-transform")
+def suggest_transform(
+    csv: Annotated[Path, typer.Option("--csv", help="Source CSV file.")],
+    column: Annotated[str, typer.Option("--column", help="Source column to convert.")],
+    target_type: Annotated[
+        str, typer.Option("--target-type", help="text|email|phone|date|currency.")
+    ],
+    with_column: Annotated[
+        list[str] | None,
+        typer.Option("--with-column", help="Sibling column (repeatable, e.g. Currency)."),
+    ] = None,
+    default_region: Annotated[
+        str | None,
+        typer.Option("--default-region", help="Phone region for numbers without a code."),
+    ] = None,
+    format_name: Annotated[str, typer.Option("--format", help="json|table|html.")] = "json",
+    out: Annotated[Path | None, typer.Option("--out", help="Write to a file.")] = None,
+    ai: AiAfter = False,
+    ai_allow_pii: AiAllowPiiAfter = False,
+    ai_max_tokens: AiMaxTokensAfter = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
+) -> None:
+    """Propose one value transform, validated on the samples (AI-MIG-2)."""
+    from zohokit.modules.migration.suggest import (
+        read_column_samples,
+        render_transform_html,
+        render_transform_table,
+    )
+    from zohokit.modules.migration.suggest import (
+        suggest_transform as run_suggest,
+    )
+
+    reject_unsupported_live("migration", live, profile, max_api_calls)
+    if baseline is not None:
+        fail("suggest-transform takes no --baseline (it proposes, it suppresses none)")
+    if target_type not in ("text", "email", "phone", "date", "currency"):
+        fail("--target-type must be text|email|phone|date|currency")
+    if not csv.is_file():
+        fail(f"--csv {csv} is not a file")
+    runtime = resolve_ai_runtime(ai=ai, allow_pii=ai_allow_pii, max_tokens=ai_max_tokens)
+    try:
+        columns = read_column_samples(str(csv))
+    except ValueError as exc:
+        fail(str(exc))
+    by_name = {item.name: item for item in columns}
+    if column not in by_name:
+        fail(f"--column {column!r} is not a header of {csv}")
+    siblings = with_column or []
+    for sibling in siblings:
+        if sibling not in by_name:
+            fail(f"--with-column {sibling!r} is not a header of {csv}")
+    samples = list(by_name[column].samples)
+    for sibling in siblings:
+        samples = samples[: len(by_name[sibling].samples)]
+    if not samples:
+        fail(f"--column {column!r} has no data rows in {csv}")
+    rows = [
+        {sibling: by_name[sibling].samples[index] for sibling in siblings}
+        for index in range(len(samples))
+    ]
+    currency_col = siblings[0] if target_type == "currency" and siblings else None
+    if target_type == "currency" and currency_col is None:
+        fail("--target-type currency needs --with-column CURRENCY for validation")
+    result = run_suggest(
+        column,
+        samples,
+        target_type,
+        rows=rows,
+        provider=runtime.provider,
+        allow_pii=runtime.allow_pii,
+        budget_tokens=runtime.max_tokens,
+        default_region=default_region,
+        currency_col=currency_col,
+    )
+    if format_name == "json":
+        text = result.model_dump_json(indent=2) + "\n"
+    elif format_name == "table":
+        text = render_transform_table(result)
+    elif format_name == "html":
+        text = render_transform_html(result)
+    else:
+        fail(f"unsupported --format {format_name!r} (json|table|html)")
+    if out is None:
+        typer.echo(text)
+    else:
+        out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+        typer.echo(f"Wrote {out}")
 
 
 __all__: list[str] = ["app"]

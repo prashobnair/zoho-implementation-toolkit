@@ -1,0 +1,38 @@
+{
+  "description": "One value-transform proposal checked against samples (AI-MIG-2).",
+  "properties": {
+    "confidence": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "evidence_samples_idx": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Evidence Samples Idx",
+      "type": "array"
+    },
+    "rationale": {
+      "default": "",
+      "title": "Rationale",
+      "type": "string"
+    },
+    "transform": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transform"
+    }
+  },
+  "title": "TransformDraft",
+  "type": "object"
+}

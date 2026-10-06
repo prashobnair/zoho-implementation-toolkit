@@ -1,0 +1,5 @@
+[min]
+precision = 0.90
+recall = 0.80
+abstention_rate = 0.80
+catch_rate = 1.0
