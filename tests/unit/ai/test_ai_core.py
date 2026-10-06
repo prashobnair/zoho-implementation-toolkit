@@ -380,25 +380,73 @@ def test_name_like_columns_match_header_normalized() -> None:
         "Last Name",
         "last_name",
         "Full Name",
+        "FullName",
         "Contact",
         "Contact Person",
         "contact_person",
+        "Contact Email",
         "Owner",
+        "Owner Email",
         "Customer",
         "Person",
+        "Account Manager",
+        "Deal Owner Name",
+        "Sales Rep",
+        "Assignee",
+        "Salesperson",
+        "Agent",
+        "Representative",
+        "Given Name",
+        "FamilyName",
+        "Surname",
+        "Lead Name",
+        "Lead Owner",
     ):
         assert is_name_like_column(header), header
     for header in (
         "Company Name",
         "Deal Name",
         "Account_Name",
+        "Account Name",
+        "Product Name",
+        "Stage",
+        "Amount",
         "Email",
-        "Contact Email",
         "Phone Number",
         "Notes",
+        "Lead Source",
         "",
     ):
         assert not is_name_like_column(header), header
+
+
+def test_name_like_compound_headers_mask_only_person_roles() -> None:
+    """Lead probe: compound person headers mask, business names stay visible."""
+    for header in (
+        "Name",
+        "First Name",
+        "last_name",
+        "FullName",
+        "Contact Person",
+        "Account Manager",
+        "Deal Owner Name",
+        "Sales Rep",
+        "Assignee",
+        "Owner Email",
+    ):
+        assert is_name_like_column(header), header
+        masked = mask_column_samples(header, ["Asha Rao"])
+        assert masked == ("<name: 2 words>",), header
+    for header in (
+        "Account Name",
+        "Company Name",
+        "Deal Name",
+        "Product Name",
+        "Stage",
+        "Amount",
+    ):
+        assert not is_name_like_column(header), header
+        assert mask_column_samples(header, ["Asha Rao"]) == ("Asha Rao",), header
 
 
 def test_pii_flagged_columns_count_as_name_like() -> None:
