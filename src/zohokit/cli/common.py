@@ -25,6 +25,7 @@ from zohokit.reports import (
     render_sarif,
     render_table,
 )
+from zohokit.reports.xlsx import render_xlsx
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -49,7 +50,7 @@ _RENDERERS = {
 }
 
 #: Accepted ``--format`` values, shared by every command's help text.
-FORMATS_HELP = "json|table|markdown|html|sarif|junit."
+FORMATS_HELP = "json|table|markdown|html|sarif|junit|xlsx."
 
 
 def ensure_utf8_stdio() -> None:
@@ -242,6 +243,12 @@ def fresh_context() -> RunContext:
 
 def emit(report: Report, format_name: str, out: Path | None, *, strict: bool) -> NoReturn:
     """Render the report, write it, and exit with the resolved code."""
+    if format_name == "xlsx":
+        if out is None:
+            fail("xlsx output needs --out (workbooks cannot print to stdout)")
+        out.write_bytes(render_xlsx(report))
+        typer.echo(f"Wrote {out}")
+        raise typer.Exit(code=int(resolve(report, strict=strict)))
     try:
         render = _RENDERERS[format_name]
     except KeyError:

@@ -1,0 +1,3 @@
+Deal ID,Deal Name,Associated Contact IDs,Associated Company IDs,Amount,Currency,Deal Stage,Pipeline,Create Date
+3001,Marigold pilot,2001,201,250000,INR,qualifiedtobuy,default,2026-01-07
+3002,Northwind renewal,2002,202,12000,USD,decisionmakerboughtin,default,2026-01-08
