@@ -17,7 +17,10 @@
 
 `dataset.jsonl`: 32 good + 8 bad cases (40 total), each with source
 columns (name + 5 synthetic sample values), target field metadata and a
-gold mapping.
+gold mapping. Prompts mask name-like column values to shape hints
+(`<name: 2 words>`, headers kept, STD-AI8); the bad-case uniqueness
+tweaks sit on fully-visible columns so one prompt hash still maps to
+exactly one recording.
 
 - Good: Pipedrive, HubSpot and messy-CSV header styles over person and
   deal targets, including 5 injection-input cases (a header or sample

@@ -142,7 +142,7 @@ def _explain_sentence(message: str, finding_id: str) -> dict[str, Any]:
 
 
 def build_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
-    """30 good (incl. 5 injection-safe + 5 empty) and 8 bad explain cases."""
+    """30 good (incl. 5 injection-safe + 5 empty) and 10 bad explain cases."""
     cases: list[dict[str, Any]] = []
     responses: dict[str, str] = {}
     counter = 0
@@ -388,6 +388,44 @@ def build_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
             ]
         },
         audience="client",
+    )
+    # STD-AI7 correction: spelled-out counts are converted to digits and
+    # checked, so they cannot bypass grounding. The first report carries
+    # 6 errors and 2 reviews (no 7/9 anywhere); the second carries no
+    # 10/2/12 anywhere.
+    words_report = _report([0, 1, 6, 10, 11, 13, 2, 4])
+    first_words = words_report["findings"][0]
+    _bad_case(
+        "bad-number-words",
+        "rejected",
+        "spelled-out narrative numbers absent from the report",
+        words_report,
+        {
+            "sentences": [
+                _bad_sentence(
+                    "There are seven errors and nine reviews.",
+                    first_words["id"],
+                    first_words["message"],
+                )
+            ]
+        },
+    )
+    ordinal_report = _report([12])
+    ordinal_finding = ordinal_report["findings"][0]
+    _bad_case(
+        "bad-ordinal-words",
+        "rejected",
+        "spelled-out ordinals and quantities absent from the report",
+        ordinal_report,
+        {
+            "sentences": [
+                _bad_sentence(
+                    "The tenth review took twice as long; a dozen errors remain.",
+                    ordinal_finding["id"],
+                    ordinal_finding["message"],
+                )
+            ]
+        },
     )
     return cases, responses
 
@@ -930,7 +968,11 @@ def build_mapping() -> tuple[list[dict[str, Any]], dict[str, str]]:
         tweak: tuple[str, int, str] = ("Company", 4, "Jasmine Hotels Ltd"),
     ) -> None:
         # Each bad case tweaks one sample value so its prompt hash is
-        # unique: one hash maps to exactly one recording.
+        # unique: one hash maps to exactly one recording. The tweak must
+        # survive prompt redaction visibly — name-like columns collapse
+        # to word-count hints and emails to first-letter masks, so tweak
+        # a fully-visible column (Company) with a value no other case
+        # uses.
         source_columns = []
         for name, pool in bad_columns:
             samples = list(_MAPPING_SAMPLES[pool])
@@ -1010,7 +1052,7 @@ def build_mapping() -> tuple[list[dict[str, Any]], dict[str, str]]:
         },
         "rejected",
         "two suggestions claim the same source column",
-        ("FirstName", 4, "Devon"),
+        ("Company", 4, "Jasmine Hotels LLC"),
     )
     _bad(
         "mapping-bad-missing",
@@ -1023,7 +1065,7 @@ def build_mapping() -> tuple[list[dict[str, Any]], dict[str, str]]:
         },
         "rejected",
         "one source column has no suggestion at all",
-        ("Email", 4, "devon.patel@example.invalid"),
+        ("Company", 4, "Jasmine Hotels Group"),
     )
     _bad(
         "mapping-bad-evidence",
@@ -1455,7 +1497,7 @@ def build_transform() -> tuple[list[dict[str, Any]], dict[str, str]]:
     _bad(
         "transform-bad-evidence",
         "Full_Name",
-        ["  Arjun Mehta ", "Rani Iyer  ", "  Kabir Shah", "Meera Nair ", "Dev Patel "],
+        ["  Arjun Mehta ", "Rani Iyer  ", "  Kabir Shah", "Meera Nair ", "Dev Kumar Patel"],
         "text",
         {**_resp("trim", 0.9), "evidence_samples_idx": [0, 1]},
         "rejected",

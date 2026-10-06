@@ -2,17 +2,21 @@
 
 Dataset cases carry source columns (name + 5 synthetic sample values),
 target field metadata and a gold mapping. ``case_variables`` renders the
-prompt variables; ``validate_response`` enforces the structural guardrails
-(coverage, known targets/transforms, evidence indexes, the confidence-0.6
-abstention rule); precision/recall/abstention are scored against gold.
-``bad_caught`` decides whether a bad recording was rejected, flagged or
-fell back as its case expects.
+prompt variables exactly the way the suggester does — values of
+name-like columns masked to shape hints (STD-AI8), headers kept — so
+the replayed prompt hash matches a real run; ``validate_response``
+enforces the structural guardrails (coverage, known targets/transforms,
+evidence indexes, the confidence-0.6 abstention rule);
+precision/recall/abstention are scored against gold. ``bad_caught``
+decides whether a bad recording was rejected, flagged or fell back as
+its case expects.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from zohokit.ai.redaction import mask_column_samples
 from zohokit.ai.schemas import MappingDraft
 from zohokit.modules.migration.mapping import TransformError, coerce_transform
 
@@ -23,7 +27,7 @@ ABSTAIN_BELOW = 0.6
 def case_variables(case: dict[str, Any]) -> dict[str, str]:
     """Render deterministic prompt variables for a dataset case."""
     column_lines = [
-        f"{column['name']}: {' | '.join(column['samples'])}"
+        f"{column['name']}: {' | '.join(mask_column_samples(column['name'], column['samples']))}"
         for column in case["input"]["source_columns"]
     ]
     target_lines = []

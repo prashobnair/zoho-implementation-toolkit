@@ -17,7 +17,9 @@
 
 `dataset.jsonl`: 27 good + 7 bad cases (34 total), each with a column
 name, sample values (plus sibling columns where the transform needs
-them) and a target type.
+them) and a target type. Prompts mask name-like column values to shape
+hints (`<name: 2 words>`, column name kept, STD-AI8); validation still
+applies each proposal to the original samples.
 
 - Good: trim/casefold/e164/date/money proposals across two sample
   variants each, including 5 abstention cases (mixed junk the honest

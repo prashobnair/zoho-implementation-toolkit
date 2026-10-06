@@ -11,10 +11,18 @@ suggestion carries its source, model and prompt version for review.
   no provider configured, the tool prints `AI disabled` and runs its
   deterministic path.
 - **Redact before send.** The shared redactor runs on every prompt, so
-  personal data never leaves the process. `--ai-allow-pii` skips
-  redaction for synthetic-only local runs and is refused with `--live`.
+  personal data never leaves the process. Sample values from
+  person-name columns (`Name`, `First/Last/Full Name`, `Contact`,
+  `Contact Person`, `Owner`, `Customer`, `Person`, plus any column the
+  mapping marks `pii: true`) are replaced by shape hints
+  (`<name: 2 words>`, header kept) before the prompt is built.
+  `--ai-allow-pii` skips redaction for synthetic-only local runs and is
+  refused with `--live`.
 - **Grounding.** Every AI sentence cites finding IDs, and every number
-  or date is checked against the report. A mismatch falls back to the
+  or date is checked against the report. Spelled-out counts are
+  converted to digits first ("six errors" is accepted against 6;
+  "seven errors" is rejected there), so wording a hallucinated count
+  out in words cannot bypass the check. A mismatch falls back to the
   deterministic template.
 - **Injection hygiene.** Source text travels in delimited data blocks
   and the system prompt declares it data, never instructions.

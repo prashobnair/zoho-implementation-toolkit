@@ -14,7 +14,7 @@
 
 ## Dataset
 
-`dataset.jsonl`: 30 good + 8 bad cases (38 total).
+`dataset.jsonl`: 30 good + 10 bad cases (40 total).
 
 - Good: 10 full internal summaries, 5 client summaries (internal-only
   findings filtered before prompting), 5 injection-input cases (a note
@@ -25,11 +25,16 @@
   `explain-bad-citation-id` (cites a finding ID that does not exist),
   `explain-bad-quote` (quotes text not present verbatim),
   `explain-bad-number` / `explain-bad-date` (numbers/dates absent from
-  the report), `explain-bad-json` / `explain-bad-schema` (malformed
-  JSON / schema violation → one repair retry, then deterministic
-  fallback with `ai_status: "fallback"`), `explain-bad-injection`
-  (asserts an approval verdict), `explain-bad-client-leak` (cites an
-  internal-only finding to a client audience).
+  the report), `explain-bad-number-words` (spelled-out "seven errors
+  and nine reviews" against 6 errors / 2 reviews — number words are
+  converted to digits and checked, STD-AI7),
+  `explain-bad-ordinal-words` ("tenth", "twice", "a dozen" with no
+  10/2/12 anywhere), `explain-bad-json` / `explain-bad-schema`
+  (malformed JSON / schema violation → one repair retry, then
+  deterministic fallback with `ai_status: "fallback"`),
+  `explain-bad-injection` (asserts an approval verdict),
+  `explain-bad-client-leak` (cites an internal-only finding to a
+  client audience).
 
 ## Metrics on the good set (thresholds from the spec)
 
@@ -46,6 +51,6 @@
 |---|---|---|
 | catch_rate | 1.0000 | >= 1.0 |
 
-All 8 bad recordings met their expected safe outcome
-(rejected by the citation/number validators, or fallback template):
-8 of 8 caught.
+All 10 bad recordings met their expected safe outcome
+(rejected by the citation/number/number-word validators, or fallback
+template): 10 of 10 caught.
