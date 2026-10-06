@@ -10,7 +10,13 @@
   │ --help          Show this message and exit.                                  │
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
-  │ audit  Audit a source export and report what would break on import.          │
+  │ audit      Audit a source export and report what would break on import.      │
+  │ preflight  Audit CSV exports against a mapping and the target field          │
+  │            metadata.                                                         │
+  │ plan       Write the signed import plan: batches, order, keys and rollback   │
+  │            note.                                                             │
+  │ reconcile  Compare sources against target dumps; write the reconcile         │
+  │            workbook.                                                         │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   

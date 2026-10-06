@@ -36,7 +36,7 @@ def simulate(
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when findings remain.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,
