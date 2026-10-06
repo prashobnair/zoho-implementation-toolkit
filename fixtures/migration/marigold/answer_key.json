@@ -1,0 +1,257 @@
+{
+  "expected": [
+    {
+      "code": "row_parse_error",
+      "entity": "people",
+      "line": 12,
+      "severity": "error",
+      "source_id": null
+    },
+    {
+      "code": "row_parse_error",
+      "entity": "people",
+      "line": 23,
+      "severity": "warning",
+      "source_id": null
+    },
+    {
+      "code": "unique_field_collision_in_batch",
+      "entity": "people",
+      "line": 33,
+      "severity": "error",
+      "source_id": "31"
+    },
+    {
+      "code": "unique_field_collision_in_batch",
+      "entity": "people",
+      "line": 34,
+      "severity": "error",
+      "source_id": "32"
+    },
+    {
+      "code": "fuzzy_duplicate_cluster",
+      "entity": "people",
+      "line": null,
+      "severity": "review",
+      "source_id": "31"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "people",
+      "line": 43,
+      "severity": "error",
+      "source_id": "41"
+    },
+    {
+      "code": "value_too_long",
+      "entity": "people",
+      "line": 44,
+      "severity": "error",
+      "source_id": "42"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "people",
+      "line": 45,
+      "severity": "error",
+      "source_id": "43"
+    },
+    {
+      "code": "unique_field_collision_in_batch",
+      "entity": "people",
+      "line": 53,
+      "severity": "error",
+      "source_id": "9001#b50fdaec"
+    },
+    {
+      "code": "unique_field_collision_in_batch",
+      "entity": "people",
+      "line": 54,
+      "severity": "error",
+      "source_id": "9001#4a7f2606"
+    },
+    {
+      "code": "inactive_owner",
+      "entity": "people",
+      "line": 63,
+      "severity": "error",
+      "source_id": "61"
+    },
+    {
+      "code": "owner_unmapped",
+      "entity": "people",
+      "line": 64,
+      "severity": "error",
+      "source_id": "62"
+    },
+    {
+      "code": "picklist_value_missing",
+      "entity": "people",
+      "line": 65,
+      "severity": "error",
+      "source_id": "63"
+    },
+    {
+      "code": "would_duplicate_existing",
+      "entity": "people",
+      "line": 73,
+      "severity": "review",
+      "source_id": "71"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "people",
+      "line": 74,
+      "severity": "error",
+      "source_id": "72"
+    },
+    {
+      "code": "unknown_target_field",
+      "entity": "people",
+      "line": null,
+      "severity": "error",
+      "source_id": "Mystery"
+    },
+    {
+      "code": "read_only_target_field",
+      "entity": "people",
+      "line": null,
+      "severity": "error",
+      "source_id": "id"
+    },
+    {
+      "code": "missing_source_column",
+      "entity": "people",
+      "line": null,
+      "severity": "error",
+      "source_id": "Nickname"
+    },
+    {
+      "code": "target_dedupe_coverage",
+      "entity": "people",
+      "line": null,
+      "severity": "info",
+      "source_id": "coverage"
+    },
+    {
+      "code": "fuzzy_duplicate_cluster",
+      "entity": "companies",
+      "line": null,
+      "severity": "review",
+      "source_id": "501"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "companies",
+      "line": 9,
+      "severity": "error",
+      "source_id": "503"
+    },
+    {
+      "code": "target_dedupe_coverage",
+      "entity": "companies",
+      "line": null,
+      "severity": "info",
+      "source_id": "coverage"
+    },
+    {
+      "code": "picklist_value_missing",
+      "entity": "deals",
+      "line": 102,
+      "severity": "error",
+      "source_id": "101"
+    },
+    {
+      "code": "unmapped_stage",
+      "entity": "deals",
+      "line": 102,
+      "severity": "error",
+      "source_id": "101"
+    },
+    {
+      "code": "stage_probability_mismatch",
+      "entity": "deals",
+      "line": 103,
+      "severity": "warning",
+      "source_id": "102"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "deals",
+      "line": 104,
+      "severity": "error",
+      "source_id": "103"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "deals",
+      "line": 105,
+      "severity": "error",
+      "source_id": "104"
+    },
+    {
+      "code": "type_incompatible",
+      "entity": "deals",
+      "line": 106,
+      "severity": "error",
+      "source_id": "105"
+    },
+    {
+      "code": "mandatory_field_unmapped",
+      "entity": "deals",
+      "line": null,
+      "severity": "error",
+      "source_id": "Pipeline"
+    },
+    {
+      "code": "lookup_unresolvable",
+      "entity": "deals",
+      "line": null,
+      "severity": "review",
+      "source_id": "Account_Name"
+    },
+    {
+      "code": "target_dedupe_coverage",
+      "entity": "deals",
+      "line": null,
+      "severity": "info",
+      "source_id": "coverage"
+    },
+    {
+      "code": "history_type_unsupported",
+      "entity": "activities",
+      "line": 13,
+      "severity": "warning",
+      "source_id": "12"
+    },
+    {
+      "code": "history_type_unsupported",
+      "entity": "activities",
+      "line": 57,
+      "severity": "warning",
+      "source_id": "56"
+    },
+    {
+      "code": "history_type_unsupported",
+      "entity": "activities",
+      "line": 152,
+      "severity": "warning",
+      "source_id": "151"
+    },
+    {
+      "code": "history_type_unsupported",
+      "entity": "activities",
+      "line": null,
+      "severity": "info",
+      "source_id": "counts"
+    },
+    {
+      "code": "target_dedupe_coverage",
+      "entity": "activities",
+      "line": null,
+      "severity": "info",
+      "source_id": "coverage"
+    }
+  ],
+  "seed": 20261004
+}

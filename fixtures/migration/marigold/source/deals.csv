@@ -1,0 +1,701 @@
+ID,Title,Person ID,Organization ID,Value,Currency,Stage,Status,Expected_Close,Prob
+1,Deal 0001 expansion,2,2,1137.00,INR,Needs Analysis,open,02/02/2026,25
+2,Deal 0002 expansion,3,3,1274.00,INR,Proposal,open,03/02/2026,50
+3,Deal 0003 expansion,4,4,1411.00,USD,Closed Won,open,04/02/2026,100
+4,Deal 0004 expansion,5,5,1548.00,INR,Qualification,open,05/02/2026,10
+5,Deal 0005 expansion,6,6,1685.00,INR,Needs Analysis,open,06/02/2026,25
+6,Deal 0006 expansion,7,7,1822.00,USD,Proposal,open,07/02/2026,50
+7,Deal 0007 expansion,8,8,1959.00,INR,Closed Won,open,08/02/2026,100
+8,Deal 0008 expansion,9,9,2096.00,INR,Qualification,open,09/02/2026,10
+9,Deal 0009 expansion,10,10,2233.00,USD,Needs Analysis,open,10/02/2026,25
+10,Deal 0010 expansion,11,11,2370.00,INR,Proposal,open,11/02/2026,50
+11,Deal 0011 expansion,12,12,2507.00,INR,Closed Won,open,12/02/2026,100
+12,Deal 0012 expansion,13,13,2644.00,USD,Qualification,open,13/02/2026,10
+13,Deal 0013 expansion,14,14,2781.00,INR,Needs Analysis,open,14/02/2026,25
+14,Deal 0014 expansion,15,15,2918.00,INR,Proposal,open,15/02/2026,50
+15,Deal 0015 expansion,16,16,3055.00,USD,Closed Won,open,16/02/2026,100
+16,Deal 0016 expansion,17,17,3192.00,INR,Qualification,open,17/02/2026,10
+17,Deal 0017 expansion,18,18,3329.00,INR,Needs Analysis,open,18/02/2026,25
+18,Deal 0018 expansion,19,19,3466.00,USD,Proposal,open,19/02/2026,50
+19,Deal 0019 expansion,20,20,3603.00,INR,Closed Won,open,20/02/2026,100
+20,Deal 0020 expansion,21,21,3740.00,INR,Qualification,open,21/02/2026,10
+21,Deal 0021 expansion,22,22,3877.00,USD,Needs Analysis,open,22/02/2026,25
+22,Deal 0022 expansion,23,23,4014.00,INR,Proposal,open,23/02/2026,50
+23,Deal 0023 expansion,24,24,4151.00,INR,Closed Won,open,24/02/2026,100
+24,Deal 0024 expansion,25,25,4288.00,USD,Qualification,open,25/02/2026,10
+25,Deal 0025 expansion,26,26,4425.00,INR,Needs Analysis,open,26/02/2026,25
+26,Deal 0026 expansion,27,27,4562.00,INR,Proposal,open,27/02/2026,50
+27,Deal 0027 expansion,28,28,4699.00,USD,Closed Won,open,01/02/2026,100
+28,Deal 0028 expansion,29,29,4836.00,INR,Qualification,open,02/02/2026,10
+29,Deal 0029 expansion,30,30,4973.00,INR,Needs Analysis,open,03/02/2026,25
+30,Deal 0030 expansion,31,31,5110.00,USD,Proposal,open,04/02/2026,50
+31,Deal 0031 expansion,32,32,5247.00,INR,Closed Won,open,05/02/2026,100
+32,Deal 0032 expansion,33,33,5384.00,INR,Qualification,open,06/02/2026,10
+33,Deal 0033 expansion,34,34,5521.00,USD,Needs Analysis,open,07/02/2026,25
+34,Deal 0034 expansion,35,35,5658.00,INR,Proposal,open,08/02/2026,50
+35,Deal 0035 expansion,36,36,5795.00,INR,Closed Won,open,09/02/2026,100
+36,Deal 0036 expansion,37,37,5932.00,USD,Qualification,open,10/02/2026,10
+37,Deal 0037 expansion,38,38,6069.00,INR,Needs Analysis,open,11/02/2026,25
+38,Deal 0038 expansion,39,39,6206.00,INR,Proposal,open,12/02/2026,50
+39,Deal 0039 expansion,40,40,6343.00,USD,Closed Won,open,13/02/2026,100
+40,Deal 0040 expansion,41,41,6480.00,INR,Qualification,open,14/02/2026,10
+41,Deal 0041 expansion,42,42,6617.00,INR,Needs Analysis,open,15/02/2026,25
+42,Deal 0042 expansion,43,43,6754.00,USD,Proposal,open,16/02/2026,50
+43,Deal 0043 expansion,44,44,6891.00,INR,Closed Won,open,17/02/2026,100
+44,Deal 0044 expansion,45,45,7028.00,INR,Qualification,open,18/02/2026,10
+45,Deal 0045 expansion,46,46,7165.00,USD,Needs Analysis,open,19/02/2026,25
+46,Deal 0046 expansion,47,47,7302.00,INR,Proposal,open,20/02/2026,50
+47,Deal 0047 expansion,48,48,7439.00,INR,Closed Won,open,21/02/2026,100
+48,Deal 0048 expansion,49,49,7576.00,USD,Qualification,open,22/02/2026,10
+49,Deal 0049 expansion,50,50,7713.00,INR,Needs Analysis,open,23/02/2026,25
+50,Deal 0050 expansion,51,51,7850.00,INR,Proposal,open,24/02/2026,50
+51,Deal 0051 expansion,52,52,7987.00,USD,Closed Won,open,25/02/2026,100
+52,Deal 0052 expansion,53,53,8124.00,INR,Qualification,open,26/02/2026,10
+53,Deal 0053 expansion,54,54,8261.00,INR,Needs Analysis,open,27/02/2026,25
+54,Deal 0054 expansion,55,55,8398.00,USD,Proposal,open,01/02/2026,50
+55,Deal 0055 expansion,56,56,8535.00,INR,Closed Won,open,02/02/2026,100
+56,Deal 0056 expansion,57,57,8672.00,INR,Qualification,open,03/02/2026,10
+57,Deal 0057 expansion,58,58,8809.00,USD,Needs Analysis,open,04/02/2026,25
+58,Deal 0058 expansion,59,59,8946.00,INR,Proposal,open,05/02/2026,50
+59,Deal 0059 expansion,60,60,9083.00,INR,Closed Won,open,06/02/2026,100
+60,Deal 0060 expansion,61,61,9220.00,USD,Qualification,open,07/02/2026,10
+61,Deal 0061 expansion,62,62,9357.00,INR,Needs Analysis,open,08/02/2026,25
+62,Deal 0062 expansion,63,63,9494.00,INR,Proposal,open,09/02/2026,50
+63,Deal 0063 expansion,64,64,9631.00,USD,Closed Won,open,10/02/2026,100
+64,Deal 0064 expansion,65,65,9768.00,INR,Qualification,open,11/02/2026,10
+65,Deal 0065 expansion,66,66,9905.00,INR,Needs Analysis,open,12/02/2026,25
+66,Deal 0066 expansion,67,67,10042.00,USD,Proposal,open,13/02/2026,50
+67,Deal 0067 expansion,68,68,10179.00,INR,Closed Won,open,14/02/2026,100
+68,Deal 0068 expansion,69,69,10316.00,INR,Qualification,open,15/02/2026,10
+69,Deal 0069 expansion,70,70,10453.00,USD,Needs Analysis,open,16/02/2026,25
+70,Deal 0070 expansion,71,71,10590.00,INR,Proposal,open,17/02/2026,50
+71,Deal 0071 expansion,72,72,10727.00,INR,Closed Won,open,18/02/2026,100
+72,Deal 0072 expansion,73,73,10864.00,USD,Qualification,open,19/02/2026,10
+73,Deal 0073 expansion,74,74,11001.00,INR,Needs Analysis,open,20/02/2026,25
+74,Deal 0074 expansion,75,75,11138.00,INR,Proposal,open,21/02/2026,50
+75,Deal 0075 expansion,76,76,11275.00,USD,Closed Won,open,22/02/2026,100
+76,Deal 0076 expansion,77,77,11412.00,INR,Qualification,open,23/02/2026,10
+77,Deal 0077 expansion,78,78,11549.00,INR,Needs Analysis,open,24/02/2026,25
+78,Deal 0078 expansion,79,79,11686.00,USD,Proposal,open,25/02/2026,50
+79,Deal 0079 expansion,80,80,11823.00,INR,Closed Won,open,26/02/2026,100
+80,Deal 0080 expansion,81,81,11960.00,INR,Qualification,open,27/02/2026,10
+81,Deal 0081 expansion,82,82,12097.00,USD,Needs Analysis,open,01/02/2026,25
+82,Deal 0082 expansion,83,83,12234.00,INR,Proposal,open,02/02/2026,50
+83,Deal 0083 expansion,84,84,12371.00,INR,Closed Won,open,03/02/2026,100
+84,Deal 0084 expansion,85,85,12508.00,USD,Qualification,open,04/02/2026,10
+85,Deal 0085 expansion,86,86,12645.00,INR,Needs Analysis,open,05/02/2026,25
+86,Deal 0086 expansion,87,87,12782.00,INR,Proposal,open,06/02/2026,50
+87,Deal 0087 expansion,88,88,12919.00,USD,Closed Won,open,07/02/2026,100
+88,Deal 0088 expansion,89,89,13056.00,INR,Qualification,open,08/02/2026,10
+89,Deal 0089 expansion,90,90,13193.00,INR,Needs Analysis,open,09/02/2026,25
+90,Deal 0090 expansion,91,91,13330.00,USD,Proposal,open,10/02/2026,50
+91,Deal 0091 expansion,92,92,13467.00,INR,Closed Won,open,11/02/2026,100
+92,Deal 0092 expansion,93,93,13604.00,INR,Qualification,open,12/02/2026,10
+93,Deal 0093 expansion,94,94,13741.00,USD,Needs Analysis,open,13/02/2026,25
+94,Deal 0094 expansion,95,95,13878.00,INR,Proposal,open,14/02/2026,50
+95,Deal 0095 expansion,96,96,14015.00,INR,Closed Won,open,15/02/2026,100
+96,Deal 0096 expansion,97,97,14152.00,USD,Qualification,open,16/02/2026,10
+97,Deal 0097 expansion,98,98,14289.00,INR,Needs Analysis,open,17/02/2026,25
+98,Deal 0098 expansion,99,99,14426.00,INR,Proposal,open,18/02/2026,50
+99,Deal 0099 expansion,100,100,14563.00,USD,Closed Won,open,19/02/2026,100
+100,Deal 0100 expansion,101,101,14700.00,INR,Qualification,open,20/02/2026,10
+101,Deal 0101 expansion,102,102,14837.00,INR,Warp Drive,open,21/02/2026,25
+102,Deal 0102 expansion,103,103,14974.00,USD,Qualification,open,22/02/2026,80
+103,Deal 0103 expansion,104,104,1.234,INR,Closed Won,open,23/02/2026,100
+104,Deal 0104 expansion,105,105,15248.00,XX,Qualification,open,24/02/2026,10
+105,Deal 0105 expansion,106,106,15385.00,USD,Needs Analysis,open,someday,25
+106,Deal 0106 expansion,107,107,15522.00,INR,Proposal,open,26/02/2026,50
+107,Deal 0107 expansion,108,108,15659.00,INR,Closed Won,open,27/02/2026,100
+108,Deal 0108 expansion,109,109,15796.00,USD,Qualification,open,01/02/2026,10
+109,Deal 0109 expansion,110,110,15933.00,INR,Needs Analysis,open,02/02/2026,25
+110,Deal 0110 expansion,111,111,16070.00,INR,Proposal,open,03/02/2026,50
+111,Deal 0111 expansion,112,112,16207.00,USD,Closed Won,open,04/02/2026,100
+112,Deal 0112 expansion,113,113,16344.00,INR,Qualification,open,05/02/2026,10
+113,Deal 0113 expansion,114,114,16481.00,INR,Needs Analysis,open,06/02/2026,25
+114,Deal 0114 expansion,115,115,16618.00,USD,Proposal,open,07/02/2026,50
+115,Deal 0115 expansion,116,116,16755.00,INR,Closed Won,open,08/02/2026,100
+116,Deal 0116 expansion,117,117,16892.00,INR,Qualification,open,09/02/2026,10
+117,Deal 0117 expansion,118,118,17029.00,USD,Needs Analysis,open,10/02/2026,25
+118,Deal 0118 expansion,119,119,17166.00,INR,Proposal,open,11/02/2026,50
+119,Deal 0119 expansion,120,120,17303.00,INR,Closed Won,open,12/02/2026,100
+120,Deal 0120 expansion,121,121,17440.00,USD,Qualification,open,13/02/2026,10
+121,Deal 0121 expansion,122,122,17577.00,INR,Needs Analysis,open,14/02/2026,25
+122,Deal 0122 expansion,123,123,17714.00,INR,Proposal,open,15/02/2026,50
+123,Deal 0123 expansion,124,124,17851.00,USD,Closed Won,open,16/02/2026,100
+124,Deal 0124 expansion,125,125,17988.00,INR,Qualification,open,17/02/2026,10
+125,Deal 0125 expansion,126,126,18125.00,INR,Needs Analysis,open,18/02/2026,25
+126,Deal 0126 expansion,127,127,18262.00,USD,Proposal,open,19/02/2026,50
+127,Deal 0127 expansion,128,128,18399.00,INR,Closed Won,open,20/02/2026,100
+128,Deal 0128 expansion,129,129,18536.00,INR,Qualification,open,21/02/2026,10
+129,Deal 0129 expansion,130,130,18673.00,USD,Needs Analysis,open,22/02/2026,25
+130,Deal 0130 expansion,131,131,18810.00,INR,Proposal,open,23/02/2026,50
+131,Deal 0131 expansion,132,132,18947.00,INR,Closed Won,open,24/02/2026,100
+132,Deal 0132 expansion,133,133,19084.00,USD,Qualification,open,25/02/2026,10
+133,Deal 0133 expansion,134,134,19221.00,INR,Needs Analysis,open,26/02/2026,25
+134,Deal 0134 expansion,135,135,19358.00,INR,Proposal,open,27/02/2026,50
+135,Deal 0135 expansion,136,136,19495.00,USD,Closed Won,open,01/02/2026,100
+136,Deal 0136 expansion,137,137,19632.00,INR,Qualification,open,02/02/2026,10
+137,Deal 0137 expansion,138,138,19769.00,INR,Needs Analysis,open,03/02/2026,25
+138,Deal 0138 expansion,139,139,19906.00,USD,Proposal,open,04/02/2026,50
+139,Deal 0139 expansion,140,140,20043.00,INR,Closed Won,open,05/02/2026,100
+140,Deal 0140 expansion,141,141,20180.00,INR,Qualification,open,06/02/2026,10
+141,Deal 0141 expansion,142,142,20317.00,USD,Needs Analysis,open,07/02/2026,25
+142,Deal 0142 expansion,143,143,20454.00,INR,Proposal,open,08/02/2026,50
+143,Deal 0143 expansion,144,144,20591.00,INR,Closed Won,open,09/02/2026,100
+144,Deal 0144 expansion,145,145,20728.00,USD,Qualification,open,10/02/2026,10
+145,Deal 0145 expansion,146,146,20865.00,INR,Needs Analysis,open,11/02/2026,25
+146,Deal 0146 expansion,147,147,21002.00,INR,Proposal,open,12/02/2026,50
+147,Deal 0147 expansion,148,148,21139.00,USD,Closed Won,open,13/02/2026,100
+148,Deal 0148 expansion,149,149,21276.00,INR,Qualification,open,14/02/2026,10
+149,Deal 0149 expansion,150,150,21413.00,INR,Needs Analysis,open,15/02/2026,25
+150,Deal 0150 expansion,151,151,21550.00,USD,Proposal,open,16/02/2026,50
+151,Deal 0151 expansion,152,152,21687.00,INR,Closed Won,open,17/02/2026,100
+152,Deal 0152 expansion,153,153,21824.00,INR,Qualification,open,18/02/2026,10
+153,Deal 0153 expansion,154,154,21961.00,USD,Needs Analysis,open,19/02/2026,25
+154,Deal 0154 expansion,155,155,22098.00,INR,Proposal,open,20/02/2026,50
+155,Deal 0155 expansion,156,156,22235.00,INR,Closed Won,open,21/02/2026,100
+156,Deal 0156 expansion,157,157,22372.00,USD,Qualification,open,22/02/2026,10
+157,Deal 0157 expansion,158,158,22509.00,INR,Needs Analysis,open,23/02/2026,25
+158,Deal 0158 expansion,159,159,22646.00,INR,Proposal,open,24/02/2026,50
+159,Deal 0159 expansion,160,160,22783.00,USD,Closed Won,open,25/02/2026,100
+160,Deal 0160 expansion,161,161,22920.00,INR,Qualification,open,26/02/2026,10
+161,Deal 0161 expansion,162,162,23057.00,INR,Needs Analysis,open,27/02/2026,25
+162,Deal 0162 expansion,163,163,23194.00,USD,Proposal,open,01/02/2026,50
+163,Deal 0163 expansion,164,164,23331.00,INR,Closed Won,open,02/02/2026,100
+164,Deal 0164 expansion,165,165,23468.00,INR,Qualification,open,03/02/2026,10
+165,Deal 0165 expansion,166,166,23605.00,USD,Needs Analysis,open,04/02/2026,25
+166,Deal 0166 expansion,167,167,23742.00,INR,Proposal,open,05/02/2026,50
+167,Deal 0167 expansion,168,168,23879.00,INR,Closed Won,open,06/02/2026,100
+168,Deal 0168 expansion,169,169,24016.00,USD,Qualification,open,07/02/2026,10
+169,Deal 0169 expansion,170,170,24153.00,INR,Needs Analysis,open,08/02/2026,25
+170,Deal 0170 expansion,171,171,24290.00,INR,Proposal,open,09/02/2026,50
+171,Deal 0171 expansion,172,172,24427.00,USD,Closed Won,open,10/02/2026,100
+172,Deal 0172 expansion,173,173,24564.00,INR,Qualification,open,11/02/2026,10
+173,Deal 0173 expansion,174,174,24701.00,INR,Needs Analysis,open,12/02/2026,25
+174,Deal 0174 expansion,175,175,24838.00,USD,Proposal,open,13/02/2026,50
+175,Deal 0175 expansion,176,176,24975.00,INR,Closed Won,open,14/02/2026,100
+176,Deal 0176 expansion,177,177,25112.00,INR,Qualification,open,15/02/2026,10
+177,Deal 0177 expansion,178,178,25249.00,USD,Needs Analysis,open,16/02/2026,25
+178,Deal 0178 expansion,179,179,25386.00,INR,Proposal,open,17/02/2026,50
+179,Deal 0179 expansion,180,180,25523.00,INR,Closed Won,open,18/02/2026,100
+180,Deal 0180 expansion,181,181,25660.00,USD,Qualification,open,19/02/2026,10
+181,Deal 0181 expansion,182,182,25797.00,INR,Needs Analysis,open,20/02/2026,25
+182,Deal 0182 expansion,183,183,25934.00,INR,Proposal,open,21/02/2026,50
+183,Deal 0183 expansion,184,184,26071.00,USD,Closed Won,open,22/02/2026,100
+184,Deal 0184 expansion,185,185,26208.00,INR,Qualification,open,23/02/2026,10
+185,Deal 0185 expansion,186,186,26345.00,INR,Needs Analysis,open,24/02/2026,25
+186,Deal 0186 expansion,187,187,26482.00,USD,Proposal,open,25/02/2026,50
+187,Deal 0187 expansion,188,188,26619.00,INR,Closed Won,open,26/02/2026,100
+188,Deal 0188 expansion,189,189,26756.00,INR,Qualification,open,27/02/2026,10
+189,Deal 0189 expansion,190,190,26893.00,USD,Needs Analysis,open,01/02/2026,25
+190,Deal 0190 expansion,191,191,27030.00,INR,Proposal,open,02/02/2026,50
+191,Deal 0191 expansion,192,192,27167.00,INR,Closed Won,open,03/02/2026,100
+192,Deal 0192 expansion,193,193,27304.00,USD,Qualification,open,04/02/2026,10
+193,Deal 0193 expansion,194,194,27441.00,INR,Needs Analysis,open,05/02/2026,25
+194,Deal 0194 expansion,195,195,27578.00,INR,Proposal,open,06/02/2026,50
+195,Deal 0195 expansion,196,196,27715.00,USD,Closed Won,open,07/02/2026,100
+196,Deal 0196 expansion,197,197,27852.00,INR,Qualification,open,08/02/2026,10
+197,Deal 0197 expansion,198,198,27989.00,INR,Needs Analysis,open,09/02/2026,25
+198,Deal 0198 expansion,199,199,28126.00,USD,Proposal,open,10/02/2026,50
+199,Deal 0199 expansion,200,200,28263.00,INR,Closed Won,open,11/02/2026,100
+200,Deal 0200 expansion,201,1,28400.00,INR,Qualification,open,12/02/2026,10
+201,Deal 0201 expansion,202,2,28537.00,USD,Needs Analysis,open,13/02/2026,25
+202,Deal 0202 expansion,203,3,28674.00,INR,Proposal,open,14/02/2026,50
+203,Deal 0203 expansion,204,4,28811.00,INR,Closed Won,open,15/02/2026,100
+204,Deal 0204 expansion,205,5,28948.00,USD,Qualification,open,16/02/2026,10
+205,Deal 0205 expansion,206,6,29085.00,INR,Needs Analysis,open,17/02/2026,25
+206,Deal 0206 expansion,207,7,29222.00,INR,Proposal,open,18/02/2026,50
+207,Deal 0207 expansion,208,8,29359.00,USD,Closed Won,open,19/02/2026,100
+208,Deal 0208 expansion,209,9,29496.00,INR,Qualification,open,20/02/2026,10
+209,Deal 0209 expansion,210,10,29633.00,INR,Needs Analysis,open,21/02/2026,25
+210,Deal 0210 expansion,211,11,29770.00,USD,Proposal,open,22/02/2026,50
+211,Deal 0211 expansion,212,12,29907.00,INR,Closed Won,open,23/02/2026,100
+212,Deal 0212 expansion,213,13,30044.00,INR,Qualification,open,24/02/2026,10
+213,Deal 0213 expansion,214,14,30181.00,USD,Needs Analysis,open,25/02/2026,25
+214,Deal 0214 expansion,215,15,30318.00,INR,Proposal,open,26/02/2026,50
+215,Deal 0215 expansion,216,16,30455.00,INR,Closed Won,open,27/02/2026,100
+216,Deal 0216 expansion,217,17,30592.00,USD,Qualification,open,01/02/2026,10
+217,Deal 0217 expansion,218,18,30729.00,INR,Needs Analysis,open,02/02/2026,25
+218,Deal 0218 expansion,219,19,30866.00,INR,Proposal,open,03/02/2026,50
+219,Deal 0219 expansion,220,20,31003.00,USD,Closed Won,open,04/02/2026,100
+220,Deal 0220 expansion,221,21,31140.00,INR,Qualification,open,05/02/2026,10
+221,Deal 0221 expansion,222,22,31277.00,INR,Needs Analysis,open,06/02/2026,25
+222,Deal 0222 expansion,223,23,31414.00,USD,Proposal,open,07/02/2026,50
+223,Deal 0223 expansion,224,24,31551.00,INR,Closed Won,open,08/02/2026,100
+224,Deal 0224 expansion,225,25,31688.00,INR,Qualification,open,09/02/2026,10
+225,Deal 0225 expansion,226,26,31825.00,USD,Needs Analysis,open,10/02/2026,25
+226,Deal 0226 expansion,227,27,31962.00,INR,Proposal,open,11/02/2026,50
+227,Deal 0227 expansion,228,28,32099.00,INR,Closed Won,open,12/02/2026,100
+228,Deal 0228 expansion,229,29,32236.00,USD,Qualification,open,13/02/2026,10
+229,Deal 0229 expansion,230,30,32373.00,INR,Needs Analysis,open,14/02/2026,25
+230,Deal 0230 expansion,231,31,32510.00,INR,Proposal,open,15/02/2026,50
+231,Deal 0231 expansion,232,32,32647.00,USD,Closed Won,open,16/02/2026,100
+232,Deal 0232 expansion,233,33,32784.00,INR,Qualification,open,17/02/2026,10
+233,Deal 0233 expansion,234,34,32921.00,INR,Needs Analysis,open,18/02/2026,25
+234,Deal 0234 expansion,235,35,33058.00,USD,Proposal,open,19/02/2026,50
+235,Deal 0235 expansion,236,36,33195.00,INR,Closed Won,open,20/02/2026,100
+236,Deal 0236 expansion,237,37,33332.00,INR,Qualification,open,21/02/2026,10
+237,Deal 0237 expansion,238,38,33469.00,USD,Needs Analysis,open,22/02/2026,25
+238,Deal 0238 expansion,239,39,33606.00,INR,Proposal,open,23/02/2026,50
+239,Deal 0239 expansion,240,40,33743.00,INR,Closed Won,open,24/02/2026,100
+240,Deal 0240 expansion,241,41,33880.00,USD,Qualification,open,25/02/2026,10
+241,Deal 0241 expansion,242,42,34017.00,INR,Needs Analysis,open,26/02/2026,25
+242,Deal 0242 expansion,243,43,34154.00,INR,Proposal,open,27/02/2026,50
+243,Deal 0243 expansion,244,44,34291.00,USD,Closed Won,open,01/02/2026,100
+244,Deal 0244 expansion,245,45,34428.00,INR,Qualification,open,02/02/2026,10
+245,Deal 0245 expansion,246,46,34565.00,INR,Needs Analysis,open,03/02/2026,25
+246,Deal 0246 expansion,247,47,34702.00,USD,Proposal,open,04/02/2026,50
+247,Deal 0247 expansion,248,48,34839.00,INR,Closed Won,open,05/02/2026,100
+248,Deal 0248 expansion,249,49,34976.00,INR,Qualification,open,06/02/2026,10
+249,Deal 0249 expansion,250,50,35113.00,USD,Needs Analysis,open,07/02/2026,25
+250,Deal 0250 expansion,251,51,35250.00,INR,Proposal,open,08/02/2026,50
+251,Deal 0251 expansion,252,52,35387.00,INR,Closed Won,open,09/02/2026,100
+252,Deal 0252 expansion,253,53,35524.00,USD,Qualification,open,10/02/2026,10
+253,Deal 0253 expansion,254,54,35661.00,INR,Needs Analysis,open,11/02/2026,25
+254,Deal 0254 expansion,255,55,35798.00,INR,Proposal,open,12/02/2026,50
+255,Deal 0255 expansion,256,56,35935.00,USD,Closed Won,open,13/02/2026,100
+256,Deal 0256 expansion,257,57,36072.00,INR,Qualification,open,14/02/2026,10
+257,Deal 0257 expansion,258,58,36209.00,INR,Needs Analysis,open,15/02/2026,25
+258,Deal 0258 expansion,259,59,36346.00,USD,Proposal,open,16/02/2026,50
+259,Deal 0259 expansion,260,60,36483.00,INR,Closed Won,open,17/02/2026,100
+260,Deal 0260 expansion,261,61,36620.00,INR,Qualification,open,18/02/2026,10
+261,Deal 0261 expansion,262,62,36757.00,USD,Needs Analysis,open,19/02/2026,25
+262,Deal 0262 expansion,263,63,36894.00,INR,Proposal,open,20/02/2026,50
+263,Deal 0263 expansion,264,64,37031.00,INR,Closed Won,open,21/02/2026,100
+264,Deal 0264 expansion,265,65,37168.00,USD,Qualification,open,22/02/2026,10
+265,Deal 0265 expansion,266,66,37305.00,INR,Needs Analysis,open,23/02/2026,25
+266,Deal 0266 expansion,267,67,37442.00,INR,Proposal,open,24/02/2026,50
+267,Deal 0267 expansion,268,68,37579.00,USD,Closed Won,open,25/02/2026,100
+268,Deal 0268 expansion,269,69,37716.00,INR,Qualification,open,26/02/2026,10
+269,Deal 0269 expansion,270,70,37853.00,INR,Needs Analysis,open,27/02/2026,25
+270,Deal 0270 expansion,271,71,37990.00,USD,Proposal,open,01/02/2026,50
+271,Deal 0271 expansion,272,72,38127.00,INR,Closed Won,open,02/02/2026,100
+272,Deal 0272 expansion,273,73,38264.00,INR,Qualification,open,03/02/2026,10
+273,Deal 0273 expansion,274,74,38401.00,USD,Needs Analysis,open,04/02/2026,25
+274,Deal 0274 expansion,275,75,38538.00,INR,Proposal,open,05/02/2026,50
+275,Deal 0275 expansion,276,76,38675.00,INR,Closed Won,open,06/02/2026,100
+276,Deal 0276 expansion,277,77,38812.00,USD,Qualification,open,07/02/2026,10
+277,Deal 0277 expansion,278,78,38949.00,INR,Needs Analysis,open,08/02/2026,25
+278,Deal 0278 expansion,279,79,39086.00,INR,Proposal,open,09/02/2026,50
+279,Deal 0279 expansion,280,80,39223.00,USD,Closed Won,open,10/02/2026,100
+280,Deal 0280 expansion,281,81,39360.00,INR,Qualification,open,11/02/2026,10
+281,Deal 0281 expansion,282,82,39497.00,INR,Needs Analysis,open,12/02/2026,25
+282,Deal 0282 expansion,283,83,39634.00,USD,Proposal,open,13/02/2026,50
+283,Deal 0283 expansion,284,84,39771.00,INR,Closed Won,open,14/02/2026,100
+284,Deal 0284 expansion,285,85,39908.00,INR,Qualification,open,15/02/2026,10
+285,Deal 0285 expansion,286,86,40045.00,USD,Needs Analysis,open,16/02/2026,25
+286,Deal 0286 expansion,287,87,40182.00,INR,Proposal,open,17/02/2026,50
+287,Deal 0287 expansion,288,88,40319.00,INR,Closed Won,open,18/02/2026,100
+288,Deal 0288 expansion,289,89,40456.00,USD,Qualification,open,19/02/2026,10
+289,Deal 0289 expansion,290,90,40593.00,INR,Needs Analysis,open,20/02/2026,25
+290,Deal 0290 expansion,291,91,40730.00,INR,Proposal,open,21/02/2026,50
+291,Deal 0291 expansion,292,92,40867.00,USD,Closed Won,open,22/02/2026,100
+292,Deal 0292 expansion,293,93,41004.00,INR,Qualification,open,23/02/2026,10
+293,Deal 0293 expansion,294,94,41141.00,INR,Needs Analysis,open,24/02/2026,25
+294,Deal 0294 expansion,295,95,41278.00,USD,Proposal,open,25/02/2026,50
+295,Deal 0295 expansion,296,96,41415.00,INR,Closed Won,open,26/02/2026,100
+296,Deal 0296 expansion,297,97,41552.00,INR,Qualification,open,27/02/2026,10
+297,Deal 0297 expansion,298,98,41689.00,USD,Needs Analysis,open,01/02/2026,25
+298,Deal 0298 expansion,299,99,41826.00,INR,Proposal,open,02/02/2026,50
+299,Deal 0299 expansion,300,100,41963.00,INR,Closed Won,open,03/02/2026,100
+300,Deal 0300 expansion,301,101,42100.00,USD,Qualification,open,04/02/2026,10
+301,Deal 0301 expansion,302,102,42237.00,INR,Needs Analysis,open,05/02/2026,25
+302,Deal 0302 expansion,303,103,42374.00,INR,Proposal,open,06/02/2026,50
+303,Deal 0303 expansion,304,104,42511.00,USD,Closed Won,open,07/02/2026,100
+304,Deal 0304 expansion,305,105,42648.00,INR,Qualification,open,08/02/2026,10
+305,Deal 0305 expansion,306,106,42785.00,INR,Needs Analysis,open,09/02/2026,25
+306,Deal 0306 expansion,307,107,42922.00,USD,Proposal,open,10/02/2026,50
+307,Deal 0307 expansion,308,108,43059.00,INR,Closed Won,open,11/02/2026,100
+308,Deal 0308 expansion,309,109,43196.00,INR,Qualification,open,12/02/2026,10
+309,Deal 0309 expansion,310,110,43333.00,USD,Needs Analysis,open,13/02/2026,25
+310,Deal 0310 expansion,311,111,43470.00,INR,Proposal,open,14/02/2026,50
+311,Deal 0311 expansion,312,112,43607.00,INR,Closed Won,open,15/02/2026,100
+312,Deal 0312 expansion,313,113,43744.00,USD,Qualification,open,16/02/2026,10
+313,Deal 0313 expansion,314,114,43881.00,INR,Needs Analysis,open,17/02/2026,25
+314,Deal 0314 expansion,315,115,44018.00,INR,Proposal,open,18/02/2026,50
+315,Deal 0315 expansion,316,116,44155.00,USD,Closed Won,open,19/02/2026,100
+316,Deal 0316 expansion,317,117,44292.00,INR,Qualification,open,20/02/2026,10
+317,Deal 0317 expansion,318,118,44429.00,INR,Needs Analysis,open,21/02/2026,25
+318,Deal 0318 expansion,319,119,44566.00,USD,Proposal,open,22/02/2026,50
+319,Deal 0319 expansion,320,120,44703.00,INR,Closed Won,open,23/02/2026,100
+320,Deal 0320 expansion,321,121,44840.00,INR,Qualification,open,24/02/2026,10
+321,Deal 0321 expansion,322,122,44977.00,USD,Needs Analysis,open,25/02/2026,25
+322,Deal 0322 expansion,323,123,45114.00,INR,Proposal,open,26/02/2026,50
+323,Deal 0323 expansion,324,124,45251.00,INR,Closed Won,open,27/02/2026,100
+324,Deal 0324 expansion,325,125,45388.00,USD,Qualification,open,01/02/2026,10
+325,Deal 0325 expansion,326,126,45525.00,INR,Needs Analysis,open,02/02/2026,25
+326,Deal 0326 expansion,327,127,45662.00,INR,Proposal,open,03/02/2026,50
+327,Deal 0327 expansion,328,128,45799.00,USD,Closed Won,open,04/02/2026,100
+328,Deal 0328 expansion,329,129,45936.00,INR,Qualification,open,05/02/2026,10
+329,Deal 0329 expansion,330,130,46073.00,INR,Needs Analysis,open,06/02/2026,25
+330,Deal 0330 expansion,331,131,46210.00,USD,Proposal,open,07/02/2026,50
+331,Deal 0331 expansion,332,132,46347.00,INR,Closed Won,open,08/02/2026,100
+332,Deal 0332 expansion,333,133,46484.00,INR,Qualification,open,09/02/2026,10
+333,Deal 0333 expansion,334,134,46621.00,USD,Needs Analysis,open,10/02/2026,25
+334,Deal 0334 expansion,335,135,46758.00,INR,Proposal,open,11/02/2026,50
+335,Deal 0335 expansion,336,136,46895.00,INR,Closed Won,open,12/02/2026,100
+336,Deal 0336 expansion,337,137,47032.00,USD,Qualification,open,13/02/2026,10
+337,Deal 0337 expansion,338,138,47169.00,INR,Needs Analysis,open,14/02/2026,25
+338,Deal 0338 expansion,339,139,47306.00,INR,Proposal,open,15/02/2026,50
+339,Deal 0339 expansion,340,140,47443.00,USD,Closed Won,open,16/02/2026,100
+340,Deal 0340 expansion,341,141,47580.00,INR,Qualification,open,17/02/2026,10
+341,Deal 0341 expansion,342,142,47717.00,INR,Needs Analysis,open,18/02/2026,25
+342,Deal 0342 expansion,343,143,47854.00,USD,Proposal,open,19/02/2026,50
+343,Deal 0343 expansion,344,144,47991.00,INR,Closed Won,open,20/02/2026,100
+344,Deal 0344 expansion,345,145,48128.00,INR,Qualification,open,21/02/2026,10
+345,Deal 0345 expansion,346,146,48265.00,USD,Needs Analysis,open,22/02/2026,25
+346,Deal 0346 expansion,347,147,48402.00,INR,Proposal,open,23/02/2026,50
+347,Deal 0347 expansion,348,148,48539.00,INR,Closed Won,open,24/02/2026,100
+348,Deal 0348 expansion,349,149,48676.00,USD,Qualification,open,25/02/2026,10
+349,Deal 0349 expansion,350,150,48813.00,INR,Needs Analysis,open,26/02/2026,25
+350,Deal 0350 expansion,351,151,48950.00,INR,Proposal,open,27/02/2026,50
+351,Deal 0351 expansion,352,152,49087.00,USD,Closed Won,open,01/02/2026,100
+352,Deal 0352 expansion,353,153,49224.00,INR,Qualification,open,02/02/2026,10
+353,Deal 0353 expansion,354,154,49361.00,INR,Needs Analysis,open,03/02/2026,25
+354,Deal 0354 expansion,355,155,49498.00,USD,Proposal,open,04/02/2026,50
+355,Deal 0355 expansion,356,156,49635.00,INR,Closed Won,open,05/02/2026,100
+356,Deal 0356 expansion,357,157,49772.00,INR,Qualification,open,06/02/2026,10
+357,Deal 0357 expansion,358,158,49909.00,USD,Needs Analysis,open,07/02/2026,25
+358,Deal 0358 expansion,359,159,50046.00,INR,Proposal,open,08/02/2026,50
+359,Deal 0359 expansion,360,160,50183.00,INR,Closed Won,open,09/02/2026,100
+360,Deal 0360 expansion,361,161,50320.00,USD,Qualification,open,10/02/2026,10
+361,Deal 0361 expansion,362,162,50457.00,INR,Needs Analysis,open,11/02/2026,25
+362,Deal 0362 expansion,363,163,50594.00,INR,Proposal,open,12/02/2026,50
+363,Deal 0363 expansion,364,164,50731.00,USD,Closed Won,open,13/02/2026,100
+364,Deal 0364 expansion,365,165,50868.00,INR,Qualification,open,14/02/2026,10
+365,Deal 0365 expansion,366,166,51005.00,INR,Needs Analysis,open,15/02/2026,25
+366,Deal 0366 expansion,367,167,51142.00,USD,Proposal,open,16/02/2026,50
+367,Deal 0367 expansion,368,168,51279.00,INR,Closed Won,open,17/02/2026,100
+368,Deal 0368 expansion,369,169,51416.00,INR,Qualification,open,18/02/2026,10
+369,Deal 0369 expansion,370,170,51553.00,USD,Needs Analysis,open,19/02/2026,25
+370,Deal 0370 expansion,371,171,51690.00,INR,Proposal,open,20/02/2026,50
+371,Deal 0371 expansion,372,172,51827.00,INR,Closed Won,open,21/02/2026,100
+372,Deal 0372 expansion,373,173,51964.00,USD,Qualification,open,22/02/2026,10
+373,Deal 0373 expansion,374,174,52101.00,INR,Needs Analysis,open,23/02/2026,25
+374,Deal 0374 expansion,375,175,52238.00,INR,Proposal,open,24/02/2026,50
+375,Deal 0375 expansion,376,176,52375.00,USD,Closed Won,open,25/02/2026,100
+376,Deal 0376 expansion,377,177,52512.00,INR,Qualification,open,26/02/2026,10
+377,Deal 0377 expansion,378,178,52649.00,INR,Needs Analysis,open,27/02/2026,25
+378,Deal 0378 expansion,379,179,52786.00,USD,Proposal,open,01/02/2026,50
+379,Deal 0379 expansion,380,180,52923.00,INR,Closed Won,open,02/02/2026,100
+380,Deal 0380 expansion,381,181,53060.00,INR,Qualification,open,03/02/2026,10
+381,Deal 0381 expansion,382,182,53197.00,USD,Needs Analysis,open,04/02/2026,25
+382,Deal 0382 expansion,383,183,53334.00,INR,Proposal,open,05/02/2026,50
+383,Deal 0383 expansion,384,184,53471.00,INR,Closed Won,open,06/02/2026,100
+384,Deal 0384 expansion,385,185,53608.00,USD,Qualification,open,07/02/2026,10
+385,Deal 0385 expansion,386,186,53745.00,INR,Needs Analysis,open,08/02/2026,25
+386,Deal 0386 expansion,387,187,53882.00,INR,Proposal,open,09/02/2026,50
+387,Deal 0387 expansion,388,188,54019.00,USD,Closed Won,open,10/02/2026,100
+388,Deal 0388 expansion,389,189,54156.00,INR,Qualification,open,11/02/2026,10
+389,Deal 0389 expansion,390,190,54293.00,INR,Needs Analysis,open,12/02/2026,25
+390,Deal 0390 expansion,391,191,54430.00,USD,Proposal,open,13/02/2026,50
+391,Deal 0391 expansion,392,192,54567.00,INR,Closed Won,open,14/02/2026,100
+392,Deal 0392 expansion,393,193,54704.00,INR,Qualification,open,15/02/2026,10
+393,Deal 0393 expansion,394,194,54841.00,USD,Needs Analysis,open,16/02/2026,25
+394,Deal 0394 expansion,395,195,54978.00,INR,Proposal,open,17/02/2026,50
+395,Deal 0395 expansion,396,196,55115.00,INR,Closed Won,open,18/02/2026,100
+396,Deal 0396 expansion,397,197,55252.00,USD,Qualification,open,19/02/2026,10
+397,Deal 0397 expansion,398,198,55389.00,INR,Needs Analysis,open,20/02/2026,25
+398,Deal 0398 expansion,399,199,55526.00,INR,Proposal,open,21/02/2026,50
+399,Deal 0399 expansion,400,200,55663.00,USD,Closed Won,open,22/02/2026,100
+400,Deal 0400 expansion,401,1,55800.00,INR,Qualification,open,23/02/2026,10
+401,Deal 0401 expansion,402,2,55937.00,INR,Needs Analysis,open,24/02/2026,25
+402,Deal 0402 expansion,403,3,56074.00,USD,Proposal,open,25/02/2026,50
+403,Deal 0403 expansion,404,4,56211.00,INR,Closed Won,open,26/02/2026,100
+404,Deal 0404 expansion,405,5,56348.00,INR,Qualification,open,27/02/2026,10
+405,Deal 0405 expansion,406,6,56485.00,USD,Needs Analysis,open,01/02/2026,25
+406,Deal 0406 expansion,407,7,56622.00,INR,Proposal,open,02/02/2026,50
+407,Deal 0407 expansion,408,8,56759.00,INR,Closed Won,open,03/02/2026,100
+408,Deal 0408 expansion,409,9,56896.00,USD,Qualification,open,04/02/2026,10
+409,Deal 0409 expansion,410,10,57033.00,INR,Needs Analysis,open,05/02/2026,25
+410,Deal 0410 expansion,411,11,57170.00,INR,Proposal,open,06/02/2026,50
+411,Deal 0411 expansion,412,12,57307.00,USD,Closed Won,open,07/02/2026,100
+412,Deal 0412 expansion,413,13,57444.00,INR,Qualification,open,08/02/2026,10
+413,Deal 0413 expansion,414,14,57581.00,INR,Needs Analysis,open,09/02/2026,25
+414,Deal 0414 expansion,415,15,57718.00,USD,Proposal,open,10/02/2026,50
+415,Deal 0415 expansion,416,16,57855.00,INR,Closed Won,open,11/02/2026,100
+416,Deal 0416 expansion,417,17,57992.00,INR,Qualification,open,12/02/2026,10
+417,Deal 0417 expansion,418,18,58129.00,USD,Needs Analysis,open,13/02/2026,25
+418,Deal 0418 expansion,419,19,58266.00,INR,Proposal,open,14/02/2026,50
+419,Deal 0419 expansion,420,20,58403.00,INR,Closed Won,open,15/02/2026,100
+420,Deal 0420 expansion,421,21,58540.00,USD,Qualification,open,16/02/2026,10
+421,Deal 0421 expansion,422,22,58677.00,INR,Needs Analysis,open,17/02/2026,25
+422,Deal 0422 expansion,423,23,58814.00,INR,Proposal,open,18/02/2026,50
+423,Deal 0423 expansion,424,24,58951.00,USD,Closed Won,open,19/02/2026,100
+424,Deal 0424 expansion,425,25,59088.00,INR,Qualification,open,20/02/2026,10
+425,Deal 0425 expansion,426,26,59225.00,INR,Needs Analysis,open,21/02/2026,25
+426,Deal 0426 expansion,427,27,59362.00,USD,Proposal,open,22/02/2026,50
+427,Deal 0427 expansion,428,28,59499.00,INR,Closed Won,open,23/02/2026,100
+428,Deal 0428 expansion,429,29,59636.00,INR,Qualification,open,24/02/2026,10
+429,Deal 0429 expansion,430,30,59773.00,USD,Needs Analysis,open,25/02/2026,25
+430,Deal 0430 expansion,431,31,59910.00,INR,Proposal,open,26/02/2026,50
+431,Deal 0431 expansion,432,32,60047.00,INR,Closed Won,open,27/02/2026,100
+432,Deal 0432 expansion,433,33,60184.00,USD,Qualification,open,01/02/2026,10
+433,Deal 0433 expansion,434,34,60321.00,INR,Needs Analysis,open,02/02/2026,25
+434,Deal 0434 expansion,435,35,60458.00,INR,Proposal,open,03/02/2026,50
+435,Deal 0435 expansion,436,36,60595.00,USD,Closed Won,open,04/02/2026,100
+436,Deal 0436 expansion,437,37,60732.00,INR,Qualification,open,05/02/2026,10
+437,Deal 0437 expansion,438,38,60869.00,INR,Needs Analysis,open,06/02/2026,25
+438,Deal 0438 expansion,439,39,61006.00,USD,Proposal,open,07/02/2026,50
+439,Deal 0439 expansion,440,40,61143.00,INR,Closed Won,open,08/02/2026,100
+440,Deal 0440 expansion,441,41,61280.00,INR,Qualification,open,09/02/2026,10
+441,Deal 0441 expansion,442,42,61417.00,USD,Needs Analysis,open,10/02/2026,25
+442,Deal 0442 expansion,443,43,61554.00,INR,Proposal,open,11/02/2026,50
+443,Deal 0443 expansion,444,44,61691.00,INR,Closed Won,open,12/02/2026,100
+444,Deal 0444 expansion,445,45,61828.00,USD,Qualification,open,13/02/2026,10
+445,Deal 0445 expansion,446,46,61965.00,INR,Needs Analysis,open,14/02/2026,25
+446,Deal 0446 expansion,447,47,62102.00,INR,Proposal,open,15/02/2026,50
+447,Deal 0447 expansion,448,48,62239.00,USD,Closed Won,open,16/02/2026,100
+448,Deal 0448 expansion,449,49,62376.00,INR,Qualification,open,17/02/2026,10
+449,Deal 0449 expansion,450,50,62513.00,INR,Needs Analysis,open,18/02/2026,25
+450,Deal 0450 expansion,451,51,62650.00,USD,Proposal,open,19/02/2026,50
+451,Deal 0451 expansion,452,52,62787.00,INR,Closed Won,open,20/02/2026,100
+452,Deal 0452 expansion,453,53,62924.00,INR,Qualification,open,21/02/2026,10
+453,Deal 0453 expansion,454,54,63061.00,USD,Needs Analysis,open,22/02/2026,25
+454,Deal 0454 expansion,455,55,63198.00,INR,Proposal,open,23/02/2026,50
+455,Deal 0455 expansion,456,56,63335.00,INR,Closed Won,open,24/02/2026,100
+456,Deal 0456 expansion,457,57,63472.00,USD,Qualification,open,25/02/2026,10
+457,Deal 0457 expansion,458,58,63609.00,INR,Needs Analysis,open,26/02/2026,25
+458,Deal 0458 expansion,459,59,63746.00,INR,Proposal,open,27/02/2026,50
+459,Deal 0459 expansion,460,60,63883.00,USD,Closed Won,open,01/02/2026,100
+460,Deal 0460 expansion,461,61,64020.00,INR,Qualification,open,02/02/2026,10
+461,Deal 0461 expansion,462,62,64157.00,INR,Needs Analysis,open,03/02/2026,25
+462,Deal 0462 expansion,463,63,64294.00,USD,Proposal,open,04/02/2026,50
+463,Deal 0463 expansion,464,64,64431.00,INR,Closed Won,open,05/02/2026,100
+464,Deal 0464 expansion,465,65,64568.00,INR,Qualification,open,06/02/2026,10
+465,Deal 0465 expansion,466,66,64705.00,USD,Needs Analysis,open,07/02/2026,25
+466,Deal 0466 expansion,467,67,64842.00,INR,Proposal,open,08/02/2026,50
+467,Deal 0467 expansion,468,68,64979.00,INR,Closed Won,open,09/02/2026,100
+468,Deal 0468 expansion,469,69,65116.00,USD,Qualification,open,10/02/2026,10
+469,Deal 0469 expansion,470,70,65253.00,INR,Needs Analysis,open,11/02/2026,25
+470,Deal 0470 expansion,471,71,65390.00,INR,Proposal,open,12/02/2026,50
+471,Deal 0471 expansion,472,72,65527.00,USD,Closed Won,open,13/02/2026,100
+472,Deal 0472 expansion,473,73,65664.00,INR,Qualification,open,14/02/2026,10
+473,Deal 0473 expansion,474,74,65801.00,INR,Needs Analysis,open,15/02/2026,25
+474,Deal 0474 expansion,475,75,65938.00,USD,Proposal,open,16/02/2026,50
+475,Deal 0475 expansion,476,76,66075.00,INR,Closed Won,open,17/02/2026,100
+476,Deal 0476 expansion,477,77,66212.00,INR,Qualification,open,18/02/2026,10
+477,Deal 0477 expansion,478,78,66349.00,USD,Needs Analysis,open,19/02/2026,25
+478,Deal 0478 expansion,479,79,66486.00,INR,Proposal,open,20/02/2026,50
+479,Deal 0479 expansion,480,80,66623.00,INR,Closed Won,open,21/02/2026,100
+480,Deal 0480 expansion,481,81,66760.00,USD,Qualification,open,22/02/2026,10
+481,Deal 0481 expansion,482,82,66897.00,INR,Needs Analysis,open,23/02/2026,25
+482,Deal 0482 expansion,483,83,67034.00,INR,Proposal,open,24/02/2026,50
+483,Deal 0483 expansion,484,84,67171.00,USD,Closed Won,open,25/02/2026,100
+484,Deal 0484 expansion,485,85,67308.00,INR,Qualification,open,26/02/2026,10
+485,Deal 0485 expansion,486,86,67445.00,INR,Needs Analysis,open,27/02/2026,25
+486,Deal 0486 expansion,487,87,67582.00,USD,Proposal,open,01/02/2026,50
+487,Deal 0487 expansion,488,88,67719.00,INR,Closed Won,open,02/02/2026,100
+488,Deal 0488 expansion,489,89,67856.00,INR,Qualification,open,03/02/2026,10
+489,Deal 0489 expansion,490,90,67993.00,USD,Needs Analysis,open,04/02/2026,25
+490,Deal 0490 expansion,491,91,68130.00,INR,Proposal,open,05/02/2026,50
+491,Deal 0491 expansion,492,92,68267.00,INR,Closed Won,open,06/02/2026,100
+492,Deal 0492 expansion,493,93,68404.00,USD,Qualification,open,07/02/2026,10
+493,Deal 0493 expansion,494,94,68541.00,INR,Needs Analysis,open,08/02/2026,25
+494,Deal 0494 expansion,495,95,68678.00,INR,Proposal,open,09/02/2026,50
+495,Deal 0495 expansion,496,96,68815.00,USD,Closed Won,open,10/02/2026,100
+496,Deal 0496 expansion,497,97,68952.00,INR,Qualification,open,11/02/2026,10
+497,Deal 0497 expansion,498,98,69089.00,INR,Needs Analysis,open,12/02/2026,25
+498,Deal 0498 expansion,499,99,69226.00,USD,Proposal,open,13/02/2026,50
+499,Deal 0499 expansion,500,100,69363.00,INR,Closed Won,open,14/02/2026,100
+500,Deal 0500 expansion,501,101,69500.00,INR,Qualification,open,15/02/2026,10
+501,Deal 0501 expansion,502,102,69637.00,USD,Needs Analysis,open,16/02/2026,25
+502,Deal 0502 expansion,503,103,69774.00,INR,Proposal,open,17/02/2026,50
+503,Deal 0503 expansion,504,104,69911.00,INR,Closed Won,open,18/02/2026,100
+504,Deal 0504 expansion,505,105,70048.00,USD,Qualification,open,19/02/2026,10
+505,Deal 0505 expansion,506,106,70185.00,INR,Needs Analysis,open,20/02/2026,25
+506,Deal 0506 expansion,507,107,70322.00,INR,Proposal,open,21/02/2026,50
+507,Deal 0507 expansion,508,108,70459.00,USD,Closed Won,open,22/02/2026,100
+508,Deal 0508 expansion,509,109,70596.00,INR,Qualification,open,23/02/2026,10
+509,Deal 0509 expansion,510,110,70733.00,INR,Needs Analysis,open,24/02/2026,25
+510,Deal 0510 expansion,511,111,70870.00,USD,Proposal,open,25/02/2026,50
+511,Deal 0511 expansion,512,112,71007.00,INR,Closed Won,open,26/02/2026,100
+512,Deal 0512 expansion,513,113,71144.00,INR,Qualification,open,27/02/2026,10
+513,Deal 0513 expansion,514,114,71281.00,USD,Needs Analysis,open,01/02/2026,25
+514,Deal 0514 expansion,515,115,71418.00,INR,Proposal,open,02/02/2026,50
+515,Deal 0515 expansion,516,116,71555.00,INR,Closed Won,open,03/02/2026,100
+516,Deal 0516 expansion,517,117,71692.00,USD,Qualification,open,04/02/2026,10
+517,Deal 0517 expansion,518,118,71829.00,INR,Needs Analysis,open,05/02/2026,25
+518,Deal 0518 expansion,519,119,71966.00,INR,Proposal,open,06/02/2026,50
+519,Deal 0519 expansion,520,120,72103.00,USD,Closed Won,open,07/02/2026,100
+520,Deal 0520 expansion,521,121,72240.00,INR,Qualification,open,08/02/2026,10
+521,Deal 0521 expansion,522,122,72377.00,INR,Needs Analysis,open,09/02/2026,25
+522,Deal 0522 expansion,523,123,72514.00,USD,Proposal,open,10/02/2026,50
+523,Deal 0523 expansion,524,124,72651.00,INR,Closed Won,open,11/02/2026,100
+524,Deal 0524 expansion,525,125,72788.00,INR,Qualification,open,12/02/2026,10
+525,Deal 0525 expansion,526,126,72925.00,USD,Needs Analysis,open,13/02/2026,25
+526,Deal 0526 expansion,527,127,73062.00,INR,Proposal,open,14/02/2026,50
+527,Deal 0527 expansion,528,128,73199.00,INR,Closed Won,open,15/02/2026,100
+528,Deal 0528 expansion,529,129,73336.00,USD,Qualification,open,16/02/2026,10
+529,Deal 0529 expansion,530,130,73473.00,INR,Needs Analysis,open,17/02/2026,25
+530,Deal 0530 expansion,531,131,73610.00,INR,Proposal,open,18/02/2026,50
+531,Deal 0531 expansion,532,132,73747.00,USD,Closed Won,open,19/02/2026,100
+532,Deal 0532 expansion,533,133,73884.00,INR,Qualification,open,20/02/2026,10
+533,Deal 0533 expansion,534,134,74021.00,INR,Needs Analysis,open,21/02/2026,25
+534,Deal 0534 expansion,535,135,74158.00,USD,Proposal,open,22/02/2026,50
+535,Deal 0535 expansion,536,136,74295.00,INR,Closed Won,open,23/02/2026,100
+536,Deal 0536 expansion,537,137,74432.00,INR,Qualification,open,24/02/2026,10
+537,Deal 0537 expansion,538,138,74569.00,USD,Needs Analysis,open,25/02/2026,25
+538,Deal 0538 expansion,539,139,74706.00,INR,Proposal,open,26/02/2026,50
+539,Deal 0539 expansion,540,140,74843.00,INR,Closed Won,open,27/02/2026,100
+540,Deal 0540 expansion,541,141,74980.00,USD,Qualification,open,01/02/2026,10
+541,Deal 0541 expansion,542,142,75117.00,INR,Needs Analysis,open,02/02/2026,25
+542,Deal 0542 expansion,543,143,75254.00,INR,Proposal,open,03/02/2026,50
+543,Deal 0543 expansion,544,144,75391.00,USD,Closed Won,open,04/02/2026,100
+544,Deal 0544 expansion,545,145,75528.00,INR,Qualification,open,05/02/2026,10
+545,Deal 0545 expansion,546,146,75665.00,INR,Needs Analysis,open,06/02/2026,25
+546,Deal 0546 expansion,547,147,75802.00,USD,Proposal,open,07/02/2026,50
+547,Deal 0547 expansion,548,148,75939.00,INR,Closed Won,open,08/02/2026,100
+548,Deal 0548 expansion,549,149,76076.00,INR,Qualification,open,09/02/2026,10
+549,Deal 0549 expansion,550,150,76213.00,USD,Needs Analysis,open,10/02/2026,25
+550,Deal 0550 expansion,551,151,76350.00,INR,Proposal,open,11/02/2026,50
+551,Deal 0551 expansion,552,152,76487.00,INR,Closed Won,open,12/02/2026,100
+552,Deal 0552 expansion,553,153,76624.00,USD,Qualification,open,13/02/2026,10
+553,Deal 0553 expansion,554,154,76761.00,INR,Needs Analysis,open,14/02/2026,25
+554,Deal 0554 expansion,555,155,76898.00,INR,Proposal,open,15/02/2026,50
+555,Deal 0555 expansion,556,156,77035.00,USD,Closed Won,open,16/02/2026,100
+556,Deal 0556 expansion,557,157,77172.00,INR,Qualification,open,17/02/2026,10
+557,Deal 0557 expansion,558,158,77309.00,INR,Needs Analysis,open,18/02/2026,25
+558,Deal 0558 expansion,559,159,77446.00,USD,Proposal,open,19/02/2026,50
+559,Deal 0559 expansion,560,160,77583.00,INR,Closed Won,open,20/02/2026,100
+560,Deal 0560 expansion,561,161,77720.00,INR,Qualification,open,21/02/2026,10
+561,Deal 0561 expansion,562,162,77857.00,USD,Needs Analysis,open,22/02/2026,25
+562,Deal 0562 expansion,563,163,77994.00,INR,Proposal,open,23/02/2026,50
+563,Deal 0563 expansion,564,164,78131.00,INR,Closed Won,open,24/02/2026,100
+564,Deal 0564 expansion,565,165,78268.00,USD,Qualification,open,25/02/2026,10
+565,Deal 0565 expansion,566,166,78405.00,INR,Needs Analysis,open,26/02/2026,25
+566,Deal 0566 expansion,567,167,78542.00,INR,Proposal,open,27/02/2026,50
+567,Deal 0567 expansion,568,168,78679.00,USD,Closed Won,open,01/02/2026,100
+568,Deal 0568 expansion,569,169,78816.00,INR,Qualification,open,02/02/2026,10
+569,Deal 0569 expansion,570,170,78953.00,INR,Needs Analysis,open,03/02/2026,25
+570,Deal 0570 expansion,571,171,79090.00,USD,Proposal,open,04/02/2026,50
+571,Deal 0571 expansion,572,172,79227.00,INR,Closed Won,open,05/02/2026,100
+572,Deal 0572 expansion,573,173,79364.00,INR,Qualification,open,06/02/2026,10
+573,Deal 0573 expansion,574,174,79501.00,USD,Needs Analysis,open,07/02/2026,25
+574,Deal 0574 expansion,575,175,79638.00,INR,Proposal,open,08/02/2026,50
+575,Deal 0575 expansion,576,176,79775.00,INR,Closed Won,open,09/02/2026,100
+576,Deal 0576 expansion,577,177,79912.00,USD,Qualification,open,10/02/2026,10
+577,Deal 0577 expansion,578,178,80049.00,INR,Needs Analysis,open,11/02/2026,25
+578,Deal 0578 expansion,579,179,80186.00,INR,Proposal,open,12/02/2026,50
+579,Deal 0579 expansion,580,180,80323.00,USD,Closed Won,open,13/02/2026,100
+580,Deal 0580 expansion,581,181,80460.00,INR,Qualification,open,14/02/2026,10
+581,Deal 0581 expansion,582,182,80597.00,INR,Needs Analysis,open,15/02/2026,25
+582,Deal 0582 expansion,583,183,80734.00,USD,Proposal,open,16/02/2026,50
+583,Deal 0583 expansion,584,184,80871.00,INR,Closed Won,open,17/02/2026,100
+584,Deal 0584 expansion,585,185,81008.00,INR,Qualification,open,18/02/2026,10
+585,Deal 0585 expansion,586,186,81145.00,USD,Needs Analysis,open,19/02/2026,25
+586,Deal 0586 expansion,587,187,81282.00,INR,Proposal,open,20/02/2026,50
+587,Deal 0587 expansion,588,188,81419.00,INR,Closed Won,open,21/02/2026,100
+588,Deal 0588 expansion,589,189,81556.00,USD,Qualification,open,22/02/2026,10
+589,Deal 0589 expansion,590,190,81693.00,INR,Needs Analysis,open,23/02/2026,25
+590,Deal 0590 expansion,591,191,81830.00,INR,Proposal,open,24/02/2026,50
+591,Deal 0591 expansion,592,192,81967.00,USD,Closed Won,open,25/02/2026,100
+592,Deal 0592 expansion,593,193,82104.00,INR,Qualification,open,26/02/2026,10
+593,Deal 0593 expansion,594,194,82241.00,INR,Needs Analysis,open,27/02/2026,25
+594,Deal 0594 expansion,595,195,82378.00,USD,Proposal,open,01/02/2026,50
+595,Deal 0595 expansion,596,196,82515.00,INR,Closed Won,open,02/02/2026,100
+596,Deal 0596 expansion,597,197,82652.00,INR,Qualification,open,03/02/2026,10
+597,Deal 0597 expansion,598,198,82789.00,USD,Needs Analysis,open,04/02/2026,25
+598,Deal 0598 expansion,599,199,82926.00,INR,Proposal,open,05/02/2026,50
+599,Deal 0599 expansion,600,200,83063.00,INR,Closed Won,open,06/02/2026,100
+600,Deal 0600 expansion,601,1,83200.00,USD,Qualification,open,07/02/2026,10
+601,Deal 0601 expansion,602,2,83337.00,INR,Needs Analysis,open,08/02/2026,25
+602,Deal 0602 expansion,603,3,83474.00,INR,Proposal,open,09/02/2026,50
+603,Deal 0603 expansion,604,4,83611.00,USD,Closed Won,open,10/02/2026,100
+604,Deal 0604 expansion,605,5,83748.00,INR,Qualification,open,11/02/2026,10
+605,Deal 0605 expansion,606,6,83885.00,INR,Needs Analysis,open,12/02/2026,25
+606,Deal 0606 expansion,607,7,84022.00,USD,Proposal,open,13/02/2026,50
+607,Deal 0607 expansion,608,8,84159.00,INR,Closed Won,open,14/02/2026,100
+608,Deal 0608 expansion,609,9,84296.00,INR,Qualification,open,15/02/2026,10
+609,Deal 0609 expansion,610,10,84433.00,USD,Needs Analysis,open,16/02/2026,25
+610,Deal 0610 expansion,611,11,84570.00,INR,Proposal,open,17/02/2026,50
+611,Deal 0611 expansion,612,12,84707.00,INR,Closed Won,open,18/02/2026,100
+612,Deal 0612 expansion,613,13,84844.00,USD,Qualification,open,19/02/2026,10
+613,Deal 0613 expansion,614,14,84981.00,INR,Needs Analysis,open,20/02/2026,25
+614,Deal 0614 expansion,615,15,85118.00,INR,Proposal,open,21/02/2026,50
+615,Deal 0615 expansion,616,16,85255.00,USD,Closed Won,open,22/02/2026,100
+616,Deal 0616 expansion,617,17,85392.00,INR,Qualification,open,23/02/2026,10
+617,Deal 0617 expansion,618,18,85529.00,INR,Needs Analysis,open,24/02/2026,25
+618,Deal 0618 expansion,619,19,85666.00,USD,Proposal,open,25/02/2026,50
+619,Deal 0619 expansion,620,20,85803.00,INR,Closed Won,open,26/02/2026,100
+620,Deal 0620 expansion,621,21,85940.00,INR,Qualification,open,27/02/2026,10
+621,Deal 0621 expansion,622,22,86077.00,USD,Needs Analysis,open,01/02/2026,25
+622,Deal 0622 expansion,623,23,86214.00,INR,Proposal,open,02/02/2026,50
+623,Deal 0623 expansion,624,24,86351.00,INR,Closed Won,open,03/02/2026,100
+624,Deal 0624 expansion,625,25,86488.00,USD,Qualification,open,04/02/2026,10
+625,Deal 0625 expansion,626,26,86625.00,INR,Needs Analysis,open,05/02/2026,25
+626,Deal 0626 expansion,627,27,86762.00,INR,Proposal,open,06/02/2026,50
+627,Deal 0627 expansion,628,28,86899.00,USD,Closed Won,open,07/02/2026,100
+628,Deal 0628 expansion,629,29,87036.00,INR,Qualification,open,08/02/2026,10
+629,Deal 0629 expansion,630,30,87173.00,INR,Needs Analysis,open,09/02/2026,25
+630,Deal 0630 expansion,631,31,87310.00,USD,Proposal,open,10/02/2026,50
+631,Deal 0631 expansion,632,32,87447.00,INR,Closed Won,open,11/02/2026,100
+632,Deal 0632 expansion,633,33,87584.00,INR,Qualification,open,12/02/2026,10
+633,Deal 0633 expansion,634,34,87721.00,USD,Needs Analysis,open,13/02/2026,25
+634,Deal 0634 expansion,635,35,87858.00,INR,Proposal,open,14/02/2026,50
+635,Deal 0635 expansion,636,36,87995.00,INR,Closed Won,open,15/02/2026,100
+636,Deal 0636 expansion,637,37,88132.00,USD,Qualification,open,16/02/2026,10
+637,Deal 0637 expansion,638,38,88269.00,INR,Needs Analysis,open,17/02/2026,25
+638,Deal 0638 expansion,639,39,88406.00,INR,Proposal,open,18/02/2026,50
+639,Deal 0639 expansion,640,40,88543.00,USD,Closed Won,open,19/02/2026,100
+640,Deal 0640 expansion,641,41,88680.00,INR,Qualification,open,20/02/2026,10
+641,Deal 0641 expansion,642,42,88817.00,INR,Needs Analysis,open,21/02/2026,25
+642,Deal 0642 expansion,643,43,88954.00,USD,Proposal,open,22/02/2026,50
+643,Deal 0643 expansion,644,44,89091.00,INR,Closed Won,open,23/02/2026,100
+644,Deal 0644 expansion,645,45,89228.00,INR,Qualification,open,24/02/2026,10
+645,Deal 0645 expansion,646,46,89365.00,USD,Needs Analysis,open,25/02/2026,25
+646,Deal 0646 expansion,647,47,89502.00,INR,Proposal,open,26/02/2026,50
+647,Deal 0647 expansion,648,48,89639.00,INR,Closed Won,open,27/02/2026,100
+648,Deal 0648 expansion,649,49,89776.00,USD,Qualification,open,01/02/2026,10
+649,Deal 0649 expansion,650,50,89913.00,INR,Needs Analysis,open,02/02/2026,25
+650,Deal 0650 expansion,651,51,90050.00,INR,Proposal,open,03/02/2026,50
+651,Deal 0651 expansion,652,52,90187.00,USD,Closed Won,open,04/02/2026,100
+652,Deal 0652 expansion,653,53,90324.00,INR,Qualification,open,05/02/2026,10
+653,Deal 0653 expansion,654,54,90461.00,INR,Needs Analysis,open,06/02/2026,25
+654,Deal 0654 expansion,655,55,90598.00,USD,Proposal,open,07/02/2026,50
+655,Deal 0655 expansion,656,56,90735.00,INR,Closed Won,open,08/02/2026,100
+656,Deal 0656 expansion,657,57,90872.00,INR,Qualification,open,09/02/2026,10
+657,Deal 0657 expansion,658,58,1009.00,USD,Needs Analysis,open,10/02/2026,25
+658,Deal 0658 expansion,659,59,1146.00,INR,Proposal,open,11/02/2026,50
+659,Deal 0659 expansion,660,60,1283.00,INR,Closed Won,open,12/02/2026,100
+660,Deal 0660 expansion,661,61,1420.00,USD,Qualification,open,13/02/2026,10
+661,Deal 0661 expansion,662,62,1557.00,INR,Needs Analysis,open,14/02/2026,25
+662,Deal 0662 expansion,663,63,1694.00,INR,Proposal,open,15/02/2026,50
+663,Deal 0663 expansion,664,64,1831.00,USD,Closed Won,open,16/02/2026,100
+664,Deal 0664 expansion,665,65,1968.00,INR,Qualification,open,17/02/2026,10
+665,Deal 0665 expansion,666,66,2105.00,INR,Needs Analysis,open,18/02/2026,25
+666,Deal 0666 expansion,667,67,2242.00,USD,Proposal,open,19/02/2026,50
+667,Deal 0667 expansion,668,68,2379.00,INR,Closed Won,open,20/02/2026,100
+668,Deal 0668 expansion,669,69,2516.00,INR,Qualification,open,21/02/2026,10
+669,Deal 0669 expansion,670,70,2653.00,USD,Needs Analysis,open,22/02/2026,25
+670,Deal 0670 expansion,671,71,2790.00,INR,Proposal,open,23/02/2026,50
+671,Deal 0671 expansion,672,72,2927.00,INR,Closed Won,open,24/02/2026,100
+672,Deal 0672 expansion,673,73,3064.00,USD,Qualification,open,25/02/2026,10
+673,Deal 0673 expansion,674,74,3201.00,INR,Needs Analysis,open,26/02/2026,25
+674,Deal 0674 expansion,675,75,3338.00,INR,Proposal,open,27/02/2026,50
+675,Deal 0675 expansion,676,76,3475.00,USD,Closed Won,open,01/02/2026,100
+676,Deal 0676 expansion,677,77,3612.00,INR,Qualification,open,02/02/2026,10
+677,Deal 0677 expansion,678,78,3749.00,INR,Needs Analysis,open,03/02/2026,25
+678,Deal 0678 expansion,679,79,3886.00,USD,Proposal,open,04/02/2026,50
+679,Deal 0679 expansion,680,80,4023.00,INR,Closed Won,open,05/02/2026,100
+680,Deal 0680 expansion,681,81,4160.00,INR,Qualification,open,06/02/2026,10
+681,Deal 0681 expansion,682,82,4297.00,USD,Needs Analysis,open,07/02/2026,25
+682,Deal 0682 expansion,683,83,4434.00,INR,Proposal,open,08/02/2026,50
+683,Deal 0683 expansion,684,84,4571.00,INR,Closed Won,open,09/02/2026,100
+684,Deal 0684 expansion,685,85,4708.00,USD,Qualification,open,10/02/2026,10
+685,Deal 0685 expansion,686,86,4845.00,INR,Needs Analysis,open,11/02/2026,25
+686,Deal 0686 expansion,687,87,4982.00,INR,Proposal,open,12/02/2026,50
+687,Deal 0687 expansion,688,88,5119.00,USD,Closed Won,open,13/02/2026,100
+688,Deal 0688 expansion,689,89,5256.00,INR,Qualification,open,14/02/2026,10
+689,Deal 0689 expansion,690,90,5393.00,INR,Needs Analysis,open,15/02/2026,25
+690,Deal 0690 expansion,691,91,5530.00,USD,Proposal,open,16/02/2026,50
+691,Deal 0691 expansion,692,92,5667.00,INR,Closed Won,open,17/02/2026,100
+692,Deal 0692 expansion,693,93,5804.00,INR,Qualification,open,18/02/2026,10
+693,Deal 0693 expansion,694,94,5941.00,USD,Needs Analysis,open,19/02/2026,25
+694,Deal 0694 expansion,695,95,6078.00,INR,Proposal,open,20/02/2026,50
+695,Deal 0695 expansion,696,96,6215.00,INR,Closed Won,open,21/02/2026,100
+696,Deal 0696 expansion,697,97,6352.00,USD,Qualification,open,22/02/2026,10
+697,Deal 0697 expansion,698,98,6489.00,INR,Needs Analysis,open,23/02/2026,25
+698,Deal 0698 expansion,699,99,6626.00,INR,Proposal,open,24/02/2026,50
+699,Deal 0699 expansion,700,100,6763.00,USD,Closed Won,open,25/02/2026,100
+700,Deal 0700 expansion,701,101,6900.00,INR,Qualification,open,26/02/2026,10

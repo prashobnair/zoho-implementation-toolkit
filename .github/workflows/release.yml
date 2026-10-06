@@ -46,7 +46,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: astral-sh/setup-uv@v7
         if: steps.check-branch.outputs.exists == 'true'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: steps.check-branch.outputs.exists == 'true'
         with:
           python-version: "3.11"
@@ -75,7 +75,7 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
       - uses: astral-sh/setup-uv@v7
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - run: uv build

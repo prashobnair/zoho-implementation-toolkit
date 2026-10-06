@@ -22,9 +22,12 @@ dependencies = [
   "httpx>=0.27",
   "jinja2>=3.1",
   "keyring>=25.7.0",
+  "openpyxl>=3.1",
   "phonenumbers>=9.0",
   "pycountry>=23.0",
   "pydantic>=2.7",
+  "pyyaml>=6.0",
+  "rapidfuzz>=3.0",
   "rich>=13.7",
   "typer>=0.12",
 ]
@@ -87,7 +90,7 @@ warn_unused_ignores = true
 warn_return_any = true
 
 [[tool.mypy.overrides]]
-module = ["phonenumbers.*", "pycountry.*"]
+module = ["phonenumbers.*", "pycountry.*", "yaml.*", "openpyxl.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

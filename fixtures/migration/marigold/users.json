@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "email": "owner@example.invalid",
+      "status": "active"
+    },
+    {
+      "email": "former@example.invalid",
+      "status": "inactive"
+    }
+  ]
+}

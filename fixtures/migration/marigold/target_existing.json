@@ -1,0 +1,24 @@
+{
+  "Contacts": [
+    {
+      "Email": "returning@example.invalid",
+      "id": "145542300000000000"
+    },
+    {
+      "Email": "customer.a@example.invalid",
+      "id": "145542300000000001"
+    },
+    {
+      "Email": "customer.b@example.invalid",
+      "id": "145542300000000002"
+    },
+    {
+      "Email": "customer.c@example.invalid",
+      "id": "145542300000000003"
+    },
+    {
+      "Email": "customer.d@example.invalid",
+      "id": "145542300000000004"
+    }
+  ]
+}
