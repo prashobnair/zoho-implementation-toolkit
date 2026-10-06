@@ -119,7 +119,7 @@ def diff(
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,
@@ -238,7 +238,7 @@ def snapshot(
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
     ] = "json",
     live: LiveAfter = False,
     ai: AiAfter = False,
@@ -292,7 +292,7 @@ def drift(
     ] = ",".join(DEFAULT_SNAPSHOT_MODULES),
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
-        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit.")
+        str, typer.Option("--format", help="json|table|markdown|html|sarif|junit|xlsx.")
     ] = "json",
     out: Annotated[Path | None, typer.Option("--out", help="Write the report to a file.")] = None,
     live: LiveAfter = False,

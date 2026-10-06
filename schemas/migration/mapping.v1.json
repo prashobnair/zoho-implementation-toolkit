@@ -1,0 +1,212 @@
+{
+  "$defs": {
+    "EntityMapping": {
+      "description": "One source entity (file kind) mapped onto one target module.",
+      "properties": {
+        "external_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExternalId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fields": {
+          "additionalProperties": {
+            "$ref": "#/$defs/FieldMapping"
+          },
+          "title": "Fields",
+          "type": "object"
+        },
+        "history": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HistoryConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lookups": {
+          "additionalProperties": {
+            "$ref": "#/$defs/LookupMapping"
+          },
+          "title": "Lookups",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source_kind": {
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "stage_probabilities": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Stage Probabilities",
+          "type": "object"
+        },
+        "target_module": {
+          "title": "Target Module",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "source_kind",
+        "target_module",
+        "fields"
+      ],
+      "title": "EntityMapping",
+      "type": "object"
+    },
+    "ExternalId": {
+      "description": "Idempotency anchor: target External ID field fed by a source column.",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "from": {
+          "title": "From",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "from"
+      ],
+      "title": "ExternalId",
+      "type": "object"
+    },
+    "FieldMapping": {
+      "description": "One target field: source column, transforms, flags.",
+      "properties": {
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "pii": {
+          "default": false,
+          "title": "Pii",
+          "type": "boolean"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "transform": {
+          "items": {
+            "$ref": "#/$defs/TransformSpec"
+          },
+          "title": "Transform",
+          "type": "array"
+        }
+      },
+      "title": "FieldMapping",
+      "type": "object"
+    },
+    "HistoryConfig": {
+      "description": "Which activity/history types the target can hold (TK-MIG-F8).\n\nRows whose ``type_col`` value falls outside ``supported`` yield\n``history_type_unsupported`` warnings; the plan then carries them.",
+      "properties": {
+        "supported": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supported",
+          "type": "array"
+        },
+        "type_col": {
+          "title": "Type Col",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type_col"
+      ],
+      "title": "HistoryConfig",
+      "type": "object"
+    },
+    "LookupMapping": {
+      "description": "A target lookup resolved through another mapped entity.",
+      "properties": {
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "via": {
+          "title": "Via",
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity",
+        "via"
+      ],
+      "title": "LookupMapping",
+      "type": "object"
+    },
+    "TransformSpec": {
+      "description": "One parsed transform step: name plus validated string-keyed args.",
+      "properties": {
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "TransformSpec",
+      "type": "object"
+    }
+  },
+  "description": "A whole mapping file (``version: 1`` only, per fail-closed STD-P1).",
+  "properties": {
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/EntityMapping"
+      },
+      "title": "Entities",
+      "type": "array"
+    },
+    "source": {
+      "default": "generic",
+      "title": "Source",
+      "type": "string"
+    },
+    "version": {
+      "const": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "entities"
+  ],
+  "title": "MappingDoc",
+  "type": "object"
+}

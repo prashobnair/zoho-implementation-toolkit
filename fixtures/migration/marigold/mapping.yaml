@@ -1,0 +1,45 @@
+version: 1
+source: pipedrive
+entities:
+  - name: people
+    source_kind: persons
+    target_module: Contacts
+    fields:
+      Last_Name: {from: Name, transform: [trim], required: true}
+      Email: {from: Email, transform: [trim, casefold], pii: true}
+      Phone: {from: Phone, transform: [trim, e164(region=IN)]}
+      Lead_Source:
+        {from: Source, transform: [{map: {values: {web: Web, referral: Referral, pigeon: Pigeon}}}]}
+      Owner: {from: OwnerEmail}
+      id: {from: ID}
+      Nickname: {from: Nickname}
+      Mystery: {from: Source}
+    external_id: {field: External_ID__s, from: ID}
+  - name: companies
+    source_kind: organizations
+    target_module: Accounts
+    fields:
+      Account_Name: {from: Name, transform: [trim], required: true}
+    external_id: {field: External_ID__s, from: ID}
+  - name: deals
+    source_kind: deals
+    target_module: Deals
+    fields:
+      Deal_Name: {from: Title, transform: [trim], required: true}
+      Amount: {from: Value, transform: [money(currency_col=Currency)]}
+      Stage: {from: Stage, transform: [trim], required: true}
+      Closing_Date: {from: Expected_Close, transform: [date(format="%d/%m/%Y")]}
+      Probability: {from: Prob}
+      Account_Name: {from: Organization ID}
+    external_id: {field: External_ID__s, from: ID}
+    stage_probabilities:
+      {Qualification: 10.0, Needs Analysis: 25.0, Proposal: 50.0, Closed Won: 100.0}
+  - name: activities
+    source_kind: activities
+    target_module: Calls
+    fields:
+      Subject: {from: Subject, transform: [trim], required: true}
+    external_id: {field: External_ID__s, from: ID}
+    lookups:
+      Call_For: {entity: deals, via: Deal ID}
+    history: {type_col: Type, supported: [Call, Meeting, Task]}
