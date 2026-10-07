@@ -160,6 +160,10 @@ class Report(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
     artifacts: dict[str, str] = Field(default_factory=dict)
     side_effects: SideEffects = Field(default_factory=SideEffects)
+    #: Reachable causal trace for one simulation (workflow only, TK-WF-F2).
+    simulation: dict[str, Any] | None = Field(default=None)
+    #: Rule/branch coverage for one scenario run (workflow only, TK-WF-F6).
+    coverage: dict[str, Any] | None = Field(default=None)
 
     @classmethod
     def build(
@@ -176,6 +180,8 @@ class Report(BaseModel):
         inputs_sha256: str = "",
         artifacts: dict[str, str] | None = None,
         side_effects: SideEffects | None = None,
+        simulation: dict[str, Any] | None = None,
+        coverage: dict[str, Any] | None = None,
     ) -> Report:
         """Build a report with findings sorted and the summary derived."""
         ordered = sort_findings(findings)
@@ -199,4 +205,6 @@ class Report(BaseModel):
             findings=ordered,
             artifacts=artifacts or {},
             side_effects=side_effects or SideEffects(),
+            simulation=simulation,
+            coverage=coverage,
         )

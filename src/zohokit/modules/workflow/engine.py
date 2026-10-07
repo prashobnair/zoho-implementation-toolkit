@@ -120,6 +120,15 @@ def _entity_id(item: dict[str, Any]) -> str:
     return str(item["code"])
 
 
+def _v2_chain(item: dict[str, Any]) -> list[str]:
+    """Rule IDs of the steps behind a cycle/step-limit finding, in order."""
+    chain = [str(rule_id) for rule_id in item.get("rules", []) if str(rule_id)]
+    if chain:
+        return chain
+    single = str(item.get("rule", ""))
+    return [single] if single else []
+
+
 def _v2_entity(item: dict[str, Any], record_id: str) -> tuple[str, str, str]:
     """Stable (entity, entity_id, discriminator) for one v2 sim finding."""
     code = str(item["code"])
@@ -137,9 +146,14 @@ def _v2_entity(item: dict[str, Any], record_id: str) -> tuple[str, str, str]:
                 ]
             ),
         )
+    chain = _v2_chain(item)
     if code == "step_limit":
-        return ("trace", str(item.get("rule", "trace")), "step-limit")
-    return ("trace", str(item.get("rule", "") or "cycle"), "cycle")
+        if not chain:
+            return ("trace", str(item.get("rule", "trace")), "step-limit")
+        return ("trace", min(chain), "step-limit\0" + "\0".join(chain))
+    if not chain:
+        return ("trace", str(item.get("rule", "") or "cycle"), "cycle")
+    return ("trace", min(chain), "cycle\0" + "\0".join(chain))
 
 
 def _v2_message(item: dict[str, Any]) -> str:
@@ -149,9 +163,14 @@ def _v2_message(item: dict[str, Any]) -> str:
             f"Simulated {item.get('action', 'action')} for rule {item.get('rule', '')} "
             f"would duplicate within day {item.get('day', 0)}; dropped."
         )
+    chain = _v2_chain(item)
     if code == "step_limit":
-        return f"Simulation exceeded the step budget (rule {item.get('rule', '')})."
-    return "Simulation revisited a state signature; stopped to avoid a loop."
+        if not chain:
+            return f"Simulation exceeded the step budget (rule {item.get('rule', '')})."
+        return "Simulation exceeded the step budget (rules " + " -> ".join(chain) + ")."
+    if not chain:
+        return "Simulation revisited a state signature; stopped to avoid a loop."
+    return "Simulation revisited a state signature via " + " -> ".join(chain) + "; stopped."
 
 
 _V2_SEVERITY: dict[str, Severity] = {
