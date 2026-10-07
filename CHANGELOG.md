@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.3.0...v0.4.0) (2026-10-07)
+
+
+### Features
+
+* **books:** month-end reconciliation v2, finance workbook and controller narrative ([#54](https://github.com/prashobnair/zoho-implementation-toolkit/issues/54)) ([ef3b23d](https://github.com/prashobnair/zoho-implementation-toolkit/commit/ef3b23d5669deba6dbed3bb36e7fe674285d29b4))
+* **workflow:** language v2, simulator, static lint, rule test suites and AI drafts ([#51](https://github.com/prashobnair/zoho-implementation-toolkit/issues/51)) ([8a06e07](https://github.com/prashobnair/zoho-implementation-toolkit/commit/8a06e074d9c64900ff0db1d31814a4e71378e855))
+
 ## [0.3.0](https://github.com/prashobnair/zoho-implementation-toolkit/compare/v0.2.1...v0.3.0) (2026-10-06)
 
 
