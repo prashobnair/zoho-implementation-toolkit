@@ -12,6 +12,8 @@ import typer
 
 from zohokit.cli.common import (
     AiAfter,
+    AiAllowPiiAfter,
+    AiMaxTokensAfter,
     BaselineAfter,
     LiveAfter,
     MaxApiCallsAfter,
@@ -23,6 +25,8 @@ from zohokit.cli.common import (
     load_input,
     parse_model,
     reject_future_flags,
+    reject_unsupported_live,
+    resolve_ai_runtime,
     resolve_runtime,
 )
 from zohokit.modules.books.engine import run
@@ -209,7 +213,74 @@ def reconcile(
         fail(str(exc))
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
+    if runtime.format_name == "xlsx":
+        from zohokit.cli.exitcodes import resolve
+        from zohokit.modules.books.workbook import render_books_workbook
+
+        if runtime.out is None:
+            fail("xlsx output needs --out (workbooks cannot print to stdout)")
+        runtime.out.write_bytes(render_books_workbook(report))
+        typer.echo(f"Wrote {runtime.out}")
+        raise typer.Exit(code=int(resolve(report, strict=runtime.strict)))
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
+
+
+@app.command(name="explain")
+def explain_cmd(
+    report_path: Annotated[Path, typer.Argument(help="Recon report JSON to narrate.")],
+    format_name: Annotated[str, typer.Option("--format", help="json|table|markdown.")] = "json",
+    out: Annotated[Path | None, typer.Option("--out", help="Write to a file.")] = None,
+    ai: AiAfter = False,
+    ai_allow_pii: AiAllowPiiAfter = False,
+    ai_max_tokens: AiMaxTokensAfter = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
+) -> None:
+    """Narrate a recon report for the controller (template, or AI with --ai)."""
+    import json as _json
+
+    from zohokit.core.findings import Report as _Report
+    from zohokit.modules.books.explain import (
+        render_books_markdown,
+        render_books_table,
+        run_books_explain,
+    )
+
+    reject_unsupported_live("books explain", live, profile, max_api_calls)
+    if baseline is not None:
+        fail("explain takes no --baseline (it reads one report, it suppresses none)")
+    runtime = resolve_ai_runtime(ai=ai, allow_pii=ai_allow_pii, max_tokens=ai_max_tokens)
+    try:
+        raw = _json.loads(report_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        fail(f"cannot read {report_path}: {exc}")
+    except ValueError:
+        fail(f"{report_path} is not valid JSON")
+    try:
+        report = _Report.model_validate(raw)
+    except ValueError:
+        fail(f"{report_path} is not a zohokit report envelope")
+    result = run_books_explain(
+        report,
+        provider=runtime.provider,
+        allow_pii=runtime.allow_pii,
+        budget_tokens=runtime.max_tokens,
+    )
+    if format_name == "json":
+        text = result.model_dump_json(indent=2) + "\n"
+    elif format_name == "table":
+        text = render_books_table(result)
+    elif format_name == "markdown":
+        text = render_books_markdown(result)
+    else:
+        fail(f"unsupported --format {format_name!r} (json|table|markdown)")
+    if out is None:
+        typer.echo(text)
+    else:
+        out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+        typer.echo(f"Wrote {out}")
 
 
 __all__: list[str] = ["app"]

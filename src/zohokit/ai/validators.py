@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 
 _NUMBER_RE = re.compile(r"\d[\d,]*(?:\.\d+)?")
 _ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?\b")
@@ -342,14 +343,133 @@ def check_grounded(
     return GroundingCheck(ok=not errors, errors=tuple(errors))
 
 
+# --- STD-AI7: finance money figures (Indian notation) --------------------------
+#
+# Controller narratives restate report amounts with scale suffixes:
+# ``₹4.2L`` / ``4.2 lakh`` = 420000, ``1.5 Cr`` / ``crore`` = 15000000,
+# ``$1.2k`` = 1200, ``1.2M`` = 1200000. A stated figure is accepted only
+# when some report figure equals it after rounding to the narrative's own
+# stated precision (``|report - stated| <= precision / 2`` with Decimal):
+# ``₹4.2L`` (precision 10000) accepts 421234 but not 428000, and
+# ``₹4.20L`` (precision 1000) rejects 421234 as over-precise. Plain
+# numbers without a currency symbol or scale suffix stay on the exact
+# token path above, so existing features are unaffected.
+
+_SUFFIX_MULTIPLIERS: dict[str, Decimal] = {
+    "l": Decimal(100000),
+    "lakh": Decimal(100000),
+    "lakhs": Decimal(100000),
+    "cr": Decimal(10000000),
+    "crore": Decimal(10000000),
+    "crores": Decimal(10000000),
+    "k": Decimal(1000),
+    "m": Decimal(1000000),
+    "million": Decimal(1000000),
+    "millions": Decimal(1000000),
+}
+
+_MONEY_SUFFIXED_RE = re.compile(
+    r"(?:₹|\$|Rs\.?|INR|USD)?\s*(\d[\d,]*(?:\.\d+)?)\s*"
+    r"(l|lakh|lakhs|cr|crore|crores|k|m|million|millions)\b",
+    re.IGNORECASE,
+)
+_MONEY_SYMBOL_RE = re.compile(
+    r"(?:₹|\$|Rs\.?|INR|USD)\s*(\d[\d,]*(?:\.\d+)?)\b",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class MoneyFigure:
+    """One stated or reported amount: value plus stated precision."""
+
+    value: Decimal
+    precision: Decimal
+
+
+def _money_figure(mantissa: str, suffix: str | None) -> MoneyFigure | None:
+    """Build a figure from a mantissa and an optional scale suffix."""
+    try:
+        mantissa_value = Decimal(mantissa.replace(",", ""))
+    except InvalidOperation:
+        return None
+    multiplier = Decimal(1)
+    if suffix is not None:
+        multiplier = _SUFFIX_MULTIPLIERS[suffix.casefold()]
+    places = mantissa.split(".")[1] if "." in mantissa else ""
+    precision = (Decimal(1) / (Decimal(10) ** len(places)) if places else Decimal(1)) * multiplier
+    return MoneyFigure(value=mantissa_value * multiplier, precision=precision)
+
+
+def extract_money_figures(text: str) -> tuple[list[MoneyFigure], list[tuple[int, int]]]:
+    """Suffixed/symbol money figures in *text* plus their spans.
+
+    Only figures with a currency symbol or a scale suffix count here;
+    plain numbers stay on the exact token path. Returns the figures and
+    the character spans they occupy (so callers can blank them before
+    the plain-number check — ``4.2`` inside ``₹4.2L`` is not a report
+    token on its own).
+    """
+    figures: list[MoneyFigure] = []
+    spans: list[tuple[int, int]] = []
+    for match in _MONEY_SUFFIXED_RE.finditer(text):
+        figure = _money_figure(match.group(1), match.group(2))
+        if figure is not None:
+            figures.append(figure)
+            spans.append((match.start(), match.end()))
+    covered = list(spans)
+    for match in _MONEY_SYMBOL_RE.finditer(text):
+        if any(start <= match.start() and match.end() <= end for start, end in covered):
+            continue
+        figure = _money_figure(match.group(1), None)
+        if figure is not None:
+            figures.append(figure)
+            spans.append((match.start(), match.end()))
+    return figures, spans
+
+
+def strip_money_figures(text: str) -> str:
+    """Blank money-figure spans so the plain-number check skips them."""
+    chars = list(text)
+    _, spans = extract_money_figures(text)
+    for start, end in spans:
+        for index in range(start, end):
+            chars[index] = " "
+    return "".join(chars)
+
+
+def check_money_grounded(
+    *,
+    narrative: str,
+    allowed: list[MoneyFigure],
+) -> GroundingCheck:
+    """Verify every money figure in *narrative* against *allowed* amounts.
+
+    A figure passes only when some report amount rounds to it at its own
+    stated precision (``|report - stated| <= precision / 2``). Errors name
+    the offending figure index only, never values.
+    """
+    errors: list[str] = []
+    figures, _ = extract_money_figures(narrative)
+    for index, figure in enumerate(figures):
+        half = figure.precision / Decimal(2)
+        if not any(abs(entry.value - figure.value) <= half for entry in allowed):
+            errors.append(f"money figure #{index} not present in report at its precision")
+    return GroundingCheck(ok=not errors, errors=tuple(errors))
+
+
 __all__: list[str] = [
     "CitationCheck",
     "GroundingCheck",
+    "MoneyFigure",
     "NumberDateSets",
     "check_citations",
     "check_grounded",
+    "check_money_grounded",
     "extract_dates",
+    "extract_money_figures",
     "extract_number_words",
     "extract_numbers",
     "extract_report_tokens",
+    "strip_money_figures",
 ]

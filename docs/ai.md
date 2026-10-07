@@ -26,15 +26,20 @@ suggestion carries its source, model and prompt version for review.
   or date is checked against the report. Spelled-out counts are
   converted to digits first ("six errors" is accepted against 6;
   "seven errors" is rejected there), so wording a hallucinated count
-  out in words cannot bypass the check. A mismatch falls back to the
+  out in words cannot bypass the check. Finance narratives may restate
+  amounts in Indian notation (`₹4.2L`/`4.2 lakh` = 420000,
+  `1.5 Cr`/`crore` = 15000000, `$1.2k`, `1.2M`); a figure is accepted
+  only when it equals a report amount at its own stated precision
+  (`₹4.2L` accepts 421234 but not 428000; `₹4.20L` rejects 421234 as
+  over-precise). A mismatch falls back to the
   deterministic template.
 - **Draft action targets (STD-AI10).** A drafted workflow rule acts
-  only on literals the description mentions: every webhook `url`,
-  email `template` and `assign_owner` `owner` must appear in the
-  description as a case-insensitive, separator-insensitive substring
-  (`regional-manager` matches `regional manager`; for URLs the host
-  counts as well, so `example.invalid` grounds
-  `https://example.invalid/hooks/billing`), or match a
+  only on literals the description mentions: every webhook `url` must
+  appear in full or as a same-scheme dotted host (`http://` never
+  grounds on an `https://` mention; a dotless host like `billing` never
+  grounds on a bare word), and every email `template` / `assign_owner`
+  `owner` must match whole whitespace tokens (`own` is not `owner`;
+  `won` is not `closed-won`), or match a
   caller-supplied allowlist entry (`--allow-targets FILE`, a JSON
   list of exact strings). Anything else is a prompt-injection
   attempt: the draft is rejected with

@@ -63,6 +63,27 @@ Entity maps keep raw Books org IDs in the local profile only; reports show
 `sha256:` fingerprints. An exact-match FX table converts cross-currency
 amounts with `Decimal` (missing rate → `fx_rate_missing`, never guessed).
 
+## Finance workbook
+
+`--format xlsx` on a v2 recon writes the sign-off workbook (seven tabs:
+Matched / Mismatched / Missing invoice / Orphan invoice / Needs review /
+FX / Sign-off). Amount columns carry real `=SUM(...)` totals formulas so
+finance can audit the arithmetic; every other cell is literal text
+(data starting with `=`, `+`, `-`, `@`, tab or CR is stored guarded,
+never as a formula — only the toolkit's own totals may be formulas).
+Headers are frozen and the sign-off sheet's preparer, reviewer and date
+stay blank for the human gate.
+
+## Controller narrative
+
+`zohokit books explain <report.json> [--ai]` narrates the recon for the
+controller ("3 deals (₹4.2L) missing invoices; 1 invoice in wrong
+entity…"). With `--ai` every figure is verified against the report —
+Indian-notation amounts only at their stated precision, and every
+error-severity finding's entity cited — or the deterministic template
+runs instead. Without a provider the tool prints `AI disabled` and the
+template runs (`source: "template"`).
+
 ## Finding codes
 
 | Code | Severity | Meaning |
