@@ -180,7 +180,7 @@ def simulate_v2(
                 rule_id=rule.id,
             )
 
-    visited: set[str] = set()
+    visited: dict[str, int] = {}
     fired_once: set[str] = set()
     steps = 0
     step_no = 0
@@ -203,9 +203,16 @@ def simulate_v2(
             }
         )
         if signature in visited:
-            findings.append({"code": "cycle_detected", "rule": str(event.get("rule_id", ""))})
+            chain = [str(step["rule"]) for step in trace[visited[signature] :]]
+            findings.append(
+                {
+                    "code": "cycle_detected",
+                    "rule": min(chain) if chain else "",
+                    "rules": chain,
+                }
+            )
             break
-        visited.add(signature)
+        visited[signature] = len(trace)
         changed = set(str(name) for name in event.get("fields_changed", []))
         candidates = rules
         if event.get("rule_id"):
@@ -225,7 +232,8 @@ def simulate_v2(
             for action in rule.actions:
                 steps += 1
                 if steps > max_steps:
-                    findings.append({"code": "step_limit", "rule": rule.id})
+                    chain = [str(step["rule"]) for step in trace] + [rule.id]
+                    findings.append({"code": "step_limit", "rule": min(chain), "rules": chain})
                     pending.clear()
                     break
                 step_no += 1

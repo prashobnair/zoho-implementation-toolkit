@@ -3,8 +3,9 @@
 Findings are keyed on stable entity IDs (rule IDs, ``Module.field``
 names) — never positions — and the report carries the ID-uniqueness
 invariant. Loop detection builds the write-graph (rule -> written
-fields -> rules triggered by edits of those fields) and reports cycles
-with their paths.
+fields -> rules triggered by edits of those fields) and reports one
+finding per strongly connected rule group with its member rules and a
+representative cycle path.
 """
 
 from __future__ import annotations
@@ -59,16 +60,22 @@ def _trigger_key(rule: Any) -> tuple[str, str, str]:
 
 
 def conflicting_field_updates(ruleset: RulesetV2) -> list[Finding]:
-    """Two active rules, same trigger, same field, different values."""
+    """Two active rules, same trigger, same field, different values.
+
+    Assigning an owner counts as writing ``Owner``, so two rules on one
+    trigger assigning different owners conflict.
+    """
     by_key: dict[tuple[str, str, str, str], dict[str, list[str]]] = {}
     for rule in ruleset.rules:
         if not rule.active:
             continue
         for action in rule.actions:
-            if action.type != "field_update" or not action.field:
-                continue
-            key = (*_trigger_key(rule), action.field)
-            by_key.setdefault(key, {}).setdefault(repr(action.value), []).append(rule.id)
+            if action.type == "field_update" and action.field:
+                key = (*_trigger_key(rule), action.field)
+                by_key.setdefault(key, {}).setdefault(repr(action.value), []).append(rule.id)
+            elif action.type == "assign_owner":
+                key = (*_trigger_key(rule), "Owner")
+                by_key.setdefault(key, {}).setdefault(repr(action.owner), []).append(rule.id)
     findings: list[Finding] = []
     for (module, _event, _on, field_name), by_value in sorted(by_key.items()):
         if len(by_value) < 2:
@@ -93,6 +100,83 @@ def conflicting_field_updates(ruleset: RulesetV2) -> list[Finding]:
     return findings
 
 
+def _strongly_connected(edges: dict[str, set[str]]) -> list[set[str]]:
+    """Tarjan SCCs, iterative (linear time; never enumerates cycles).
+
+    Nodes and successors are visited in sorted order so the returned
+    components are deterministic across runs.
+    """
+    index_of: dict[str, int] = {}
+    lowlink: dict[str, int] = {}
+    on_stack: set[str] = set()
+    stack: list[str] = []
+    components: list[set[str]] = []
+    counter = 0
+    for root in sorted(edges):
+        if root in index_of:
+            continue
+        work: list[tuple[str, int]] = [(root, 0)]
+        while work:
+            node, child_pos = work[-1]
+            if child_pos == 0:
+                index_of[node] = counter
+                lowlink[node] = counter
+                counter += 1
+                stack.append(node)
+                on_stack.add(node)
+            successors = sorted(edges.get(node, ()))
+            descended = False
+            for pos in range(child_pos, len(successors)):
+                target = successors[pos]
+                if target not in index_of:
+                    work[-1] = (node, pos + 1)
+                    work.append((target, 0))
+                    descended = True
+                    break
+                if target in on_stack and index_of[target] < lowlink[node]:
+                    lowlink[node] = index_of[target]
+            if descended:
+                continue
+            work.pop()
+            if work:
+                parent = work[-1][0]
+                if lowlink[node] < lowlink[parent]:
+                    lowlink[parent] = lowlink[node]
+            if lowlink[node] == index_of[node]:
+                component: set[str] = set()
+                while True:
+                    member = stack.pop()
+                    on_stack.discard(member)
+                    component.add(member)
+                    if member == node:
+                        break
+                components.append(component)
+    return components
+
+
+def _shortest_cycle(start: str, edges: dict[str, set[str]]) -> list[str]:
+    """Shortest directed cycle starting and ending at *start* (BFS)."""
+    if start in edges.get(start, ()):
+        return [start, start]
+    from collections import deque
+
+    parent: dict[str, str] = {start: ""}
+    queue: deque[str] = deque([start])
+    while queue:
+        node = queue.popleft()
+        for target in sorted(edges.get(node, ())):
+            if target == start:
+                path = [node]
+                while path[-1] != start:
+                    path.append(parent[path[-1]])
+                path.reverse()
+                return [*path, start]
+            if target not in parent:
+                parent[target] = node
+                queue.append(target)
+    return [start, start]  # pragma: no cover - SCC members always cycle back
+
+
 def potential_loops(ruleset: RulesetV2) -> list[Finding]:
     """Cycles in the rule -> written fields -> edit-triggered rules graph."""
     active = [rule for rule in ruleset.rules if rule.active]
@@ -109,35 +193,26 @@ def potential_loops(ruleset: RulesetV2) -> list[Finding]:
                 edges[source.id].add(target.id)
     # record_edited self-edge only counts when the rule writes (it does here).
     findings: list[Finding] = []
-    seen: set[str] = set()
-    ordered = sorted(edges)
-    for start in ordered:
-        stack: list[list[str]] = [[start]]
-        while stack:
-            path = stack.pop()
-            for nxt in sorted(edges.get(path[-1], ())):
-                if nxt == start and len(path) >= 1:
-                    cycle = [*path, start]
-                    key = "\0".join(sorted(set(cycle)))
-                    if key not in seen:
-                        seen.add(key)
-                        first = sorted(set(cycle))[0]
-                        findings.append(
-                            Finding.create(
-                                module="workflow",
-                                code="potential_loop",
-                                severity=Severity.ERROR,
-                                entity="rule",
-                                entity_id=first,
-                                message=("Field-update chain can re-fire: " + " -> ".join(cycle)),
-                                evidence={"path": cycle},
-                                remediation="Gate one link with criteria or consolidate the rules.",
-                                discriminator="loop\0" + "\0".join(sorted(set(cycle))),
-                            )
-                        )
-                elif nxt not in path:
-                    stack.append([*path, nxt])
-    return sorted(findings, key=lambda item: item.id)
+    for component in _strongly_connected(edges):
+        members = sorted(component)
+        if len(members) == 1 and members[0] not in edges.get(members[0], ()):
+            continue
+        first = members[0]
+        path = _shortest_cycle(first, edges)
+        findings.append(
+            Finding.create(
+                module="workflow",
+                code="potential_loop",
+                severity=Severity.ERROR,
+                entity="rule",
+                entity_id=first,
+                message=("Field-update chain can re-fire: " + " -> ".join(path)),
+                evidence={"rules": members, "path": path},
+                remediation="Gate one link with criteria or consolidate the rules.",
+                discriminator="loop\0" + "\0".join(members),
+            )
+        )
+    return sorted(findings, key=lambda item: item.entity_id)
 
 
 def stale_field_references(ruleset: RulesetV2, metadata: dict[str, set[str]]) -> list[Finding]:

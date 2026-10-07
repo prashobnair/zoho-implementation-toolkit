@@ -70,7 +70,8 @@ def lint_cmd(
         Path | None, typer.Option("--actions", help="JSON action maps for real-shaped rules.")
     ] = None,
     metadata: Annotated[
-        Path | None, typer.Option("--metadata", help="JSON {module: [field api_names]}.")
+        Path | None,
+        typer.Option("--metadata", help="JSON {module: \\[field api_names]}."),
     ] = None,
     module: Annotated[str, typer.Option("--module", help="Module for live reads.")] = "Deals",
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when findings remain.")] = False,
@@ -234,7 +235,7 @@ def test_cmd(
     from zohokit.core.context import RunContext
     from zohokit.core.findings import Report
     from zohokit.core.ids import canonical_json
-    from zohokit.modules.workflow.scenario import run_directory, suite_findings
+    from zohokit.modules.workflow.scenario import coverage_block, run_directory, suite_findings
 
     reject_unsupported_live("workflow", live, profile, max_api_calls)
     reject_future_flags(ai, baseline)
@@ -265,6 +266,7 @@ def test_cmd(
         ready=not [item for item in findings if item.code == "scenario_case_failed"],
         mode=ctx.mode,
         inputs_sha256=digest,
+        coverage=coverage_block(suites),
     )
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)

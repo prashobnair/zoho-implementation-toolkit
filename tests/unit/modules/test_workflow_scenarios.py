@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from zohokit.modules.workflow.scenario import run_directory, run_suite, suite_findings
+from zohokit.modules.workflow.scenario import (
+    coverage_block,
+    run_directory,
+    run_suite,
+    suite_findings,
+)
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MARIGOLD = ROOT / "scenarios" / "marigold-labs" / "rules"
@@ -104,3 +109,64 @@ def test_missing_directory_is_input_error(tmp_path: Path) -> None:
 def test_empty_directory_is_input_error(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="no scenario files"):
         run_directory(tmp_path)
+
+
+def test_coverage_block_carries_numbers_per_suite() -> None:
+    """The JSON report coverage block: rules/branches covered/total + suites."""
+    suites = run_directory(MARIGOLD)
+    block = coverage_block(suites)
+    assert block["rules"] == {"covered": 5, "total": 5}
+    assert block["branches"] == {"covered": 5, "total": 5}
+    assert len(block["suites"]) == 1
+    entry = block["suites"][0]
+    assert entry["file"] == "deal_lifecycle.yaml"
+    assert len(entry["cases"]) == 10
+    assert all(case["passed"] for case in entry["cases"])
+    assert entry["rules"] == {
+        "covered": [
+            "ml-assign-owner",
+            "ml-close-notify",
+            "ml-high-value",
+            "ml-negotiation-task",
+            "ml-qualify",
+        ],
+        "uncovered": [],
+        "total": 5,
+    }
+    assert entry["branches"] == {
+        "covered": [
+            "ml-assign-owner",
+            "ml-close-notify",
+            "ml-high-value",
+            "ml-negotiation-task",
+            "ml-qualify",
+        ],
+        "total": 5,
+    }
+
+
+def test_mismatch_details_carry_expected_and_actual(tmp_path: Path) -> None:
+    """JUnit details name the field with expected/actual values."""
+    target = tmp_path / "state.yaml"
+    target.write_text(
+        "version: 1\nrules:\n"
+        "  - id: r-state\n"
+        "    event: {type: record_created}\n"
+        "    actions:\n"
+        "      - {type: assign_owner, owner: x}\n"
+        "cases:\n"
+        "  - name: wrong-owner\n"
+        "    given:\n"
+        "      record: {id: z}\n"
+        "      event: record_created\n"
+        "    then:\n"
+        "      state: {Owner: somebody-else}\n",
+        encoding="utf-8",
+    )
+    suite = run_suite(target)
+    assert not suite.passed
+    assert suite.cases[0].failures == ("state field Owner differs",)
+    assert suite.cases[0].details == ("state field Owner: expected 'somebody-else', got 'x'",)
+    findings = suite_findings(suite)
+    assert [finding.code for finding in findings] == ["scenario_case_failed"]
+    assert findings[0].evidence == {"failures": ["state field Owner differs"]}

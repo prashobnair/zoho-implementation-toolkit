@@ -53,14 +53,14 @@ simulator; rules that never fire become `uncovered_rule` info findings.
 
 | Code | Severity | Meaning |
 |---|---|---|
-| `cycle_detected` | error | The trace revisited a state signature; simulation stopped. |
-| `step_limit` | error | The rule trace exceeded the step budget. |
+| `cycle_detected` | error | The trace revisited a state signature; the rule chain is reported and simulation stopped. |
+| `step_limit` | error | The rule trace exceeded the step budget; the rule chain is reported. |
 | `missing_owner` | error | An assign-owner action has no usable owner value. |
 | `no_op_stage` | error | A set-stage action targets the stage already set. |
 | `duplicate_followup` | error | The same follow-up would fire twice for one record. |
 | `duplicate_side_effect` | error | A simulated call would repeat for one record, action, template/url and day. |
-| `conflicting_field_updates` | error | Two rules on the same trigger update one field differently. |
-| `potential_loop` | error | A write chain can re-fire; the path is reported. |
+| `conflicting_field_updates` | error | Two rules on the same trigger update one field differently (assigning owners counts as writing `Owner`). |
+| `potential_loop` | error | Rules write fields that re-trigger each other; one finding per rule group with the member rules and a representative path. |
 | `stale_field_reference` | error | A rule references a field absent from the metadata. |
 | `empty_rule` | warning | A rule has no actions. |
 | `dead_rule` | warning | An inactive rule never fires. |

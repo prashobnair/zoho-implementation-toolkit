@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_workflow_simulate_v2_trace_snapshot
+  dict({
+    'days_elapsed': 2,
+    'external_actions': 0,
+    'ledger': list([
+      dict({
+        'action': 'create_task',
+        'day': 2,
+        'duplicate': 0,
+        'record_id': 'd-2',
+        'rule_id': 'followup',
+        'template_or_url': 'Follow up',
+      }),
+    ]),
+    'trace': list([
+      dict({
+        'action': 'field_update',
+        'caused_by': 'e0',
+        'day': 0,
+        'fields_changed': list([
+          'Stage',
+        ]),
+        'rule': 'promote',
+        'step': 's1',
+      }),
+      dict({
+        'action': 'create_task',
+        'caused_by': 'e3',
+        'day': 2,
+        'fields_changed': list([
+        ]),
+        'rule': 'followup',
+        'step': 's2',
+      }),
+    ]),
+  })
+# ---

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from syrupy.assertion import SnapshotAssertion
 from typer.testing import CliRunner
 
 from zohokit import __version__
@@ -84,6 +85,125 @@ def test_workflow_simulate_markdown() -> None:
     )
     assert result.exit_code == 0
     assert result.output.startswith("# zohokit workflow report")
+
+
+def test_workflow_simulate_v2_trace_snapshot(tmp_path: Path, snapshot: SnapshotAssertion) -> None:
+    """A v2 rule set simulates through the CLI with a snapshot trace (TK-WF-F2)."""
+    fixture = tmp_path / "rules.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "rules": [
+                    {
+                        "id": "promote",
+                        "event": {"type": "record_created"},
+                        "priority": 1,
+                        "actions": [
+                            {"type": "field_update", "field": "Stage", "value": "Negotiation"}
+                        ],
+                    },
+                    {
+                        "id": "followup",
+                        "event": {"type": "stage_changed", "field": "Stage"},
+                        "priority": 2,
+                        "criteria": {"field": "Stage", "op": "changed_to", "value": "Negotiation"},
+                        "actions": [{"type": "create_task", "value": "Follow up", "delay_days": 2}],
+                    },
+                ],
+                "record": {"id": "d-2", "Stage": "Proposal"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["workflow", "simulate", str(fixture)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert set(payload["simulation"]) == {"trace", "ledger", "external_actions", "days_elapsed"}
+    assert payload["simulation"]["external_actions"] == 0
+    assert payload["simulation"] == snapshot
+
+
+MARIGOLD_RULES = str(ROOT / "scenarios" / "marigold-labs" / "rules")
+
+
+def test_workflow_test_json_carries_coverage(tmp_path: Path) -> None:
+    """The scenario JSON report carries the coverage block (TK-WF-F6)."""
+    out = tmp_path / "report.json"
+    result = runner.invoke(app, ["workflow", "test", MARIGOLD_RULES, "--out", str(out)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["coverage"]["rules"] == {"covered": 5, "total": 5}
+    assert payload["coverage"]["branches"] == {"covered": 5, "total": 5}
+    suites = payload["coverage"]["suites"]
+    assert [entry["file"] for entry in suites] == ["deal_lifecycle.yaml"]
+    assert len(suites[0]["cases"]) == 10
+
+
+def test_workflow_test_junit_lists_every_case(tmp_path: Path) -> None:
+    """JUnit carries one testcase per scenario case, passing included."""
+    import xml.etree.ElementTree as xml
+
+    out = tmp_path / "cases.xml"
+    result = runner.invoke(
+        app, ["workflow", "test", MARIGOLD_RULES, "--format", "junit", "--out", str(out)]
+    )
+    assert result.exit_code == 0, result.output
+    suite = xml.parse(str(out)).getroot()
+    assert suite.tag == "testsuite"
+    assert suite.attrib["tests"] == "10"
+    assert suite.attrib["failures"] == "0"
+    cases = suite.findall("testcase")
+    assert len(cases) == 10
+    assert {case.attrib["classname"] for case in cases} == {"deal_lifecycle"}
+    names = [case.attrib["name"] for case in cases]
+    assert "create-nonpositive[zero]" in names
+    assert "create-nonpositive[negative]" in names
+    assert all(case.find("failure") is None for case in cases)
+
+
+def test_workflow_test_junit_failure_names_field_expected_actual(tmp_path: Path) -> None:
+    """A failing case carries the mismatch detail (field, expected, actual)."""
+    import xml.etree.ElementTree as xml
+
+    target = tmp_path / "state.yaml"
+    target.write_text(
+        "version: 1\nrules:\n"
+        "  - id: r-state\n"
+        "    event: {type: record_created}\n"
+        "    actions:\n"
+        "      - {type: assign_owner, owner: x}\n"
+        "cases:\n"
+        "  - name: wrong-owner\n"
+        "    given:\n"
+        "      record: {id: z}\n"
+        "      event: record_created\n"
+        "    then:\n"
+        "      state: {Owner: somebody-else}\n",
+        encoding="utf-8",
+    )
+    result = runner.invoke(
+        app,
+        [
+            "workflow",
+            "test",
+            str(tmp_path),
+            "--format",
+            "junit",
+            "--out",
+            str(tmp_path / "cases.xml"),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    suite = xml.parse(str(tmp_path / "cases.xml")).getroot()
+    assert suite.attrib["tests"] == "1"
+    assert suite.attrib["failures"] == "1"
+    failure = suite.find("testcase/failure")
+    assert failure is not None
+    assert "Owner" in failure.attrib["message"]
+    assert "somebody-else" in failure.attrib["message"]
+    assert "'x'" in failure.attrib["message"]
+    strict = runner.invoke(app, ["workflow", "test", str(tmp_path), "--strict"])
+    assert strict.exit_code == 2
 
 
 def test_forms_parity_strict_exit_2() -> None:

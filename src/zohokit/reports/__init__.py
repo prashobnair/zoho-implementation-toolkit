@@ -109,6 +109,28 @@ pre { white-space: pre-wrap; word-break: break-word; }
   {% endfor %}
   </tbody>
 </table>
+{% if simulation_trace -%}
+<h2>Simulation trace</h2>
+<p>External actions: {{ simulation_meta.external_actions }};
+days elapsed: {{ simulation_meta.days_elapsed }};
+ledger entries: {{ simulation_meta.ledger_entries }}.</p>
+<table>
+  <thead><tr><th>Step</th><th>Rule</th><th>Action</th><th>Day</th><th>Caused by</th>
+  <th>Fields changed</th></tr></thead>
+  <tbody>
+  {% for step in simulation_trace %}
+    <tr>
+      <td>{{ step.step }}</td>
+      <td>{{ step.rule }}</td>
+      <td>{{ step.action }}</td>
+      <td>{{ step.day }}</td>
+      <td>{{ step.caused_by }}</td>
+      <td>{{ step.fields_changed | join(", ") }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif -%}
 <script>
 (function () {
   var root = document.documentElement;
@@ -150,8 +172,12 @@ def _xml_escape(value: object) -> str:
 
 
 def render_json(report: Report) -> str:
-    """Render the report envelope as indented JSON."""
-    return report.model_dump_json(indent=2)
+    """Render the report envelope as indented JSON.
+
+    Optional blocks (``simulation``, ``coverage``) appear only when the
+    command populated them, so other modules' JSON is unchanged.
+    """
+    return report.model_dump_json(indent=2, exclude_none=True)
 
 
 def _dump(report: Report) -> dict[str, Any]:
@@ -203,6 +229,33 @@ def render_markdown(report: Report) -> str:
             f"{_md_cell(finding['entity'])}/{_md_cell(finding['entity_id'])} "
             f"| `{_md_cell(finding['code'])}` | {_md_cell(finding['message'])} |"
         )
+    simulation = dumped.get("simulation") or {}
+    trace = simulation.get("trace") or []
+    if trace:
+        lines.extend(
+            [
+                "",
+                "## Simulation trace",
+                "",
+                "| Step | Rule | Action | Day | Caused by | Fields changed |",
+                "| --- | --- | --- | --- | --- | --- |",
+            ]
+        )
+        for step in trace:
+            changed = ", ".join(str(name) for name in step.get("fields_changed", []) or [])
+            lines.append(
+                f"| {_md_cell(step.get('step'))} | {_md_cell(step.get('rule'))} | "
+                f"{_md_cell(step.get('action'))} | {_md_cell(step.get('day'))} | "
+                f"{_md_cell(step.get('caused_by'))} | {_md_cell(changed)} |"
+            )
+        lines.extend(
+            [
+                "",
+                f"External actions: {simulation.get('external_actions', 0)}; "
+                f"days elapsed: {simulation.get('days_elapsed', 0)}; "
+                f"ledger entries: {len(simulation.get('ledger', []) or [])}.",
+            ]
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -214,6 +267,7 @@ def render_html(report: Report) -> str:
         evidence = finding.get("evidence") or {}
         findings.append({**finding, "evidence_json": canonical_json(evidence)})
     codes = sorted({str(item["code"]) for item in findings})
+    simulation = dumped.get("simulation") or {}
     template = Environment(autoescape=True).from_string(HTML_TEMPLATE)
     return template.render(
         module=dumped["module"],
@@ -223,6 +277,12 @@ def render_html(report: Report) -> str:
         summary=dumped["summary"],
         findings=findings,
         codes=codes,
+        simulation_trace=simulation.get("trace") or [],
+        simulation_meta={
+            "external_actions": simulation.get("external_actions", 0),
+            "days_elapsed": simulation.get("days_elapsed", 0),
+            "ledger_entries": len(simulation.get("ledger", []) or []),
+        },
     )
 
 
@@ -310,8 +370,49 @@ def render_sarif(report: Report) -> str:
     return json.dumps(log, indent=2, sort_keys=True) + "\n"
 
 
+def _case_stem(filename: str) -> str:
+    """Suite file stem for JUnit classnames (``deal_lifecycle.yaml``)."""
+    return str(filename).rsplit(".", 1)[0]
+
+
+def _render_case_junit(module: str, suites: list[dict[str, Any]]) -> str:
+    """JUnit XML with one testcase per scenario case (TK-WF-F5).
+
+    Passing cases are included; failures carry the scenario-authored
+    mismatch detail (author-written synthetic data).
+    """
+    rows: list[tuple[str, dict[str, Any]]] = []
+    for suite in suites:
+        stem = _case_stem(str(suite.get("file", "suite")))
+        for case in suite.get("cases", []) or []:
+            if isinstance(case, dict):
+                rows.append((stem, case))
+    total = len(rows)
+    failed = sum(1 for _, case in rows if not case.get("passed", False))
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<testsuite name="zohokit {_xml_escape(module)}" '
+        f'tests="{total}" failures="{failed}" errors="0" skipped="0">',
+    ]
+    for stem, case in rows:
+        name = str(case.get("name", "case"))
+        lines.append(f'  <testcase classname="{_xml_escape(stem)}" name="{_xml_escape(name)}">')
+        if not case.get("passed", False):
+            detail = "; ".join(str(item) for item in case.get("failures", []) or [])
+            quoted = _xml_escape(detail or "case failed")
+            lines.append(
+                f'    <failure message="{quoted}" type="scenario_case_failed">{quoted}</failure>'
+            )
+        lines.append("  </testcase>")
+    lines.append("</testsuite>")
+    return "\n".join(lines) + "\n"
+
+
 def render_junit(report: Report) -> str:
     """Render the report as JUnit XML (one testcase per finding).
+
+    Reports carrying a scenario ``coverage`` block instead render one
+    testcase per scenario case, passing cases included.
 
     ``error`` and ``review`` findings become ``<failure>`` entries;
     suppressed findings become ``<skipped>``; ``warning`` and ``info``
@@ -319,6 +420,10 @@ def render_junit(report: Report) -> str:
     match across runs.
     """
     dumped = _dump(report)
+    coverage = dumped.get("coverage") or {}
+    suites = coverage.get("suites") or []
+    if isinstance(suites, list) and suites:
+        return _render_case_junit(str(dumped["module"]), suites)
     total = len(dumped["findings"])
     failures = sum(
         1
