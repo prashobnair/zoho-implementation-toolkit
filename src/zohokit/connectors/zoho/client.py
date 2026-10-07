@@ -63,6 +63,12 @@ _KNOWN_ENDPOINTS: tuple[str, ...] = (
     "/crm/v8/settings/automation/webhooks",
     "/crm/v8/settings/automation/webhook_failures",
     "/crm/v8/workflow_configurations",
+    "/books/v3/organizations",
+    "/books/v3/invoices",
+    "/books/v3/contacts",
+    "/books/v3/creditnotes",
+    "/books/v3/settings/currencies",
+    "/books/v3/settings/taxes",
 )
 
 ENDPOINT_STATUS: dict[str, str] = {

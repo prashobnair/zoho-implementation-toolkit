@@ -23,6 +23,7 @@ from zohokit.ai.schemas import (
 )
 from zohokit.core.findings import Report
 from zohokit.modules.books.models import BooksInput
+from zohokit.modules.books.policy import MatchPolicy
 from zohokit.modules.forms.models import FormsInput
 from zohokit.modules.lead_routing.models import LeadRoutingInput
 from zohokit.modules.metrics.models import MetricsInput
@@ -71,6 +72,7 @@ def main() -> None:
     _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
     _write(ROOT / "schemas" / "workflow" / "rule.v2.json", RulesetV2.model_json_schema())
     _write(ROOT / "schemas" / "migration" / "mapping.v1.json", MappingDoc.model_json_schema())
+    _write(ROOT / "schemas" / "books" / "policy.v1.json", MatchPolicy.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "explain.v1.json", ExplainDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "mapping.v1.json", MappingDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "transform.v1.json", TransformDraft.model_json_schema())
@@ -85,7 +87,7 @@ def main() -> None:
         ROOT / "schemas" / "ai" / "suggest-transform-result.v1.json",
         SuggestTransformResult.model_json_schema(),
     )
-    print(f"wrote {2 * len(INPUTS) + 11} schemas (v{SCHEMA_VERSION})")
+    print(f"wrote {2 * len(INPUTS) + 12} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

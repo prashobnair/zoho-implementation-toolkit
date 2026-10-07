@@ -284,7 +284,14 @@ def resolve_runtime(
 
 
 def load_input(path: Path, module: str, input_format: str | None) -> dict[str, Any]:
-    """Load a JSON input, auto-detecting ``legacy-v1`` when unambiguous."""
+    """Load a JSON input, auto-detecting the envelope when unambiguous.
+
+    ``legacy-v1`` is the golden-output envelope per module (see
+    ``LEGACY_MARKERS``). The Books month-end workbench additionally reads
+    the ``recon-v2`` envelope ``{deals, invoices, credit_notes?}`` (no
+    ``entities`` key): it auto-detects, or pass ``--input-format
+    recon-v2`` explicitly.
+    """
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
@@ -292,15 +299,34 @@ def load_input(path: Path, module: str, input_format: str | None) -> dict[str, A
     if not isinstance(data, dict):
         fail(f"{path} must contain a JSON object")
     if input_format is None:
+        if module == "books" and _is_recon_v2(data):
+            return data
         matches = sorted(name for name, keys in LEGACY_MARKERS.items() if keys <= data.keys())
         if matches == [module]:
             return data
         if not matches:
+            if module == "books":
+                fail(f"{path} matches no known envelope; pass --input-format legacy-v1 or recon-v2")
             fail(f"{path} matches no known legacy envelope; pass --input-format legacy-v1")
         fail(f"{path} matches {matches}; pass --input-format explicitly")
+    if input_format == "recon-v2":
+        if module != "books" or not _is_recon_v2(data):
+            fail(f"{path} is not a recon-v2 envelope (needs deals + invoices)")
+        return dict(data)
     if input_format != "legacy-v1":
         fail(f"unsupported --input-format {input_format!r} (only legacy-v1)")
     return dict(data)
+
+
+def _is_recon_v2(data: dict[str, Any]) -> bool:
+    """Whether *data* is the Books ``recon-v2`` envelope (not legacy-v1)."""
+    return (
+        "deals" in data
+        and "invoices" in data
+        and "entities" not in data
+        and isinstance(data["deals"], list)
+        and isinstance(data["invoices"], list)
+    )
 
 
 def parse_model(model: type[ModelT], data: dict[str, Any]) -> ModelT:

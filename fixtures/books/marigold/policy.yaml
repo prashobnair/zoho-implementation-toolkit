@@ -1,0 +1,15 @@
+key_strategy: crm_deal_id_in_invoice_custom_field
+custom_field_label: "CRM Deal ID"
+tolerance:
+  abs: "1.00"
+  pct: "0.5"
+allow_multiple_invoices_when:
+  billing_plan_field: "Billing_Plan"
+credit_notes: net_off
+tax: compare_net_only
+include_draft: false
+include_void: false
+period:
+  by: deal_closing_date
+  start: 2026-09-01
+  end: 2026-09-30

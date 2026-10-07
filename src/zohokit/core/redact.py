@@ -227,6 +227,33 @@ def is_structural_tz_offset(key: str, value: object) -> bool:
     return False
 
 
+#: Books money amounts are structural, not phones: invoice/credit-note
+#: ``total`` / ``sub_total`` / ``tax_total`` fields (doc URLs as recorded
+#: in ``docs/API_CONTRACTS.md``). Narrow allowlist: only these three keys,
+#: and only when the value is numeric (a JSON number or a numeric string).
+#: Anything else under these keys is redacted/scanned normally. Mirrored
+#: in ``scripts/cassette_scan.py`` (which stays import-free), so the
+#: recorder (redacts before write) and the scan gate agree.
+STRUCTURAL_MONEY_KEYS = frozenset({"total", "sub_total", "tax_total"})
+
+_MONEY_NUMBER_RE = re.compile(r"[-+]?[0-9]+(?:\.[0-9]+)?")
+
+
+def is_structural_money(key: str, value: object) -> bool:
+    """True for a numeric money value under a money key (number or string).
+
+    Anything else — non-numeric strings, other keys — returns False so the
+    normal redaction/scan rules still apply.
+    """
+    if _normalize_key(key) not in STRUCTURAL_MONEY_KEYS or isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float)):
+        return True
+    if isinstance(value, str):
+        return _MONEY_NUMBER_RE.fullmatch(value.strip()) is not None
+    return False
+
+
 #: Keys whose presence marks a dict as a token exchange: a sibling
 #: ``code`` there is the OAuth grant code, not a finding code.
 _TOKEN_CONTEXT_KEYS = frozenset(
@@ -382,6 +409,8 @@ class Redactor:
             return REDACTED_VALUE
         if is_structural_tz_offset(key, value):
             return value
+        if is_structural_money(key, value):
+            return value
         if in_location_context and _is_location_key(normalized):
             return None if value is None else REDACTED_VALUE
         kind = _pii_kind(normalized, is_check_or_read=is_check_or_read)
@@ -516,9 +545,11 @@ __all__: list[str] = [
     "REDACTED_TOKEN",
     "REDACTED_VALUE",
     "STRUCTURAL_KEYS",
+    "STRUCTURAL_MONEY_KEYS",
     "STRUCTURAL_TZ_KEYS",
     "TOKEN_KEYS",
     "Redactor",
+    "is_structural_money",
     "is_structural_tz_offset",
     "mask_email",
     "mask_phone",

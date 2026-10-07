@@ -1,0 +1,31 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/creditnotes?organization_id=555000001&page=1&per_page=200"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "creditnotes": [
+        {
+          "creditnote_id": "555000301",
+          "creditnote_number": "CN-001",
+          "currency_code": "INR",
+          "customer_id": "555000101",
+          "customer_name": "Marigold Labs",
+          "date": "2026-09-25",
+          "reference_number": "CNREF-001",
+          "status": "open",
+          "total": 5000.0
+        }
+      ],
+      "message": "success",
+      "page_context": {
+        "has_more_page": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

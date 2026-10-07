@@ -36,6 +36,33 @@ FINDINGS_COLUMNS = (
 _BOLD = Font(bold=True)
 
 
+#: Cell prefixes that make spreadsheet apps evaluate a value as a formula
+#: (STD §4 safety). Any data-sourced text starting with one of these is
+#: stored as a literal string (leading ``'``), never as a formula — only
+#: the toolkit's own totals cells may carry formulas.
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
+
+
+def safe_text(value: Any) -> Any:
+    """Return *value* safe for a data cell: risky prefixes get a ``'`` guard.
+
+    Non-strings pass through untouched. A string starting with ``=``,
+    ``+``, ``-``, ``@``, tab or CR is prefixed with ``'`` so openpyxl
+    stores it as text (``data_type`` stays a string, never ``"f"``) and
+    spreadsheet apps show it literally instead of evaluating it.
+    """
+    if not isinstance(value, str):
+        return value
+    if value.startswith(_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
+def _text_cell(sheet: Worksheet, *, row: int, column: int, value: Any) -> None:
+    """Write one data cell through :func:`safe_text` (never a formula)."""
+    sheet.cell(row=row, column=column, value=safe_text(value))
+
+
 def _summary_sheet(sheet: Worksheet, dumped: dict[str, Any]) -> None:
     """Banner rows plus severity counts with a formula total."""
     summary = dumped["summary"]
@@ -69,14 +96,14 @@ def _findings_sheet(sheet: Worksheet, dumped: dict[str, Any]) -> None:
         cell = sheet.cell(row=1, column=column, value=title)
         cell.font = _BOLD
     for number, finding in enumerate(dumped["findings"], start=2):
-        sheet.cell(row=number, column=1, value=str(finding["severity"]))
-        sheet.cell(row=number, column=2, value=str(finding["entity"]))
-        sheet.cell(row=number, column=3, value=str(finding["entity_id"]))
-        sheet.cell(row=number, column=4, value=str(finding["code"]))
-        sheet.cell(row=number, column=5, value=str(finding["message"]))
-        sheet.cell(row=number, column=6, value=str(finding.get("remediation") or ""))
+        _text_cell(sheet, row=number, column=1, value=str(finding["severity"]))
+        _text_cell(sheet, row=number, column=2, value=str(finding["entity"]))
+        _text_cell(sheet, row=number, column=3, value=str(finding["entity_id"]))
+        _text_cell(sheet, row=number, column=4, value=str(finding["code"]))
+        _text_cell(sheet, row=number, column=5, value=str(finding["message"]))
+        _text_cell(sheet, row=number, column=6, value=str(finding.get("remediation") or ""))
         evidence = finding.get("evidence") or {}
-        sheet.cell(row=number, column=7, value=canonical_json(evidence))
+        _text_cell(sheet, row=number, column=7, value=canonical_json(evidence))
     sheet.freeze_panes = "A2"
     sheet.auto_filter.ref = f"A1:G{max(len(dumped['findings']) + 1, 1)}"
     for letter, col_width in zip("ABCDEFG", (10, 16, 16, 28, 60, 40, 50), strict=True):
@@ -110,4 +137,4 @@ def render_xlsx(report: Report) -> bytes:
     return buffer.getvalue()
 
 
-__all__: list[str] = ["FINDINGS_COLUMNS", "SHEET_NAMES", "render_xlsx"]
+__all__: list[str] = ["FINDINGS_COLUMNS", "SHEET_NAMES", "render_xlsx", "safe_text"]

@@ -64,7 +64,14 @@ def _transform_request() -> AiRequest:
 
 
 def test_prompt_files_have_front_matter_and_hash_traceability() -> None:
-    for feature in ("explain", "mapping", "transform", "workflow_draft", "workflow_loop"):
+    for feature in (
+        "explain",
+        "mapping",
+        "transform",
+        "workflow_draft",
+        "workflow_loop",
+        "books_explain",
+    ):
         template = load_template(feature)
         assert template.feature == feature
         assert template.version == "v1"

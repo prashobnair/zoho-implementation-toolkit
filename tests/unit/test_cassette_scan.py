@@ -157,6 +157,24 @@ def test_offset_value_under_phone_key_still_fails_scan() -> None:
     assert any("unredacted phone" in finding for finding in findings)
 
 
+def test_structural_money_amounts_pass_scan() -> None:
+    """Books money numbers are amounts, not phone numbers."""
+    assert scan_text('{"total": 420000.0}', []) == []
+    assert scan_text('{"sub_total": 420000.0}', []) == []
+    assert scan_text('{"taxes": [{"tax_total": 75600.00}]}', []) == []
+    assert scan_text('{"total": 420000}', []) == []
+
+
+def test_money_value_under_other_key_still_fails_scan() -> None:
+    findings = scan_text('{"phone": 420000.0}', [])
+    assert any("unredacted phone" in finding for finding in findings)
+
+
+def test_non_numeric_money_value_still_fails_scan() -> None:
+    findings = scan_text('{"total": "call 4158601234 now"}', [])
+    assert any("unredacted phone" in finding for finding in findings)
+
+
 def test_benign_run_id_skips_phone_but_nothing_else() -> None:
     """Workflow-metadata IDs skip the phone rule by exact digit equality."""
     benign = ["71110022334"]

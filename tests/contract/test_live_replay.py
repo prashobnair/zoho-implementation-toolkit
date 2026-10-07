@@ -181,7 +181,7 @@ def _docs_rows() -> list[tuple[str, str, str, str]]:
 
 def test_docs_status_column_matches_verified_set() -> None:
     rows = _docs_rows()
-    assert len(rows) == 17
+    assert len(rows) == 24
     for endpoint, verified_on, verified_by, status in rows:
         expected = "verified" if endpoint in VERIFIED_ENDPOINTS else "unverified"
         assert status == expected, endpoint

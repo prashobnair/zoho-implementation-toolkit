@@ -12,7 +12,12 @@ READ_SCOPES = {
         "ZohoCRM.users.READ",
         "ZohoCRM.org.READ",
     ],
-    "books": ["ZohoBooks.settings.READ"],
+    "books": [
+        "ZohoBooks.invoices.READ",
+        "ZohoBooks.contacts.READ",
+        "ZohoBooks.creditnotes.READ",
+        "ZohoBooks.settings.READ",
+    ],
 }
 
 

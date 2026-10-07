@@ -1,0 +1,431 @@
+{
+  "deals": [
+    {
+      "id": "d-in-01",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "420000.00",
+      "customer_name": "Marigold Labs",
+      "closing_date": "2026-09-14",
+      "reference_number": "REF-001"
+    },
+    {
+      "id": "d-in-02",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "100000.00",
+      "customer_name": "Marigold Labs",
+      "closing_date": "2026-09-20",
+      "reference_number": "REF-002",
+      "Billing_Plan": "40/60"
+    },
+    {
+      "id": "d-in-03",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "50000.00",
+      "customer_name": "Lotus Traders",
+      "closing_date": "2026-09-10",
+      "reference_number": "REF-003"
+    },
+    {
+      "id": "d-in-04",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "200000.00",
+      "customer_name": "Banyan Studios",
+      "closing_date": "2026-09-18",
+      "reference_number": "REF-004",
+      "Billing_Plan": "50/50"
+    },
+    {
+      "id": "d-in-05",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "100000.00",
+      "customer_name": "Peacock Retail",
+      "closing_date": "2026-09-22",
+      "reference_number": "REF-005",
+      "Billing_Plan": "staged"
+    },
+    {
+      "id": "d-in-06",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "75000.00",
+      "customer_name": "Neem Health",
+      "closing_date": "2026-09-25",
+      "reference_number": "REF-006"
+    },
+    {
+      "id": "d-in-07",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "30000.00",
+      "customer_name": "Jasmine Foods",
+      "closing_date": "2026-09-12",
+      "reference_number": "REF-007"
+    },
+    {
+      "id": "d-in-08",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "12.34.56",
+      "customer_name": "Cardamom Co",
+      "closing_date": "2026-09-11",
+      "reference_number": "REF-008"
+    },
+    {
+      "id": "d-in-09",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "90000.00",
+      "customer_name": "Marigold Labs",
+      "closing_date": "2026-09-16",
+      "reference_number": "REF-009"
+    },
+    {
+      "id": "d-in-10",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "88000.00",
+      "customer_name": "Saffron Works",
+      "closing_date": "2026-09-17",
+      "reference_number": "REF-010"
+    },
+    {
+      "id": "d-in-11",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "88410.00",
+      "customer_name": "Marigold Labs",
+      "closing_date": "2026-09-21",
+      "reference_number": "REF-011"
+    },
+    {
+      "id": "d-in-12",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "95000.00",
+      "customer_name": "Sandalwood Inc",
+      "closing_date": "2026-09-24",
+      "reference_number": "REF-012"
+    },
+    {
+      "id": "d-in-13",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "60000.00",
+      "customer_name": "Turmeric Trade",
+      "closing_date": "2026-08-31T19:00:00-07:00",
+      "reference_number": "REF-013"
+    },
+    {
+      "id": "d-in-14",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "61000.00",
+      "customer_name": "Indigo Apparel",
+      "closing_date": "2026-10-01T00:30:00+05:30",
+      "reference_number": "REF-014"
+    },
+    {
+      "id": "d-in-15",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "62000.00",
+      "customer_name": "Henna Crafts",
+      "closing_date": "2026-09-30T23:30:00+05:30",
+      "reference_number": "REF-015"
+    },
+    {
+      "id": "d-in-16",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "25000.00",
+      "customer_name": "Tulip Traders",
+      "closing_date": "2026-09-13",
+      "reference_number": "REF-016"
+    },
+    {
+      "id": "d-in-17",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "26000.00",
+      "customer_name": "Orchid Goods",
+      "closing_date": "",
+      "reference_number": "REF-017"
+    },
+    {
+      "id": "d-us-01",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "10000.00",
+      "customer_name": "Marigold Labs US",
+      "closing_date": "2026-09-15",
+      "reference_number": "REF-US-001"
+    },
+    {
+      "id": "d-us-02",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "25000.00",
+      "customer_name": "Cedar Systems",
+      "closing_date": "2026-09-17",
+      "reference_number": "REF-US-002"
+    },
+    {
+      "id": "d-eu-01",
+      "entity": "eu-entity",
+      "currency": "EUR",
+      "net_amount": "5000.00",
+      "customer_name": "Marigold Labs EU",
+      "closing_date": "2026-09-19",
+      "reference_number": "REF-EU-001"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "i-in-01",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "420000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-15",
+      "reference_number": "INV-001",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-01"}]
+    },
+    {
+      "id": "i-in-02a",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "40000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-08",
+      "reference_number": "INV-002A",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-02"}]
+    },
+    {
+      "id": "i-in-02b",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "60000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-20",
+      "reference_number": "INV-002B",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-02"}]
+    },
+    {
+      "id": "i-in-03",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "49500.00",
+      "customer_name": "Lotus Traders",
+      "status": "sent",
+      "date": "2026-09-11",
+      "reference_number": "INV-003",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-03"}]
+    },
+    {
+      "id": "i-in-04a",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "80000.00",
+      "customer_name": "Banyan Studios",
+      "status": "sent",
+      "date": "2026-09-09",
+      "reference_number": "INV-004A",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-04"}]
+    },
+    {
+      "id": "i-in-04b",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "60000.00",
+      "customer_name": "Banyan Studios",
+      "status": "sent",
+      "date": "2026-09-18",
+      "reference_number": "INV-004B",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-04"}]
+    },
+    {
+      "id": "i-in-05a",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "70000.00",
+      "customer_name": "Peacock Retail",
+      "status": "sent",
+      "date": "2026-09-10",
+      "reference_number": "INV-005A",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-05"}]
+    },
+    {
+      "id": "i-in-05b",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "50000.00",
+      "customer_name": "Peacock Retail",
+      "status": "sent",
+      "date": "2026-09-22",
+      "reference_number": "INV-005B",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-05"}]
+    },
+    {
+      "id": "i-in-07",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "30000.00",
+      "customer_name": "Jasmine Foods",
+      "status": "draft",
+      "date": "2026-09-12",
+      "reference_number": "INV-007",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-07"}]
+    },
+    {
+      "id": "i-in-11",
+      "entity": "in-entity",
+      "currency": "USD",
+      "net_amount": "1000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-20",
+      "reference_number": "INV-011",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-11"}]
+    },
+    {
+      "id": "i-in-10",
+      "entity": "in-entity",
+      "currency": "USD",
+      "net_amount": "1000.00",
+      "customer_name": "Saffron Works",
+      "status": "sent",
+      "date": "2026-09-15",
+      "reference_number": "INV-010",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-10"}]
+    },
+    {
+      "id": "i-in-12",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "100000.00",
+      "customer_name": "Sandalwood Inc",
+      "status": "sent",
+      "date": "2026-09-24",
+      "reference_number": "INV-012",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-12"}]
+    },
+    {
+      "id": "i-in-15",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "62000.00",
+      "customer_name": "Henna Crafts",
+      "status": "sent",
+      "date": "2026-09-30",
+      "reference_number": "INV-015",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-15"}]
+    },
+    {
+      "id": "i-in-16",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "25000.00",
+      "customer_name": "Tulip Traders",
+      "status": "void",
+      "date": "2026-09-14",
+      "reference_number": "INV-016",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-16"}]
+    },
+    {
+      "id": "i-in-99",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "1000.00",
+      "customer_name": "Neem Health",
+      "status": "sent",
+      "date": "not-a-date",
+      "reference_number": "INV-099",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-06"}]
+    },
+    {
+      "id": "i-us-01",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "10000.00",
+      "customer_name": "Marigold Labs US",
+      "status": "sent",
+      "date": "2026-09-16",
+      "reference_number": "INV-US-001",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-us-01"}]
+    },
+    {
+      "id": "i-us-02",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "1000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-16",
+      "reference_number": "INV-US-002",
+      "custom_fields": []
+    },
+    {
+      "id": "i-us-03",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "2500.00",
+      "customer_name": "Driftwood LLC",
+      "status": "sent",
+      "date": "2026-09-19",
+      "reference_number": "INV-US-003",
+      "custom_fields": []
+    },
+    {
+      "id": "i-us-04",
+      "entity": "us-entity",
+      "currency": "INR",
+      "net_amount": "90000.00",
+      "customer_name": "Marigold Labs",
+      "status": "sent",
+      "date": "2026-09-16",
+      "reference_number": "INV-US-004",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-09"}]
+    },
+    {
+      "id": "i-eu-01",
+      "entity": "eu-entity",
+      "currency": "EUR",
+      "net_amount": "5000.00",
+      "customer_name": "Marigold Labs EU",
+      "status": "sent",
+      "date": "2026-09-19",
+      "reference_number": "INV-EU-001",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-eu-01"}]
+    }
+  ],
+  "credit_notes": [
+    {
+      "id": "cn-in-01",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "5000.00",
+      "customer_name": "Sandalwood Inc",
+      "status": "open",
+      "date": "2026-09-25",
+      "invoice_id": "i-in-12"
+    },
+    {
+      "id": "cn-us-01",
+      "entity": "us-entity",
+      "currency": "USD",
+      "net_amount": "400.00",
+      "customer_name": "Driftwood LLC",
+      "status": "open",
+      "date": "2026-09-26",
+      "invoice_id": ""
+    }
+  ]
+}

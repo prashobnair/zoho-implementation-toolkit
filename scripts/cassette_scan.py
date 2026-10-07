@@ -97,6 +97,20 @@ _ISO_8601_RE = re.compile(
 #: PII (zuid/zgid/photo_id) is never allowlisted. Mirrors the redactor.
 _LONG_ID_RE = re.compile(r"\b\d{15,}\b")
 
+#: Books money amounts are structural, not phones: invoice/credit-note
+#: ``total`` / ``sub_total`` / ``tax_total`` fields (doc URLs as recorded
+#: in ``docs/API_CONTRACTS.md``:
+#: https://www.zoho.com/books/api/v3/invoices/,
+#: https://www.zoho.com/books/api/v3/credit-notes/). Narrow allowlist:
+#: only these three keys, and only when the value is a JSON number (int
+#: or decimal). Anything else under these keys is scanned normally.
+#: Mirrors ``zohokit.core.redact`` (this script stays import-free).
+_STRUCTURAL_MONEY_KEYS = frozenset({"total", "sub_total", "tax_total"})
+_STRUCTURAL_MONEY_VALUE_RE = re.compile(
+    r"\"(" + "|".join(sorted(_STRUCTURAL_MONEY_KEYS)) + r")\"\s*:\s*(-?[0-9]+(?:\.[0-9]+)?)",
+    re.IGNORECASE,
+)
+
 _CREDENTIAL_KEYS = (
     "access_token",
     "refresh_token",
@@ -162,6 +176,16 @@ def _iso_spans(line: str) -> list[tuple[int, int]]:
     return [(m.start(), m.end()) for m in _ISO_8601_RE.finditer(line)]
 
 
+def _structural_money_spans(line: str) -> list[tuple[int, int]]:
+    """Spans of JSON-number money values under money keys on one line.
+
+    The digit span itself is returned so a phone-like match fully inside
+    it can be skipped while anything else on the line is scanned
+    normally.
+    """
+    return [(m.start(2), m.end(2)) for m in _STRUCTURAL_MONEY_VALUE_RE.finditer(line)]
+
+
 def _is_id_key(key: str) -> bool:
     """True for ID-keyed fields (``id`` / ``*_id``), excluding identity PII."""
     normalized = key.casefold().lstrip("$")
@@ -206,6 +230,7 @@ def scan_text(text: str, org_ids: list[str], benign_ids: list[str] | None = None
         key = key_of_line(line)
         tz_spans = _structural_tz_spans(line)
         iso_spans = _iso_spans(line)
+        money_spans = _structural_money_spans(line)
         id_like = _is_id_key(key)
         long_id_spans = _long_id_spans(line) if id_like else []
         for match in _EMAIL_RE.finditer(line):
@@ -213,6 +238,8 @@ def scan_text(text: str, org_ids: list[str], benign_ids: list[str] | None = None
                 findings.append(f"line {lineno}: unredacted email [key: {key}]")
         for match in _PHONE_RE.finditer(line):
             if any(start <= match.start() and match.end() <= end for start, end in tz_spans):
+                continue
+            if any(start <= match.start() and match.end() <= end for start, end in money_spans):
                 continue
             if any(
                 match.start() < iso_end and iso_start < match.end()

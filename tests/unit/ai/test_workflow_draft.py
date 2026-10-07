@@ -172,6 +172,52 @@ def test_validate_draft_grounding_rules() -> None:
     ]
 
 
+def test_validate_draft_grounding_scheme_host_token_rules() -> None:
+    """Lead probes: scheme must match, hosts need a dot, tokens match whole."""
+    https_desc = "When a deal is won, post to https://billing.example.invalid/hook"
+    http_hook = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "http://billing.example.invalid/hook"}],
+    )
+    draft = RuleDraft.model_validate(json.loads(_raw(http_hook)))
+    assert validate_draft(set(FIELDS), draft, description=https_desc) == [
+        "grounding: action target not in description"
+    ]
+    same_scheme = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "https://billing.example.invalid/other"}],
+    )
+    draft = RuleDraft.model_validate(json.loads(_raw(same_scheme)))
+    assert validate_draft(set(FIELDS), draft, description=https_desc) == []
+
+    dotless_desc = "When a deal is won, post to the billing webhook"
+    dotless = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "https://billing/x"}],
+    )
+    draft = RuleDraft.model_validate(json.loads(_raw(dotless)))
+    assert validate_draft(set(FIELDS), draft, description=dotless_desc) == [
+        "grounding: action target not in description"
+    ]
+
+    owner_desc = "When a deal is created, assign it to the owner on duty"
+    own = _rule(actions=[{"type": "assign_owner", "owner": "own"}])
+    draft = RuleDraft.model_validate(json.loads(_raw(own)))
+    assert validate_draft(set(FIELDS), draft, description=owner_desc) == [
+        "grounding: action target not in description"
+    ]
+
+    won_desc = "When a deal is closed-won, send the closed-won notice"
+    won = _rule(actions=[{"type": "send_email", "template": "won"}])
+    draft = RuleDraft.model_validate(json.loads(_raw(won)))
+    assert validate_draft(set(FIELDS), draft, description=won_desc) == [
+        "grounding: action target not in description"
+    ]
+
+
 def test_validate_draft_grounding_allowlist() -> None:
     description = "When a deal is won, post to the billing webhook"
     injected = _rule(

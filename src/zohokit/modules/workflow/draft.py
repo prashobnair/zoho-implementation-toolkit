@@ -8,10 +8,10 @@ the deterministic path runs (template abstention / template loop
 summary) and reports ``AI disabled``.
 
 Action targets are grounded in the description (STD-AI10): every
-webhook ``url``, email ``template`` and ``assign_owner`` ``owner`` must
-appear in the description (case-insensitive, separator-insensitive
-substring; for URLs the host counts as well) or in a caller-supplied
-allowlist, otherwise the draft falls back to an abstention.
+webhook ``url`` must appear in full or as a same-scheme dotted host,
+and every email ``template`` / ``assign_owner`` ``owner`` must appear
+as whole tokens (or in a caller-supplied allowlist), otherwise the
+draft falls back to an abstention.
 """
 
 from __future__ import annotations
@@ -179,6 +179,48 @@ def _url_host(url: str) -> str:
         return ""
 
 
+#: Absolute HTTP(S) URLs mentioned in a description (hosts + schemes).
+_URL_RE = re.compile(r"https?://[^\s,;\"']+", re.IGNORECASE)
+
+#: Surrounding punctuation stripped before whole-token comparison.
+_WORD_EDGE_PUNCT = ",.;:!?\"'()[]"
+
+
+def _whole_token_match(target: str, description: str) -> bool:
+    """Whether *target* is named as whole whitespace tokens in *description*.
+
+    Single-token targets must equal one stripped description token
+    (``own`` is not ``owner``; ``won`` is not ``closed-won``).
+    Multi-word targets match separator-insensitively but bounded by
+    token edges on both sides.
+    """
+    lowered = target.casefold().strip()
+    if not lowered:
+        return False
+    tokens = [
+        token.strip(_WORD_EDGE_PUNCT)
+        for token in description.casefold().split()
+        if token.strip(_WORD_EDGE_PUNCT)
+    ]
+    if lowered in tokens:
+        return True
+    norm_target = _normalized(target)
+    if " " not in norm_target:
+        return False
+    norm_description = _normalized(description)
+    start = 0
+    while True:
+        index = norm_description.find(norm_target, start)
+        if index == -1:
+            return False
+        before_ok = index == 0 or norm_description[index - 1] == " "
+        end = index + len(norm_target)
+        after_ok = end == len(norm_description) or norm_description[end] == " "
+        if before_ok and after_ok:
+            return True
+        start = index + 1
+
+
 def check_action_grounding(
     description: str,
     rule: dict[str, Any],
@@ -187,47 +229,71 @@ def check_action_grounding(
 ) -> list[str]:
     """Every action target must be mentioned in *description* (STD-AI10).
 
-    Each webhook ``url``, email ``template`` and ``assign_owner``
-    ``owner`` must appear in the description as a case-insensitive,
-    separator-insensitive substring (for URLs the host counts as well)
-    or match a caller-supplied allowlist entry, otherwise the draft is
-    rejected as a possible prompt injection. Value-free violation
+    Webhook URLs ground when the full URL appears in the
+    description, or when their host (which must contain a dot) appears
+    there under the same scheme — an ``http://`` action never grounds on
+    an ``https://`` mention of the same host, and a dotless host never
+    grounds on a bare word. Email ``template`` and ``assign_owner``
+    ``owner`` values ground on whole-token matches only (``own`` is not
+    ``owner``; ``won`` is not ``closed-won``). A caller-supplied
+    allowlist entry (exact string) always grounds. Value-free violation
     strings only.
     """
     norm_description = _normalized(description)
+    desc_urls = _URL_RE.findall(description)
+    desc_schemes: dict[str, set[str]] = {}
+    for raw_url in desc_urls:
+        host = _url_host(raw_url)
+        if not host:
+            continue
+        scheme = urlsplit(raw_url).scheme.casefold()
+        desc_schemes.setdefault(host.casefold(), set()).add(scheme)
     allowed = tuple(allow_targets or ())
     for action in rule.get("actions", []) or []:
         if not isinstance(action, dict):
             continue
         kind = action.get("type")
-        targets = []
         if kind == "webhook":
             url = str(action.get("url") or "")
             if not url:
                 continue
-            targets = [url]
+            if _target_allowed(url, allowed):
+                continue
             host = _url_host(url)
-            if host:
-                targets.append(host)
+            if host and _target_allowed(host, allowed):
+                continue
+            if _normalized(url) in norm_description:
+                continue
+            schemes = desc_schemes.get(host.casefold(), set()) if host else set()
+            action_scheme = urlsplit(url).scheme.casefold()
+            if (
+                host
+                and "." in host
+                and _normalized(host) in norm_description
+                and (not schemes or action_scheme in schemes)
+            ):
+                continue
+            return ["grounding: action target not in description"]
         elif kind == "send_email":
             template = str(action.get("template") or "")
             if not template:
                 continue
-            targets = [template]
+            if _target_allowed(template, allowed):
+                continue
+            if _whole_token_match(template, description):
+                continue
+            return ["grounding: action target not in description"]
         elif kind == "assign_owner":
             owner = str(action.get("owner") or "")
             if not owner:
                 continue
-            targets = [owner]
+            if _target_allowed(owner, allowed):
+                continue
+            if _whole_token_match(owner, description):
+                continue
+            return ["grounding: action target not in description"]
         else:
             continue
-        grounded = any(
-            (normed := _normalized(target))
-            and (normed in norm_description or _target_allowed(target, allowed))
-            for target in targets
-        )
-        if not grounded:
-            return ["grounding: action target not in description"]
     return []
 
 

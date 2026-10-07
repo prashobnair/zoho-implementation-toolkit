@@ -1,0 +1,32 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/invoices?organization_id=555000001&page=2&per_page=2"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "invoices": [
+        {
+          "currency_code": "INR",
+          "customer_id": "555000101",
+          "customer_name": "Marigold Labs",
+          "date": "2026-09-20",
+          "invoice_id": "555000203",
+          "invoice_number": "INV-002B",
+          "reference_number": "REF-002",
+          "status": "sent",
+          "sub_total": 60000.0,
+          "total": 60000.0
+        }
+      ],
+      "message": "success",
+      "page_context": {
+        "has_more_page": false,
+        "page": 2,
+        "per_page": 2
+      }
+    }
+  }
+}

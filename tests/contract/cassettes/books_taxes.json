@@ -1,0 +1,25 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/settings/taxes?organization_id=555000001&page=1&per_page=200"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "message": "success",
+      "page_context": {
+        "has_more_page": false,
+        "page": 1,
+        "per_page": 200
+      },
+      "taxes": [
+        {
+          "tax_id": "555000501",
+          "tax_name": "GST18",
+          "tax_percentage": 18.0
+        }
+      ]
+    }
+  }
+}

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 
 _NUMBER_RE = re.compile(r"\d[\d,]*(?:\.\d+)?")
 _ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?\b")
@@ -342,14 +343,241 @@ def check_grounded(
     return GroundingCheck(ok=not errors, errors=tuple(errors))
 
 
+# --- STD-AI7: finance money figures (Indian notation) --------------------------
+#
+# Controller narratives restate report amounts with scale suffixes:
+# ``₹4.2L`` / ``4.2 lakh`` = 420000, ``1.5 Cr`` / ``crore`` = 15000000,
+# ``$1.2k`` = 1200, ``1.2M`` = 1200000. A stated figure is accepted only
+# when some report figure matches it BOTH at the narrative's own stated
+# precision (``|report - stated| <= precision / 2`` with Decimal) AND
+# within 2% of the report amount — so a coarse unit can never smuggle a
+# wrong figure through: ``₹4L`` (precision 100000) passes for 400000 but
+# not for 420000 (4.8% away), and ``₹1 Cr`` never passes for 52 lakh.
+# A stated zero only matches a report zero. Plain numbers without a
+# currency symbol or scale suffix stay on the exact token path above, so
+# existing features are unaffected.
+#
+# Currency travels on both sides: report amounts carry their currency
+# (from the finding evidence), and a narrative figure with a currency
+# marker (``₹``/``Rs``/``INR`` = INR, ``$``/``USD`` = USD) must match an
+# amount in that same currency — ``$4.2L`` never grounds a 420000 INR
+# report. An unmarked figure (``4.2 lakh``) — or a report with mixed
+# currencies — only matches when the report holds a single currency.
+# Reports with no currency information at all (older eval bundles) fall
+# back to value-only matching, documented at the call sites.
+
+_CURRENCY_OF_MARKER: dict[str, str] = {
+    "₹": "INR",
+    "rs": "INR",
+    "rs.": "INR",
+    "inr": "INR",
+    "$": "USD",
+    "usd": "USD",
+}
+
+
+def _marker_currency(marker: str | None) -> str:
+    """Normalize a currency marker to ``INR``/``USD`` (``""`` when absent)."""
+    if not marker:
+        return ""
+    return _CURRENCY_OF_MARKER.get(marker.casefold(), "")
+
+
+_SUFFIX_MULTIPLIERS: dict[str, Decimal] = {
+    "l": Decimal(100000),
+    "lakh": Decimal(100000),
+    "lakhs": Decimal(100000),
+    "cr": Decimal(10000000),
+    "crore": Decimal(10000000),
+    "crores": Decimal(10000000),
+    "k": Decimal(1000),
+    "m": Decimal(1000000),
+    "million": Decimal(1000000),
+    "millions": Decimal(1000000),
+}
+
+_MONEY_SUFFIXED_RE = re.compile(
+    r"(₹|\$|Rs\.?|INR|USD)?\s*(\d[\d,]*(?:\.\d+)?)\s*"
+    r"(l|lakh|lakhs|cr|crore|crores|k|m|million|millions)\b",
+    re.IGNORECASE,
+)
+_MONEY_SYMBOL_RE = re.compile(
+    r"(₹|\$|Rs\.?|INR|USD)\s*(\d[\d,]*(?:\.\d+)?)\b",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class MoneyFigure:
+    """One stated or reported amount: value, stated precision, currency.
+
+    ``currency`` is ``INR``/``USD`` when marked (narrative markers or
+    report evidence), else ``""`` (unmarked narrative figure, or a
+    report amount with no currency information).
+    """
+
+    value: Decimal
+    precision: Decimal
+    currency: str = ""
+
+
+def _money_figure(mantissa: str, suffix: str | None, currency: str = "") -> MoneyFigure | None:
+    """Build a figure from a mantissa, an optional scale suffix and currency."""
+    try:
+        mantissa_value = Decimal(mantissa.replace(",", ""))
+    except InvalidOperation:
+        return None
+    multiplier = Decimal(1)
+    if suffix is not None:
+        multiplier = _SUFFIX_MULTIPLIERS[suffix.casefold()]
+    places = mantissa.split(".")[1] if "." in mantissa else ""
+    precision = Decimal(1) / (Decimal(10) ** len(places)) if places else Decimal(1)
+    precision = precision * multiplier
+    return MoneyFigure(value=mantissa_value * multiplier, precision=precision, currency=currency)
+
+
+def extract_money_figures(text: str) -> tuple[list[MoneyFigure], list[tuple[int, int]]]:
+    """Suffixed/symbol money figures in *text* plus their spans.
+
+    Only figures with a currency symbol or a scale suffix count here;
+    plain numbers stay on the exact token path. Returns the figures and
+    the character spans they occupy (so callers can blank them before
+    the plain-number check — ``4.2`` inside ``₹4.2L`` is not a report
+    token on its own).
+    """
+    figures: list[MoneyFigure] = []
+    spans: list[tuple[int, int]] = []
+    for match in _MONEY_SUFFIXED_RE.finditer(text):
+        figure = _money_figure(match.group(2), match.group(3), _marker_currency(match.group(1)))
+        if figure is not None:
+            figures.append(figure)
+            spans.append((match.start(), match.end()))
+    covered = list(spans)
+    for match in _MONEY_SYMBOL_RE.finditer(text):
+        if any(start <= match.start() and match.end() <= end for start, end in covered):
+            continue
+        figure = _money_figure(match.group(2), None, _marker_currency(match.group(1)))
+        if figure is not None:
+            figures.append(figure)
+            spans.append((match.start(), match.end()))
+    return figures, spans
+
+
+def strip_money_figures(text: str) -> str:
+    """Blank money-figure spans so the plain-number check skips them."""
+    chars = list(text)
+    _, spans = extract_money_figures(text)
+    for start, end in spans:
+        for index in range(start, end):
+            chars[index] = " "
+    return "".join(chars)
+
+
+#: Relative tolerance for money grounding: a stated figure must also sit
+#: within 2% of the matching report amount (see :func:`check_money_grounded`).
+MONEY_RELATIVE_TOLERANCE = Decimal("0.02")
+
+_AMOUNT_ENTRY_RE = re.compile(
+    r"([+-]?\d[\d,]*(?:\.\d+)?)\s*(₹|\$|Rs\.?|INR|USD)?\b",
+    re.IGNORECASE,
+)
+
+
+def parse_report_amounts(text: str) -> list[MoneyFigure]:
+    """Report ``amounts`` entries as figures: ``VALUE [CUR]`` pairs.
+
+    Entries are exact Decimal values (precision ``0.01``) carrying their
+    currency when the entry names one (``420000 INR``); bare numbers
+    stay currency-agnostic (``""``) for older bundles without currency
+    information.
+    """
+    figures: list[MoneyFigure] = []
+    for match in _AMOUNT_ENTRY_RE.finditer(text):
+        try:
+            value = Decimal(match.group(1).replace(",", ""))
+        except InvalidOperation:
+            continue
+        figures.append(
+            MoneyFigure(
+                value=value,
+                precision=Decimal("0.01"),
+                currency=_marker_currency(match.group(2)),
+            )
+        )
+    return figures
+
+
+def _money_value_matches(figure: MoneyFigure, entry: MoneyFigure) -> bool:
+    """Whether *entry* matches *figure* by value (precision + 2% + zero rule)."""
+    if figure.value == 0 or entry.value == 0:
+        # A stated zero only matches a report zero (and vice versa).
+        return figure.value == entry.value
+    gap = abs(entry.value - figure.value)
+    if gap > figure.precision / Decimal(2):
+        return False
+    return gap <= abs(entry.value) * MONEY_RELATIVE_TOLERANCE
+
+
+def check_money_grounded(
+    *,
+    narrative: str,
+    allowed: list[MoneyFigure],
+) -> GroundingCheck:
+    """Verify every money figure in *narrative* against *allowed* amounts.
+
+    A figure passes only when some report amount matches it at its own
+    stated precision (``|report - stated| <= precision / 2``) AND within
+    2% of the report amount, with a matching currency: a marked figure
+    (``₹``/``Rs``/``INR``/``$``/``USD``) needs a same-currency amount,
+    while an unmarked figure (or a mixed-currency report) only matches
+    when the report holds a single currency. Reports with no currency
+    information at all fall back to value-only matching. A stated zero
+    only matches a report zero. Errors name the offending figure index
+    only, never values.
+    """
+    errors: list[str] = []
+    figures, _ = extract_money_figures(narrative)
+    report_currencies = {entry.currency for entry in allowed if entry.currency}
+    for index, figure in enumerate(figures):
+        if not any(
+            _money_value_matches(figure, entry)
+            and _money_currency_matches(figure, entry, report_currencies)
+            for entry in allowed
+        ):
+            errors.append(f"money figure #{index} not present in report at its precision")
+    return GroundingCheck(ok=not errors, errors=tuple(errors))
+
+
+def _money_currency_matches(
+    figure: MoneyFigure, entry: MoneyFigure, report_currencies: set[str]
+) -> bool:
+    """Whether *entry* satisfies *figure*'s currency requirement."""
+    if figure.currency and entry.currency:
+        return figure.currency == entry.currency
+    if figure.currency and not entry.currency:
+        # No currency on the report side: agnostic only when the report
+        # carries no currency information at all (older eval bundles).
+        return not report_currencies
+    if not figure.currency and entry.currency:
+        # An unmarked figure only matches a single-currency report.
+        return len(report_currencies) == 1
+    return True
+
+
 __all__: list[str] = [
+    "MONEY_RELATIVE_TOLERANCE",
     "CitationCheck",
     "GroundingCheck",
+    "MoneyFigure",
     "NumberDateSets",
     "check_citations",
     "check_grounded",
+    "check_money_grounded",
     "extract_dates",
+    "extract_money_figures",
     "extract_number_words",
     "extract_numbers",
     "extract_report_tokens",
+    "parse_report_amounts",
+    "strip_money_figures",
 ]

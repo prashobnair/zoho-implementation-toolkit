@@ -20,6 +20,11 @@
       "prompt_hash": "e8db26fd1b1ca8973073fe6a867f0e95dea33483d89e4b237645756e640a1528",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Ghost_Field__s\",\n      \"op\": \"eq\",\n      \"value\": \"x\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-field\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
+    "wf-draft-bad-ground-dotless": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "bdc75f59a484424ff6733e7cb88900d1d3feb9e60f5553d4e8901361a734af9f",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"webhook\",\n        \"url\": \"https://billing/x\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-bad-ground-dotless\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
     "wf-draft-bad-ground-email": {
       "origin": "hand-authored synthetic",
       "prompt_hash": "5c524f1e85e48db67f593c509b9ab48f93dc713ca68d6a611b7f52c523589517",
@@ -29,6 +34,21 @@
       "origin": "hand-authored synthetic",
       "prompt_hash": "c8a786914119e7afbfbff81cdfa15b39e82114bca87765017dc2c3f40ed2ca9e",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"external-contractor\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-ground-owner\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-ground-owner-sub": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "d1a41c13250557e16bb10fbd3d2c9de667198a0c4107d5dcfea1113b9523914c",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"own\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-ground-owner-sub\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-ground-scheme": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "bf13afd5ee81e5b84e8264c6d6feb1442ca28729d8b605a3dc439d7e68c946f2",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"webhook\",\n        \"url\": \"http://billing.example.invalid/hook\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-bad-ground-scheme\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-ground-template-sub": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "d972c48c25f61e1e7ae21fe13bea69b72c33156c0dcc497af2184c4d4394afc4",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"won\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-ground-template-sub\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
     "wf-draft-bad-ground-webhook": {
       "origin": "hand-authored synthetic",

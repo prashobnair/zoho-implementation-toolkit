@@ -1,0 +1,27 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/organizations"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "message": "success",
+      "organizations": [
+        {
+          "currency_code": "INR",
+          "currency_symbol": "Rs.",
+          "name": "Marigold Labs",
+          "organization_id": "555000001"
+        },
+        {
+          "currency_code": "USD",
+          "currency_symbol": "$",
+          "name": "Marigold Labs US",
+          "organization_id": "555000002"
+        }
+      ]
+    }
+  }
+}
