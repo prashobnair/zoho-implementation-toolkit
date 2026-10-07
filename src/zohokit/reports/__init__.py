@@ -370,8 +370,49 @@ def render_sarif(report: Report) -> str:
     return json.dumps(log, indent=2, sort_keys=True) + "\n"
 
 
+def _case_stem(filename: str) -> str:
+    """Suite file stem for JUnit classnames (``deal_lifecycle.yaml``)."""
+    return str(filename).rsplit(".", 1)[0]
+
+
+def _render_case_junit(module: str, suites: list[dict[str, Any]]) -> str:
+    """JUnit XML with one testcase per scenario case (TK-WF-F5).
+
+    Passing cases are included; failures carry the scenario-authored
+    mismatch detail (author-written synthetic data).
+    """
+    rows: list[tuple[str, dict[str, Any]]] = []
+    for suite in suites:
+        stem = _case_stem(str(suite.get("file", "suite")))
+        for case in suite.get("cases", []) or []:
+            if isinstance(case, dict):
+                rows.append((stem, case))
+    total = len(rows)
+    failed = sum(1 for _, case in rows if not case.get("passed", False))
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        f'<testsuite name="zohokit {_xml_escape(module)}" '
+        f'tests="{total}" failures="{failed}" errors="0" skipped="0">',
+    ]
+    for stem, case in rows:
+        name = str(case.get("name", "case"))
+        lines.append(f'  <testcase classname="{_xml_escape(stem)}" name="{_xml_escape(name)}">')
+        if not case.get("passed", False):
+            detail = "; ".join(str(item) for item in case.get("failures", []) or [])
+            quoted = _xml_escape(detail or "case failed")
+            lines.append(
+                f'    <failure message="{quoted}" type="scenario_case_failed">{quoted}</failure>'
+            )
+        lines.append("  </testcase>")
+    lines.append("</testsuite>")
+    return "\n".join(lines) + "\n"
+
+
 def render_junit(report: Report) -> str:
     """Render the report as JUnit XML (one testcase per finding).
+
+    Reports carrying a scenario ``coverage`` block instead render one
+    testcase per scenario case, passing cases included.
 
     ``error`` and ``review`` findings become ``<failure>`` entries;
     suppressed findings become ``<skipped>``; ``warning`` and ``info``
@@ -379,6 +420,10 @@ def render_junit(report: Report) -> str:
     match across runs.
     """
     dumped = _dump(report)
+    coverage = dumped.get("coverage") or {}
+    suites = coverage.get("suites") or []
+    if isinstance(suites, list) and suites:
+        return _render_case_junit(str(dumped["module"]), suites)
     total = len(dumped["findings"])
     failures = sum(
         1

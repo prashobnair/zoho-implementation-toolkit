@@ -28,11 +28,18 @@ from zohokit.modules.workflow.simulator import eval_criterion
 
 @dataclass(frozen=True)
 class CaseResult:
-    """One executed scenario case (deterministic, value-free diffs)."""
+    """One executed scenario case.
+
+    ``failures`` stays value-free (it feeds finding evidence);
+    ``details`` carries the same mismatches with the scenario-authored
+    expected/actual values for the JUnit report (scenario files are
+    author-written synthetic data).
+    """
 
     name: str
     passed: bool
     failures: tuple[str, ...] = ()
+    details: tuple[str, ...] = ()
     fired: tuple[str, ...] = ()
     findings: tuple[str, ...] = ()
 
@@ -48,6 +55,7 @@ class SuiteResult:
     covered_rules: tuple[str, ...] = ()
     uncovered_rules: tuple[str, ...] = ()
     rule_ids: tuple[str, ...] = ()
+    branch_covered_rules: tuple[str, ...] = ()
 
     @property
     def passed(self) -> bool:
@@ -75,12 +83,15 @@ def _expand_params(case: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
     return out
 
 
-def _check_state(actual: dict[str, Any], expected: dict[str, Any]) -> list[str]:
-    failures = []
+def _check_state(actual: dict[str, Any], expected: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """Value-free failures plus scenario-valued details for JUnit."""
+    failures: list[str] = []
+    details: list[str] = []
     for key, value in expected.items():
         if actual.get(key) != value:
             failures.append(f"state field {key} differs")
-    return failures
+            details.append(f"state field {key}: expected {value!r}, got {actual.get(key)!r}")
+    return failures, details
 
 
 def run_suite(path: str | Path) -> SuiteResult:
@@ -128,26 +139,33 @@ def run_suite(path: str | Path) -> SuiteResult:
                     outcome = eval_criterion(rule.criteria, state_record, set(changed), {})
                     criteria_seen.setdefault(rule.id, set()).add(outcome)
             failures: list[str] = []
+            details: list[str] = []
             codes = sorted(finding.code for finding in analysis.findings)
             if "state" in then and isinstance(then["state"], dict):
-                failures.extend(_check_state(legacy.get("state", {}), then["state"]))
+                state_failures, state_details = _check_state(legacy.get("state", {}), then["state"])
+                failures.extend(state_failures)
+                details.extend(state_details)
             if "fired" in then:
                 want = sorted(str(item) for item in then["fired"])
                 if sorted(fired) != want:
                     failures.append(f"fired rules differ (want {len(want)}, got {len(fired)})")
+                    details.append(f"fired rules: expected {want}, got {sorted(fired)}")
             if "findings" in then:
                 want_codes = sorted(str(item) for item in then["findings"])
                 if codes != want_codes:
                     failures.append(
                         f"finding codes differ (want {len(want_codes)}, got {len(codes)})"
                     )
+                    details.append(f"finding codes: expected {want_codes}, got {codes}")
             if then.get("no_findings") and codes:
                 failures.append(f"expected no findings, got {len(codes)}")
+                details.append(f"expected no findings, got {codes}")
             results.append(
                 CaseResult(
                     name=name,
                     passed=not failures,
                     failures=tuple(failures),
+                    details=tuple(details),
                     fired=fired,
                     findings=tuple(codes),
                 )
@@ -155,11 +173,12 @@ def run_suite(path: str | Path) -> SuiteResult:
     uncovered = tuple(sorted(set(rule_ids) - fired_all))
     covered = tuple(sorted(fired_all & set(rule_ids)))
     rule_coverage = len(covered) / len(rule_ids) if rule_ids else 1.0
-    branches = 0
+    branch_covered = []
     for rid in rule_ids:
         seen = criteria_seen.get(rid, set())
-        branches += 1 if (True in seen and False in seen) or rid in fired_all else 0
-    branch_coverage = branches / len(rule_ids) if rule_ids else 1.0
+        if (True in seen and False in seen) or rid in fired_all:
+            branch_covered.append(rid)
+    branch_coverage = len(branch_covered) / len(rule_ids) if rule_ids else 1.0
     return SuiteResult(
         file=source.name,
         cases=tuple(results),
@@ -168,6 +187,7 @@ def run_suite(path: str | Path) -> SuiteResult:
         covered_rules=covered,
         uncovered_rules=uncovered,
         rule_ids=rule_ids,
+        branch_covered_rules=tuple(sorted(branch_covered)),
     )
 
 
@@ -217,9 +237,50 @@ def run_directory(path: str | Path) -> list[SuiteResult]:
     return [run_suite(item) for item in files]
 
 
+def coverage_block(suites: list[SuiteResult]) -> dict[str, Any]:
+    """Aggregate rule/branch coverage plus per-suite case results (TK-WF-F6).
+
+    Case ``details`` carry the scenario-authored expected/actual values
+    (author-written synthetic data); finding evidence stays value-free.
+    """
+    rule_ids = sorted({rid for suite in suites for rid in suite.rule_ids})
+    covered = sorted({rid for suite in suites for rid in suite.covered_rules})
+    branch_covered = sorted({rid for suite in suites for rid in suite.branch_covered_rules})
+    entries = []
+    for suite in suites:
+        entries.append(
+            {
+                "file": suite.file,
+                "cases": [
+                    {
+                        "name": case.name,
+                        "passed": case.passed,
+                        "failures": list(case.details),
+                    }
+                    for case in suite.cases
+                ],
+                "rules": {
+                    "covered": list(suite.covered_rules),
+                    "uncovered": list(suite.uncovered_rules),
+                    "total": len(suite.rule_ids),
+                },
+                "branches": {
+                    "covered": list(suite.branch_covered_rules),
+                    "total": len(suite.rule_ids),
+                },
+            }
+        )
+    return {
+        "rules": {"covered": len(covered), "total": len(rule_ids)},
+        "branches": {"covered": len(branch_covered), "total": len(rule_ids)},
+        "suites": entries,
+    }
+
+
 __all__: list[str] = [
     "CaseResult",
     "SuiteResult",
+    "coverage_block",
     "run_directory",
     "run_suite",
     "suite_findings",
