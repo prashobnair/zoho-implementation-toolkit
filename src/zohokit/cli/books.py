@@ -71,7 +71,8 @@ def _resolve_period(value: str | None, policy: MatchPolicy) -> MatchPolicy:
 def reconcile(
     fixture: Annotated[Path, typer.Argument(help="JSON with entities, deals, invoices.")],
     input_format: Annotated[
-        str | None, typer.Option("--input-format", help="Only legacy-v1.")
+        str | None,
+        typer.Option("--input-format", help="legacy-v1 (golden envelope) or recon-v2."),
     ] = None,
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when not ready.")] = False,
     format_name: Annotated[
@@ -125,7 +126,9 @@ def reconcile(
     )
     if not wants_v2:
         reject_future_flags(ai, baseline)
-        data = load_input(fixture, "books", input_format)
+        if input_format == "recon-v2":
+            fail("recon-v2 input needs --policy and --entity-map (v2 recon)")
+        data = load_input(fixture, "books", input_format or "legacy-v1")
         ctx = fresh_context()
         report = run(parse_model(BooksInput, data), ctx=ctx)
         report = apply_baseline_file(report, baseline, now=ctx.now)
@@ -167,8 +170,9 @@ def reconcile(
             fail("Books endpoints are unverified: live recon needs --experimental")
         if not books_orgs:
             fail("--live recon needs --books-orgs (comma-separated entity keys)")
+        from zohokit.connectors.zoho.errors import ConnectorError, ContractDriftError
         from zohokit.connectors.zoho.profiles import load_profile
-        from zohokit.modules.books.live import live_pull
+        from zohokit.modules.books.live import live_pull, live_pull_deals
 
         try:
             current = load_profile(profile)
@@ -196,6 +200,31 @@ def reconcile(
                 live_credit_notes.extend(bundles[key]["credit_notes"])
         invoices = live_invoices
         credit_notes = live_credit_notes
+        # CRM Deals stay live too (UC-BK-1): the fixture file path is
+        # kept as the offline input (parsed above for its envelope), but
+        # its deals are replaced by the CRM read.
+        plan_field_name = (
+            active_policy.allow_multiple_invoices_when.billing_plan_field
+            if active_policy.allow_multiple_invoices_when
+            else ""
+        )
+        policy_period = active_policy.period
+        try:
+            deals = live_pull_deals(
+                profile,
+                entities,
+                active_policy.crm_fields,
+                period_by=policy_period.by if policy_period else None,
+                period_start=policy_period.start if policy_period else None,
+                period_end=policy_period.end if policy_period else None,
+                billing_plan_field=plan_field_name,
+                max_api_calls=max_api_calls or 200,
+            )
+        except ValueError as exc:
+            fail(str(exc))
+        except (ConnectorError, ContractDriftError) as exc:
+            typer.echo(f"Connector error: {exc}", err=True)
+            raise typer.Exit(code=3) from exc
         unavailable_keys = tuple(sorted(set(unavailable_keys) | set(failed)))
         org_ids = wanted_orgs
     ctx = fresh_context()

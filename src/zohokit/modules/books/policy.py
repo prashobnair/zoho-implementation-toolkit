@@ -24,8 +24,11 @@ Key strategies (one test per strategy):
   ``salesorder_number``) must equal the deal's ``salesorder_id`` (or
   ``salesorder_number``).
 
-Tolerance passes when ``|diff| <= abs`` **and** ``|diff| <= pct%`` of
-the deal net (both bounds must hold). Credit notes linked to a matched
+Tolerance passes when ``|diff|`` fits every bound the policy states:
+both ``abs`` and ``pct`` when both are given, only the stated one when a
+single bound is given, and exact match (``diff == 0``) when neither bound
+is given. A policy that sets only ``pct`` never inherits the ``abs``
+default — ``0.5%`` means ``0.5%`` alone. Credit notes linked to a matched
 invoice are netted off the invoiced total (``net_off`` is the only
 supported mode). ``tax: compare_net_only`` compares deal net against
 the invoice net; ``compare_gross_with_tax_table`` grosses the deal net
@@ -56,19 +59,39 @@ PeriodBasis = Literal["deal_closing_date", "invoice_date"]
 
 
 class Tolerance(BaseModel):
-    """Absolute + percentage tolerance bounds (both must hold)."""
+    """Absolute + percentage tolerance bounds (only stated bounds apply)."""
 
     model_config = ConfigDict(frozen=True)
 
-    abs: Decimal = Field(default=Decimal("1.00"))
-    pct: Decimal = Field(default=Decimal("0.5"))
+    abs: Decimal | None = Field(default=None)
+    pct: Decimal | None = Field(default=None)
 
     @field_validator("abs", "pct")
     @classmethod
-    def _non_negative(cls, value: Decimal) -> Decimal:
-        if value < 0:
+    def _non_negative(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and value < 0:
             raise ValueError("tolerance bounds must be >= 0")
         return value
+
+
+class CrmDealFields(BaseModel):
+    """CRM field names mapped to offline deal attributes (live Deals read).
+
+    The live recon reads Deals through the GET-only CRM v8 reader with
+    these fields (plus ``id``) in the explicit ``fields=`` list the API
+    requires. ``entity`` names the CRM field holding the entity
+    discriminator matched against each entity map entry's
+    ``crm_criteria`` (default ``Entity``, as in the Marigold fixture).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    amount: str = "Amount"
+    closing_date: str = "Closing_Date"
+    currency: str = "Currency"
+    customer: str = "Account_Name"
+    billing_plan: str = "Billing_Plan"
+    entity: str = "Entity"
 
 
 class AllowMultiple(BaseModel):
@@ -104,6 +127,7 @@ class MatchPolicy(BaseModel):
     include_draft: bool = False
     include_void: bool = False
     period: PeriodWindow | None = None
+    crm_fields: CrmDealFields = Field(default_factory=CrmDealFields)
 
 
 def default_policy() -> MatchPolicy:
@@ -160,6 +184,7 @@ def policy_to_json(policy: MatchPolicy) -> dict[str, Any]:
 
 __all__: list[str] = [
     "AllowMultiple",
+    "CrmDealFields",
     "MatchPolicy",
     "PeriodWindow",
     "PolicyConfigError",

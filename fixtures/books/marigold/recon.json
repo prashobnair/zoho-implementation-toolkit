@@ -139,6 +139,24 @@
       "reference_number": "REF-015"
     },
     {
+      "id": "d-in-16",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "25000.00",
+      "customer_name": "Tulip Traders",
+      "closing_date": "2026-09-13",
+      "reference_number": "REF-016"
+    },
+    {
+      "id": "d-in-17",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "26000.00",
+      "customer_name": "Orchid Goods",
+      "closing_date": "",
+      "reference_number": "REF-017"
+    },
+    {
       "id": "d-us-01",
       "entity": "us-entity",
       "currency": "USD",
@@ -309,6 +327,28 @@
       "date": "2026-09-30",
       "reference_number": "INV-015",
       "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-15"}]
+    },
+    {
+      "id": "i-in-16",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "25000.00",
+      "customer_name": "Tulip Traders",
+      "status": "void",
+      "date": "2026-09-14",
+      "reference_number": "INV-016",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-16"}]
+    },
+    {
+      "id": "i-in-99",
+      "entity": "in-entity",
+      "currency": "INR",
+      "net_amount": "1000.00",
+      "customer_name": "Neem Health",
+      "status": "sent",
+      "date": "not-a-date",
+      "reference_number": "INV-099",
+      "custom_fields": [{"label": "CRM Deal ID", "value": "d-in-06"}]
     },
     {
       "id": "i-us-01",

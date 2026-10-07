@@ -3,19 +3,32 @@
 Replays the contract cassettes through ``live_pull`` with a mock
 transport and a stubbed token/profile — no network, no Zoho calls. One
 malformed org response marks that org ``unavailable`` while the others
-continue (TK-BK-F8).
+continue (TK-BK-F8). CRM Deals reads (UC-BK-1) replay synthetic
+CRM v8 ``{"data", "info"}`` pages through ``live_pull_deals`` the same
+way: explicit ``fields=`` list, period windowing, budget cap.
 """
 
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import httpx
 import pytest
 
+from zohokit.connectors.zoho.errors import ConnectorError
 from zohokit.connectors.zoho.profiles import Profile, save_profile
-from zohokit.modules.books.live import live_pull, map_credit_note, map_invoice
+from zohokit.modules.books.entities import load_entity_map
+from zohokit.modules.books.live import (
+    crm_deal_fields,
+    live_pull,
+    live_pull_deals,
+    map_credit_note,
+    map_deal,
+    map_invoice,
+)
+from zohokit.modules.books.policy import CrmDealFields
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 CASSETTES = ROOT / "tests" / "contract" / "cassettes"
@@ -119,3 +132,153 @@ def test_live_pull_pages_and_isolates_bad_org(live_env: None) -> None:
     assert len(bundle["contacts"]) == 1
     assert len(bundle["currencies"]) == 2
     assert len(bundle["taxes"]) == 1
+
+
+# --- live CRM Deals (UC-BK-1) ----------------------------------------------------
+
+
+def _crm_deals_handler(request: httpx.Request) -> httpx.Response:
+    """Synthetic CRM v8 Deals pages (shaped like ``cassettes/crm/Deals.json``)."""
+    assert request.url.path == "/crm/v8/Deals"
+    page = request.url.params.get("page", "1")
+    if page == "1":
+        return httpx.Response(
+            200,
+            json={
+                "data": [
+                    {
+                        "id": "555001001",
+                        "Amount": 420000,
+                        "Closing_Date": "2026-09-14",
+                        "Currency": "INR",
+                        "Account_Name": "Marigold Labs",
+                        "Billing_Plan": "",
+                        "Entity": "India",
+                    },
+                    {
+                        "id": "555001002",
+                        "Amount": 60000,
+                        "Closing_Date": "2026-08-31",
+                        "Currency": "INR",
+                        "Account_Name": "Turmeric Trade",
+                        "Billing_Plan": "",
+                        "Entity": "India",
+                    },
+                    {
+                        "id": "555001003",
+                        "Amount": 26000,
+                        "Closing_Date": "",
+                        "Currency": "INR",
+                        "Account_Name": "Orchid Goods",
+                        "Billing_Plan": "",
+                        "Entity": "India",
+                    },
+                ],
+                "info": {"more_records": True, "count": 3, "page": 1, "per_page": 200},
+            },
+        )
+    return httpx.Response(
+        200,
+        json={
+            "data": [
+                {
+                    "id": "555001004",
+                    "Amount": 10000,
+                    "Closing_Date": "2026-09-15",
+                    "Currency": "USD",
+                    "Account_Name": "Marigold Labs US",
+                    "Billing_Plan": "40/60",
+                    "Entity": "US",
+                }
+            ],
+            "info": {"more_records": False, "count": 1, "page": 2, "per_page": 200},
+        },
+    )
+
+
+def _marigold_entities() -> dict[str, object]:
+    root = Path(__file__).resolve().parent.parent.parent.parent
+    return load_entity_map(root / "fixtures" / "books" / "marigold" / "entity_map.yaml")  # type: ignore[return-value]
+
+
+def test_crm_deal_fields_are_explicit_for_v8(live_env: None) -> None:
+    seen: dict[str, str] = {}
+
+    def spy(request: httpx.Request) -> httpx.Response:
+        seen.update(dict(request.url.params))
+        return _crm_deals_handler(request)
+
+    fields = crm_deal_fields(CrmDealFields())
+    assert "id" in fields
+    for name in ("Amount", "Closing_Date", "Currency", "Account_Name", "Billing_Plan"):
+        assert name in fields
+    live_pull_deals(
+        "dev-in",
+        _marigold_entities(),
+        CrmDealFields(),
+        period_by="deal_closing_date",
+        period_start=date(2026, 9, 1),
+        period_end=date(2026, 9, 30),
+        transport_factory=lambda: httpx.MockTransport(spy),
+    )
+    sent = seen["fields"].split(",")
+    assert "id" in sent
+    for name in ("Amount", "Closing_Date", "Currency", "Account_Name"):
+        assert name in sent
+
+
+def test_live_pull_deals_maps_entities_and_windows_period(live_env: None) -> None:
+    deals = live_pull_deals(
+        "dev-in",
+        _marigold_entities(),
+        CrmDealFields(),
+        period_by="deal_closing_date",
+        period_start=date(2026, 9, 1),
+        period_end=date(2026, 9, 30),
+        billing_plan_field="Billing_Plan",
+        transport_factory=lambda: httpx.MockTransport(_crm_deals_handler),
+    )
+    by_id = {deal["id"]: deal for deal in deals}
+    # 555001002 closed 2026-08-31: out of window, dropped here.
+    assert set(by_id) == {"555001001", "555001003", "555001004"}
+    assert by_id["555001001"]["entity"] == "in-entity"
+    assert by_id["555001001"]["net_amount"] == "420000"
+    assert by_id["555001001"]["customer_name"] == "Marigold Labs"
+    assert by_id["555001001"]["currency"] == "INR"
+    # Missing dates pass through so the engine flags invalid_date.
+    assert by_id["555001003"]["closing_date"] == ""
+    assert by_id["555001004"]["entity"] == "us-entity"
+    assert by_id["555001004"]["Billing_Plan"] == "40/60"
+
+
+def test_live_pull_deals_budget_caps_paging(live_env: None) -> None:
+    with pytest.raises(ConnectorError, match="budget exhausted"):
+        live_pull_deals(
+            "dev-in",
+            _marigold_entities(),
+            CrmDealFields(),
+            max_api_calls=1,
+            transport_factory=lambda: httpx.MockTransport(_crm_deals_handler),
+        )
+
+
+def test_map_deal_shapes_offline_row() -> None:
+    mapped = map_deal(
+        "in-entity",
+        {
+            "id": "555001001",
+            "Amount": 420000,
+            "Closing_Date": "2026-09-14",
+            "Currency": "INR",
+            "Account_Name": "Marigold Labs",
+            "Billing_Plan": "40/60",
+            "Entity": "India",
+        },
+        CrmDealFields(),
+        "Billing_Plan",
+    )
+    assert mapped["id"] == "555001001"
+    assert mapped["entity"] == "in-entity"
+    assert mapped["net_amount"] == "420000"
+    assert mapped["closing_date"] == "2026-09-14"
+    assert mapped["Billing_Plan"] == "40/60"

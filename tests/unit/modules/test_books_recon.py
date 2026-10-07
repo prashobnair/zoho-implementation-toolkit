@@ -97,6 +97,17 @@ def test_policy_loads_with_defaults() -> None:
     assert policy.credit_notes == "net_off"
     assert policy.include_draft is False
     assert policy.period is not None and policy.period.by == "deal_closing_date"
+    assert policy.crm_fields.amount == "Amount"
+    assert policy.crm_fields.closing_date == "Closing_Date"
+    assert policy.crm_fields.currency == "Currency"
+    assert policy.crm_fields.customer == "Account_Name"
+    assert policy.crm_fields.billing_plan == "Billing_Plan"
+
+
+def test_default_tolerance_is_exact_match() -> None:
+    policy = MatchPolicy()
+    assert policy.tolerance.abs is None
+    assert policy.tolerance.pct is None
 
 
 def test_bad_policy_is_a_config_error(tmp_path: Path) -> None:
@@ -193,10 +204,31 @@ def test_sales_order_link_strategy() -> None:
 
 
 def test_tolerance_needs_both_bounds() -> None:
-    policy = MatchPolicy()
+    from zohokit.modules.books.policy import Tolerance
+
+    policy = MatchPolicy(tolerance=Tolerance(abs=Decimal("1.00"), pct=Decimal("0.5")))
     assert within_tolerance(Decimal("0.60"), Decimal("100.00"), policy) is False
     assert within_tolerance(Decimal("0.40"), Decimal("100.00"), policy) is True
     assert within_tolerance(Decimal("2.00"), Decimal("100000.00"), policy) is False
+
+
+def test_tolerance_applies_only_stated_bounds() -> None:
+    from zohokit.modules.books.policy import Tolerance
+
+    # Only pct stated: the default abs is NOT silently ANDed in, so a
+    # 60.00 diff on a 100.00 net passes a 100% bound on its own.
+    pct_only = MatchPolicy(tolerance=Tolerance(pct=Decimal("100")))
+    assert within_tolerance(Decimal("60.00"), Decimal("100.00"), pct_only) is True
+    assert within_tolerance(Decimal("110.00"), Decimal("100.00"), pct_only) is False
+    # Only abs stated: the pct bound is ignored, so 2.00 passes abs 5.00
+    # even though it exceeds 0.5% of a 100.00 net.
+    abs_only = MatchPolicy(tolerance=Tolerance(abs=Decimal("5.00")))
+    assert within_tolerance(Decimal("2.00"), Decimal("100.00"), abs_only) is True
+    assert within_tolerance(Decimal("6.00"), Decimal("100.00"), abs_only) is False
+    # Neither stated: exact match only.
+    exact = MatchPolicy(tolerance=Tolerance())
+    assert within_tolerance(Decimal("0"), Decimal("100.00"), exact) is True
+    assert within_tolerance(Decimal("0.01"), Decimal("100.00"), exact) is False
 
 
 def test_single_mismatch_is_outside_tolerance() -> None:
@@ -308,6 +340,52 @@ def test_cross_entity_invoice_carries_both_fingerprints() -> None:
     deal_hit = next(item for item in items if item.entity_id == "d-in-09")
     assert deal_hit.evidence["entity_fingerprint"] == org_fingerprint("555000001")
     assert deal_hit.evidence["invoice_org_fingerprint"] == org_fingerprint("555000002")
+
+
+def test_cross_entity_evidence_names_both_entities_without_empty_strings() -> None:
+    analysis = _analyze()
+    items = [item for item in analysis.findings if item.code == "cross_entity_invoice"]
+    assert len(items) == 2
+    for item in items:
+        assert item.evidence.get("deal_entity"), "deal_entity must be present"
+        assert item.evidence.get("invoice_entity"), "invoice_entity must be present"
+        for value in item.evidence.values():
+            if isinstance(value, str) and value.startswith("sha256:"):
+                assert len(value) > len("sha256:")
+            if isinstance(value, list):
+                for entry in value:
+                    assert entry != "", "no empty-string fingerprints"
+        assert "" not in [value for value in item.evidence.values() if isinstance(value, str)]
+        flat = [value for value in item.evidence.values() if isinstance(value, str)]
+        flat += [
+            entry for value in item.evidence.values() if isinstance(value, list) for entry in value
+        ]
+        assert "" not in flat
+    deal_hit = next(item for item in items if item.entity_id == "d-in-09")
+    assert deal_hit.evidence["deal_entity"] == "in-entity"
+    assert deal_hit.evidence["invoice_entity"] == "us-entity"
+    assert (
+        deal_hit.message == "Invoice i-us-04 for deal d-in-09 (in-entity) was raised in us-entity."
+    )
+    stray = next(item for item in items if item.entity_id == "i-us-02")
+    assert stray.evidence["invoice_entity"] == "us-entity"
+    assert stray.evidence["deal_entity"] == "in-entity"
+    assert "us-entity" in stray.message and "in-entity" in stray.message
+
+
+def test_cross_entity_omits_fingerprints_without_profile_org_id() -> None:
+    analysis = _analyze(org_ids={})
+    items = [item for item in analysis.findings if item.code == "cross_entity_invoice"]
+    assert items
+    for item in items:
+        assert item.evidence.get("deal_entity")
+        assert item.evidence.get("invoice_entity")
+        flat = [value for value in item.evidence.values() if isinstance(value, str)]
+        assert "" not in flat
+        assert "entity_fingerprint" not in item.evidence
+        assert "invoice_org_fingerprint" not in item.evidence
+    unavailable = next(item for item in analysis.findings if item.code == "source_unavailable")
+    assert "org_fingerprint" not in unavailable.evidence
 
 
 def test_wrong_entity_invoice_is_never_matched_by_name() -> None:
@@ -427,6 +505,22 @@ def test_draft_excluded_by_default_with_info() -> None:
 
 
 def test_void_excluded_by_default() -> None:
+    analysis = _analyze()
+    codes = {(item.code, item.entity_id) for item in analysis.findings}
+    assert ("void_invoice_excluded", "d-in-16") in codes
+    assert ("missing_invoice", "d-in-16") in codes
+    void_hit = next(
+        item
+        for item in analysis.findings
+        if item.code == "void_invoice_excluded" and item.entity_id == "d-in-16"
+    )
+    assert void_hit.severity is Severity.INFO
+    assert void_hit.evidence["invoice_id"] == "i-in-16"
+    assert void_hit.message == "Invoice i-in-16 for deal d-in-16 is void, excluded by policy."
+    assert not [item for item in analysis.findings if item.entity_id == "i-in-16"]
+
+
+def test_void_excluded_silently_before_fix_now_audited() -> None:
     data = _marigold_data()
     invoice = dict(data["invoices"][0])
     invoice["id"] = "i-void-1"
@@ -434,7 +528,7 @@ def test_void_excluded_by_default() -> None:
     analysis = _analyze(invoices=[invoice])
     codes = {(item.code, item.entity_id) for item in analysis.findings}
     assert ("missing_invoice", "d-in-01") in codes
-    assert not [item for item in analysis.findings if item.entity_id == "i-void-1"]
+    assert ("void_invoice_excluded", "d-in-01") in codes
 
 
 # --- period windowing ---------------------------------------------------------------
@@ -486,6 +580,33 @@ def test_invalid_amount_isolated_like_legacy() -> None:
     analysis = _analyze()
     assert ("invalid_amount", "d-in-08") in _codes(analysis)
     assert ("within_tolerance", "d-in-01") in _codes(analysis)
+
+
+def test_invalid_date_is_review_and_excludes_row() -> None:
+    analysis = _analyze()
+    codes = _codes(analysis)
+    assert ("invalid_date", "d-in-17") in codes
+    assert ("invalid_date", "i-in-99") in codes
+    # The bad-date deal is excluded from matching (no amount verdict, no
+    # missing_invoice); the bad-date invoice never matches its deal.
+    assert ("missing_invoice", "d-in-17") not in codes
+    assert ("within_tolerance", "d-in-17") not in codes
+    assert ("missing_invoice", "d-in-06") in codes
+    assert ("within_tolerance", "d-in-01") in codes
+    deal_hit = next(
+        item
+        for item in analysis.findings
+        if item.code == "invalid_date" and item.entity_id == "d-in-17"
+    )
+    assert deal_hit.severity is Severity.REVIEW
+    assert deal_hit.entity == "deal"
+    invoice_hit = next(
+        item
+        for item in analysis.findings
+        if item.code == "invalid_date" and item.entity_id == "i-in-99"
+    )
+    assert invoice_hit.entity == "invoice"
+    assert invoice_hit.severity is Severity.REVIEW
 
 
 def test_malformed_org_gives_source_unavailable_while_others_continue() -> None:
@@ -600,6 +721,87 @@ def test_cli_v2_offline_recon(tmp_path: Path) -> None:
     }
 
 
+def test_cli_v2_auto_detects_recon_envelope(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from zohokit.cli import app
+
+    out = tmp_path / "report.json"
+    result = CliRunner().invoke(
+        app,
+        [
+            "books",
+            "reconcile",
+            str(MARIGOLD / "recon.json"),
+            "--policy",
+            str(MARIGOLD / "policy.yaml"),
+            "--entity-map",
+            str(MARIGOLD / "entity_map.yaml"),
+            "--fx-rates",
+            str(MARIGOLD / "fx_rates.csv"),
+            "--unavailable",
+            "eu-entity",
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["module"] == "books"
+    assert {item["code"] for item in payload["findings"]} >= {
+        "void_invoice_excluded",
+        "invalid_date",
+    }
+
+
+def test_cli_v2_accepts_recon_v2_format(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from zohokit.cli import app
+
+    out = tmp_path / "report.json"
+    result = CliRunner().invoke(
+        app,
+        [
+            "books",
+            "reconcile",
+            str(MARIGOLD / "recon.json"),
+            "--input-format",
+            "recon-v2",
+            "--policy",
+            str(MARIGOLD / "policy.yaml"),
+            "--entity-map",
+            str(MARIGOLD / "entity_map.yaml"),
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["module"] == "books"
+
+
+def test_cli_recon_v2_without_policy_exits_1(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from zohokit.cli import app
+
+    out = tmp_path / "report.json"
+    result = CliRunner().invoke(
+        app,
+        [
+            "books",
+            "reconcile",
+            str(MARIGOLD / "recon.json"),
+            "--input-format",
+            "recon-v2",
+            "--out",
+            str(out),
+        ],
+    )
+    assert result.exit_code == 1
+
+
 def test_cli_bad_period_and_missing_map_exit_1() -> None:
     from typer.testing import CliRunner
 
@@ -667,6 +869,56 @@ def test_cli_live_needs_experimental() -> None:
 # --- Marigold answer key ---------------------------------------------------------------
 
 
+def test_finance_readable_messages_exact() -> None:
+    analysis = _analyze()
+    messages = {(item.code, item.entity_id): item.message for item in analysis.findings}
+    assert messages[("outside_tolerance", "d-in-03")] == (
+        "Invoiced 49,500.00 INR against a deal net of 50,000.00 INR "
+        "(-500.00), outside tolerance (\u00b11.00 and 0.5%)."
+    )
+    assert messages[("under_invoiced", "d-in-04")] == (
+        "Deal d-in-04 under-invoiced: staged invoices total 140,000.00 INR "
+        "against a deal net of 200,000.00 INR (-60,000.00), outside tolerance "
+        "(\u00b11.00 and 0.5%)."
+    )
+    assert messages[("over_invoiced", "d-in-05")] == (
+        "Deal d-in-05 over-invoiced: staged invoices total 120,000.00 INR "
+        "against a deal net of 100,000.00 INR (+20,000.00), outside tolerance "
+        "(\u00b11.00 and 0.5%)."
+    )
+    assert messages[("fx_rate_missing", "d-in-10")] == (
+        "Deal d-in-10: no exact USD->INR rate for 2026-09-15; comparison skipped, never guessed."
+    )
+    assert messages[("credit_note_unlinked", "cn-us-01")] == (
+        "Credit note cn-us-01 (400.00 USD) links to no known invoice."
+    )
+    assert messages[("draft_invoice_excluded", "d-in-07")] == (
+        "Invoice i-in-07 for deal d-in-07 is a draft, excluded by policy."
+    )
+    assert messages[("void_invoice_excluded", "d-in-16")] == (
+        "Invoice i-in-16 for deal d-in-16 is void, excluded by policy."
+    )
+    assert messages[("within_tolerance", "d-in-01")] == (
+        "Deal d-in-01 matched: invoiced 420,000.00 INR against a deal net of "
+        "420,000.00 INR, within tolerance (\u00b11.00 and 0.5%)."
+    )
+    assert messages[("missing_invoice", "d-in-06")] == (
+        "Deal d-in-06 (75,000.00 INR) is missing its invoice for the period."
+    )
+    assert messages[("orphan_invoice_reference", "i-us-03")] == (
+        "Invoice i-us-03 (2,500.00 USD) references no known deal."
+    )
+    assert messages[("invalid_amount", "d-in-08")] == (
+        "Row d-in-08 carries a malformed amount '12.34.56'; excluded from amount comparison."
+    )
+    assert messages[("invalid_date", "d-in-17")] == (
+        "Row d-in-17 carries a missing or unparseable closing_date ''; excluded from matching."
+    )
+    assert messages[("source_unavailable", "eu-entity")] == (
+        "Org pull for eu-entity failed; its records are out of scope while others continue."
+    )
+
+
 def test_marigold_answer_key_exact_set() -> None:
     analysis = _analyze()
     assert _codes(analysis) == {
@@ -676,16 +928,20 @@ def test_marigold_answer_key_exact_set() -> None:
         ("draft_invoice_excluded", "d-in-07"),
         ("fx_rate_missing", "d-in-10"),
         ("invalid_amount", "d-in-08"),
+        ("invalid_date", "d-in-17"),
+        ("invalid_date", "i-in-99"),
         ("missing_invoice", "d-in-06"),
         ("missing_invoice", "d-in-07"),
         ("missing_invoice", "d-in-08"),
         ("missing_invoice", "d-in-09"),
+        ("missing_invoice", "d-in-16"),
         ("missing_invoice", "d-us-02"),
         ("orphan_invoice_reference", "i-us-03"),
         ("outside_tolerance", "d-in-03"),
         ("over_invoiced", "d-in-05"),
         ("source_unavailable", "eu-entity"),
         ("under_invoiced", "d-in-04"),
+        ("void_invoice_excluded", "d-in-16"),
         ("within_tolerance", "d-in-01"),
         ("within_tolerance", "d-in-02"),
         ("within_tolerance", "d-in-11"),
