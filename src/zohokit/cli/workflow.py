@@ -6,12 +6,15 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 
 from zohokit.cli.common import (
+    AI_DISABLED_NOTE,
     AiAfter,
+    AiAllowPiiAfter,
+    AiMaxTokensAfter,
     BaselineAfter,
     LiveAfter,
     MaxApiCallsAfter,
@@ -24,6 +27,7 @@ from zohokit.cli.common import (
     parse_model,
     reject_future_flags,
     reject_unsupported_live,
+    resolve_ai_runtime,
     resolve_runtime,
 )
 from zohokit.modules.workflow.engine import run
@@ -93,10 +97,11 @@ def lint_cmd(
     from zohokit.core.findings import Report
     from zohokit.core.ids import canonical_json
     from zohokit.modules.workflow.analyzer import lint
+    from zohokit.modules.workflow.draft import explain_lint_loops
     from zohokit.modules.workflow.import_real import ActionMaps, Unsupported, translate_ruleset
     from zohokit.modules.workflow.language import RulesetV2, parse_ruleset
 
-    reject_future_flags(ai, None)
+    ai_runtime = resolve_ai_runtime(ai=ai, live=live)
     metadata_map: dict[str, set[str]] = {}
     failures: dict[str, str] = {}
     limits: dict[str, dict[str, int]] = {}
@@ -202,6 +207,12 @@ def lint_cmd(
         )
         digest = hashlib.sha256(canonical_json(body).encode("utf-8")).hexdigest()
         ctx = fresh_context()
+    findings = explain_lint_loops(
+        findings,
+        provider=ai_runtime.provider,
+        allow_pii=ai_runtime.allow_pii,
+        budget_tokens=ai_runtime.max_tokens,
+    )
     report = Report.build(
         module="workflow",
         run_id=digest,
@@ -271,6 +282,135 @@ def test_cmd(
     report = apply_baseline_file(report, baseline, now=ctx.now)
     runtime = resolve_runtime(format_name, out, strict=strict)
     emit(report, runtime.format_name, runtime.out, strict=runtime.strict)
+
+
+def _load_draft_fields(metadata: Path | None, module: str) -> dict[str, str] | None:
+    """Field name → type map for the drafter, or None for the built-ins."""
+    if metadata is None:
+        return None
+    try:
+        raw = json.loads(metadata.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        fail(f"cannot read {metadata}: {exc}")
+    if not isinstance(raw, dict):
+        fail(f"{metadata} must be a JSON object ({{field: type}} or {{module: [names]}})")
+    scoped = raw.get(module)
+    if isinstance(scoped, list):
+        if not scoped or not all(isinstance(name, str) for name in scoped):
+            fail(f"{metadata} module {module!r} must list field api_names")
+        return {str(name): "string" for name in scoped}
+    if all(isinstance(value, str) for value in raw.values()):
+        return {str(name): value for name, value in raw.items()}
+    fail(f"{metadata} must be {{field: type}} or {{module: [field api_names]}}")
+
+
+def _load_allow_targets(path: Path | None) -> tuple[str, ...]:
+    """Pre-approved action targets, or () when no allowlist is given."""
+    if path is None:
+        return ()
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        fail(f"cannot read {path}: {exc}")
+    if not isinstance(raw, list) or not all(isinstance(entry, str) for entry in raw):
+        fail(f"{path} must be a JSON list of strings")
+    return tuple(raw)
+
+
+def _load_draft_record(path: Path | None) -> dict[str, Any]:
+    """Record to simulate the draft against (default: a synthetic deal)."""
+    from zohokit.modules.workflow.draft import DEFAULT_DRAFT_RECORD
+
+    if path is None:
+        return dict(DEFAULT_DRAFT_RECORD)
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        fail(f"cannot read {path}: {exc}")
+    if not isinstance(raw, dict):
+        fail(f"{path} must contain a JSON object")
+    return raw
+
+
+@app.command(name="draft")
+def draft_cmd(
+    description: Annotated[
+        str, typer.Option("--description", help="Natural-language rule description.")
+    ],
+    metadata: Annotated[
+        Path | None,
+        typer.Option("--metadata", help="JSON {field: type} or {module: [field api_names]}."),
+    ] = None,
+    module: Annotated[str, typer.Option("--module", help="Module the rule belongs to.")] = "Deals",
+    record: Annotated[
+        Path | None,
+        typer.Option("--record", help="JSON record to simulate the draft against."),
+    ] = None,
+    allow_targets: Annotated[
+        Path | None,
+        typer.Option("--allow-targets", help="JSON list of pre-approved action targets."),
+    ] = None,
+    format_name: Annotated[
+        str, typer.Option("--format", help="json|table|markdown|html.")
+    ] = "json",
+    out: Annotated[Path | None, typer.Option("--out", help="Write the draft to a file.")] = None,
+    ai: AiAfter = False,
+    ai_allow_pii: AiAllowPiiAfter = False,
+    ai_max_tokens: AiMaxTokensAfter = None,
+    live: LiveAfter = False,
+    profile: ProfileAfter = None,
+    baseline: BaselineAfter = None,
+    max_api_calls: MaxApiCallsAfter = None,
+) -> None:
+    """Draft one rule from a description and simulate it (UC-WF-4, AI-WF-1).
+
+    The draft simulates immediately against --record (default: a small
+    synthetic Marigold deal) and prints the full trace. Draft only, not
+    deployed: nothing is written anywhere except --out.
+    """
+    from zohokit.modules.workflow.draft import (
+        build_draft_output,
+        render_draft_html,
+        render_draft_markdown,
+        render_draft_table,
+        suggest_draft,
+    )
+
+    reject_unsupported_live("workflow", live, profile, max_api_calls)
+    if baseline is not None:
+        fail("draft takes no --baseline (it proposes, it suppresses none)")
+    if not description.strip():
+        fail("--description must not be empty")
+    runtime = resolve_ai_runtime(ai=ai, allow_pii=ai_allow_pii, max_tokens=ai_max_tokens, live=live)
+    if runtime.provider is None and not ai:
+        typer.echo(AI_DISABLED_NOTE, err=True)
+    fields = _load_draft_fields(metadata, module)
+    allowed = _load_allow_targets(allow_targets)
+    subject: dict[str, Any] = _load_draft_record(record)
+    result = suggest_draft(
+        description,
+        fields,
+        provider=runtime.provider,
+        allow_pii=runtime.allow_pii,
+        budget_tokens=runtime.max_tokens,
+        allow_targets=allowed,
+    )
+    output = build_draft_output(result, subject)
+    if format_name == "json":
+        text = output.model_dump_json(indent=2) + "\n"
+    elif format_name == "table":
+        text = render_draft_table(output)
+    elif format_name == "markdown":
+        text = render_draft_markdown(output)
+    elif format_name == "html":
+        text = render_draft_html(output)
+    else:
+        fail(f"unsupported --format {format_name!r} (json|table|markdown|html)")
+    if out is None:
+        typer.echo(text)
+    else:
+        out.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+        typer.echo(f"Wrote {out}")
 
 
 __all__: list[str] = ["app"]

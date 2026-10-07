@@ -28,6 +28,18 @@ suggestion carries its source, model and prompt version for review.
   "seven errors" is rejected there), so wording a hallucinated count
   out in words cannot bypass the check. A mismatch falls back to the
   deterministic template.
+- **Draft action targets (STD-AI10).** A drafted workflow rule acts
+  only on literals the description mentions: every webhook `url`,
+  email `template` and `assign_owner` `owner` must appear in the
+  description as a case-insensitive, separator-insensitive substring
+  (`regional-manager` matches `regional manager`; for URLs the host
+  counts as well, so `example.invalid` grounds
+  `https://example.invalid/hooks/billing`), or match a
+  caller-supplied allowlist entry (`--allow-targets FILE`, a JSON
+  list of exact strings). Anything else is a prompt-injection
+  attempt: the draft is rejected with
+  `grounding: action target not in description` and the run falls
+  back to an abstention.
 - **Injection hygiene.** Source text travels in delimited data blocks
   and the system prompt declares it data, never instructions.
 - **Budget.** `--ai-max-tokens` caps estimated prompt tokens; every
@@ -81,6 +93,20 @@ explicitly configured provider call.
   value transform. It is applied to the samples first: anything below
   100% parse success is dropped and reported, with the deterministic
   guess as fallback.
+- `zohokit workflow draft --description TEXT [--metadata FILE]
+  [--module Deals] [--record FILE] [--allow-targets FILE] [--ai]`
+  drafts one rule and simulates it immediately against the record
+  (default: a small synthetic Marigold deal), printing the full
+  trace. Draft only, not deployed: nothing is written anywhere
+  except `--out`. Without `--ai` (or with no provider) it prints
+  `AI disabled` and abstains. Every webhook url, email template
+  and owner must be mentioned in the description (STD-AI10, above)
+  or pre-approved via `--allow-targets`, otherwise the draft falls
+  back to an abstention.
+- `zohokit workflow lint --rules FILE [--ai]` attaches a cited loop
+  explanation to each `potential_loop` finding (an `ai` block on
+  the finding, "AI suggestion" badge in HTML). Without a provider
+  the deterministic report is unchanged.
 
 AI items render with an "AI suggestion" badge plus confidence in HTML
 output (`--format html`). JSON output carries the `ai_usage` block

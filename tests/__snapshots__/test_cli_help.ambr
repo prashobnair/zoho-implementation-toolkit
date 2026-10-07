@@ -62,6 +62,8 @@
   │ lint      Lint workflow rules for conflicts, loops, stale fields and dead    │
   │           rules.                                                             │
   │ test      Run a directory of given/when/then rule scenarios (UC-WF-2).       │
+  │ draft     Draft one rule from a description and simulate it (UC-WF-4,        │
+  │           AI-WF-1).                                                          │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   

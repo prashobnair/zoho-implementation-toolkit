@@ -18,6 +18,7 @@ from rich.console import Console
 from rich.table import Table
 
 from zohokit import __version__
+from zohokit.ai.badge import AI_BADGE_CSS, ai_badge_html
 from zohokit.core.findings import Report
 from zohokit.core.ids import canonical_json
 from zohokit.reports.xlsx import render_xlsx
@@ -61,7 +62,7 @@ th, td { border: 1px solid var(--line); padding: 0.4rem 0.6rem; text-align: left
 .filters { margin: 1rem 0; display: flex; gap: 1rem; flex-wrap: wrap; }
 pre { white-space: pre-wrap; word-break: break-word; }
 @media print { .filters, #theme-toggle { display: none; } }
-</style>
+{% if ai_badge_css %}{{ ai_badge_css }}{% endif %}</style>
 </head>
 <body>
 <h1>zohokit {{ module }} report</h1>
@@ -98,7 +99,7 @@ pre { white-space: pre-wrap; word-break: break-word; }
       <td class="severity-{{ finding.severity }}">{{ finding.severity }}</td>
       <td>{{ finding.entity }}/{{ finding.entity_id }}</td>
       <td>{{ finding.code }}</td>
-      <td>{{ finding.message }}</td>
+      <td>{{ finding.message }}{% if finding.ai_badge %}<br>{{ finding.ai_badge }}{% endif %}</td>
       <td>{% if finding.remediation %}<em>{{ finding.remediation }}</em>{% endif %}</td>
       <td>
         {% if finding.evidence %}
@@ -263,9 +264,22 @@ def render_html(report: Report) -> str:
     """Render a single self-contained HTML report file."""
     dumped = _dump(report)
     findings = []
+    has_ai = False
     for finding in dumped["findings"]:
         evidence = finding.get("evidence") or {}
-        findings.append({**finding, "evidence_json": canonical_json(evidence)})
+        ai = evidence.get("ai") if isinstance(evidence, dict) else None
+        badge = ""
+        if isinstance(ai, dict) and ai.get("ai_status") not in ("disabled", "template", None):
+            has_ai = True
+            try:
+                confidence = max(
+                    float(sentence.get("confidence", 0.0)) for sentence in ai.get("sentences", [])
+                )
+            except (TypeError, ValueError):
+                badge = ai_badge_html(None)
+            else:
+                badge = ai_badge_html(confidence)
+        findings.append({**finding, "evidence_json": canonical_json(evidence), "ai_badge": badge})
     codes = sorted({str(item["code"]) for item in findings})
     simulation = dumped.get("simulation") or {}
     template = Environment(autoescape=True).from_string(HTML_TEMPLATE)
@@ -277,6 +291,7 @@ def render_html(report: Report) -> str:
         summary=dumped["summary"],
         findings=findings,
         codes=codes,
+        ai_badge_css=AI_BADGE_CSS if has_ai else "",
         simulation_trace=simulation.get("trace") or [],
         simulation_meta={
             "external_actions": simulation.get("external_actions", 0),

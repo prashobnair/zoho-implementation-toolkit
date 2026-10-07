@@ -4,7 +4,8 @@ Dataset cases carry a natural-language description, module field
 metadata and a gold v2 rule (null for should-abstain cases).
 ``case_variables`` renders the prompt variables exactly the way the
 drafter does; ``validate_response`` enforces the structural guardrails
-(language schema, field allowlist, the confidence-0.6 abstention rule);
+(language schema, field allowlist, action-target grounding against the
+description, the confidence-0.6 abstention rule);
 exact match scores semantic slots (event, execute_on, criteria leaves,
 actions) ignoring naming slots (id, module, priority, repeat, active).
 ``bad_caught`` decides whether a bad recording was rejected, flagged
@@ -95,7 +96,12 @@ def gold_rule(case: dict[str, Any]) -> dict[str, Any] | None:
 
 def validate_response(case: dict[str, Any], draft: RuleDraft) -> list[str]:
     """Structural guardrails; value-free violation strings."""
-    return validate_draft(set(case["input"]["fields"]), draft)
+    return validate_draft(
+        set(case["input"]["fields"]),
+        draft,
+        description=case["input"]["description"],
+        allow_targets=tuple(case["input"].get("allow_targets", ())),
+    )
 
 
 def case_scores(case: dict[str, Any], draft: RuleDraft) -> dict[str, int]:

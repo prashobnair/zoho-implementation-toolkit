@@ -28,6 +28,7 @@ uv run zohokit workflow simulate rules.json
 uv run zohokit workflow simulate rules.json --strict
 uv run zohokit workflow lint --rules rules.json --metadata fields.json
 uv run zohokit workflow test scenarios/marigold-labs/rules/
+uv run zohokit workflow draft --description "When a deal is created, assign it to the regional manager"
 ```
 
 `lint` also reads the live org (read-only, unverified endpoints):
@@ -48,6 +49,21 @@ walks the rule → written-fields → edit-triggered-rules graph and reports
 cycles with their paths. Scenario files (`rules` + given/when/then
 `cases`, with `params` expansion) run through the same deterministic
 simulator; rules that never fire become `uncovered_rule` info findings.
+
+`draft` (UC-WF-4, AI-WF-1) turns one `--description` into a single v2
+rule, validates it (language schema, field allowlist, action-target
+grounding — see `docs/ai.md` — confidence floor) and simulates it
+immediately against `--record` (default: a small synthetic Marigold
+deal), printing the full trace. `--metadata` is `{field: type}` (or
+`{module: [field api_names]}` with `--module`), `--allow-targets`
+is a JSON list of pre-approved action targets. Without `--ai` (or
+with no provider configured) it prints `AI disabled` and abstains.
+Draft only, not deployed: nothing is written anywhere except `--out`.
+
+`lint --ai` (AI-WF-2) attaches a cited loop explanation to each
+`potential_loop` finding (an `ai` block on the finding evidence, with
+an "AI suggestion" badge in HTML output). Without a provider it
+prints `AI disabled` and the deterministic report is unchanged.
 
 ## Finding codes
 
