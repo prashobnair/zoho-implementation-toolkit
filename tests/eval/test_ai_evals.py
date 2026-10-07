@@ -57,6 +57,7 @@ mapping_metrics = _load_metrics_module("mapping")
 transform_metrics = _load_metrics_module("transform")
 workflow_draft_metrics = _load_metrics_module("workflow_draft")
 workflow_loop_metrics = _load_metrics_module("workflow_loop")
+books_explain_metrics = _load_metrics_module("books_explain")
 
 FEATURES: dict[str, dict[str, Any]] = {
     "explain": {"schema": ExplainDraft, "metrics": explain_metrics},
@@ -64,6 +65,7 @@ FEATURES: dict[str, dict[str, Any]] = {
     "transform": {"schema": TransformDraft, "metrics": transform_metrics},
     "workflow_draft": {"schema": RuleDraft, "metrics": workflow_draft_metrics},
     "workflow_loop": {"schema": LoopExplanation, "metrics": workflow_loop_metrics},
+    "books_explain": {"schema": ExplainDraft, "metrics": books_explain_metrics},
 }
 
 
@@ -100,7 +102,7 @@ def _split_cases(cases: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], lis
 
 def _good_metrics(feature: str, cases: list[dict[str, Any]]) -> dict[str, float]:
     metrics = FEATURES[feature]["metrics"]
-    if feature in ("explain", "workflow_loop"):
+    if feature in ("explain", "workflow_loop", "books_explain"):
         grades = []
         for case in cases:
             outcome, raw = _replay(feature, case, _recordings(feature))
@@ -140,7 +142,7 @@ def _catch_rate(feature: str, cases: list[dict[str, Any]]) -> tuple[float, list[
     for case in cases:
         outcome, raw = _replay(feature, case, _recordings(feature))
         draft = outcome.data if outcome.ai_status not in ("fallback", "disabled") else None
-        if feature in ("explain", "workflow_loop"):
+        if feature in ("explain", "workflow_loop", "books_explain"):
             caught = metrics.bad_caught(case, outcome.ai_status, draft, raw)
         else:
             caught = metrics.bad_caught(case, outcome.ai_status, draft)
@@ -217,6 +219,7 @@ def _generator_builders() -> dict[str, Any]:
         "transform": module.build_transform,
         "workflow_draft": module.build_workflow_draft,
         "workflow_loop": module.build_workflow_loop,
+        "books_explain": module.build_books_explain,
     }
 
 

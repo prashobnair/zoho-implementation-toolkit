@@ -44,7 +44,14 @@ def main(argv: Sequence[str] | None = None, env: dict[str, str] | None = None) -
     parser.add_argument(
         "--features",
         nargs="*",
-        default=["explain", "mapping", "transform", "workflow_draft", "workflow_loop"],
+        default=[
+            "explain",
+            "mapping",
+            "transform",
+            "workflow_draft",
+            "workflow_loop",
+            "books_explain",
+        ],
     )
     args = parser.parse_args(argv)
     source = env if env is not None else os.environ
