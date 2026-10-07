@@ -41,7 +41,11 @@ def _metrics_for(feature: str):  # type: ignore[no-untyped-def]
 def main(argv: Sequence[str] | None = None, env: dict[str, str] | None = None) -> int:
     """Entry point returning an exit code (0 recorded, 1 refused)."""
     parser = argparse.ArgumentParser(description="Re-record eval responses with a live provider.")
-    parser.add_argument("--features", nargs="*", default=["explain", "mapping", "transform"])
+    parser.add_argument(
+        "--features",
+        nargs="*",
+        default=["explain", "mapping", "transform", "workflow_draft", "workflow_loop"],
+    )
     args = parser.parse_args(argv)
     source = env if env is not None else os.environ
     config = AiConfig.from_env(dict(source))

@@ -1,0 +1,5 @@
+[min]
+field_exact_match = 0.85
+valid_rate = 1.0
+abstention_rate = 0.8
+catch_rate = 1.0

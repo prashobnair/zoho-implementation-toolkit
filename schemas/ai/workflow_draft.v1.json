@@ -1,0 +1,34 @@
+{
+  "description": "One natural-language rule draft for human review (AI-WF-1).\n\n``rule`` is a v2 rule payload (validated against the language\nschema plus the field allowlist); ``abstain`` marks descriptions\ntoo vague to draft from. Nothing is ever deployed: drafts simulate\nonly.",
+  "properties": {
+    "abstain": {
+      "default": false,
+      "title": "Abstain",
+      "type": "boolean"
+    },
+    "abstain_reason": {
+      "default": "",
+      "title": "Abstain Reason",
+      "type": "string"
+    },
+    "confidence": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "rationale": {
+      "default": "",
+      "title": "Rationale",
+      "type": "string"
+    },
+    "rule": {
+      "additionalProperties": true,
+      "title": "Rule",
+      "type": "object"
+    }
+  },
+  "title": "RuleDraft",
+  "type": "object"
+}

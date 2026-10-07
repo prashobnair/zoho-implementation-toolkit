@@ -14,7 +14,13 @@ from typing import Any
 from pydantic import BaseModel
 
 from zohokit.ai.explain import ExplainResult
-from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+from zohokit.ai.schemas import (
+    ExplainDraft,
+    LoopExplanation,
+    MappingDraft,
+    RuleDraft,
+    TransformDraft,
+)
 from zohokit.core.findings import Report
 from zohokit.modules.books.models import BooksInput
 from zohokit.modules.forms.models import FormsInput
@@ -68,6 +74,8 @@ def main() -> None:
     _write(ROOT / "schemas" / "ai" / "explain.v1.json", ExplainDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "mapping.v1.json", MappingDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "transform.v1.json", TransformDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "workflow_draft.v1.json", RuleDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "workflow_loop.v1.json", LoopExplanation.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "explain-result.v1.json", ExplainResult.model_json_schema())
     _write(
         ROOT / "schemas" / "ai" / "suggest-mapping-result.v1.json",
@@ -77,7 +85,7 @@ def main() -> None:
         ROOT / "schemas" / "ai" / "suggest-transform-result.v1.json",
         SuggestTransformResult.model_json_schema(),
     )
-    print(f"wrote {2 * len(INPUTS) + 9} schemas (v{SCHEMA_VERSION})")
+    print(f"wrote {2 * len(INPUTS) + 11} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

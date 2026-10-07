@@ -1,0 +1,195 @@
+{
+  "cases": {
+    "wf-draft-bad-abstain-rule": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "e3f19b8c7c92c6d7a9bf1755021daacfc81c3bcd98874498660804178c29aba8",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-01\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-action": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "a2daa1e200fd2a64e2b7bd2768fef69f7841e8ea15a0b252b920a6b94a0070d1",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"delete_records\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-action\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-empty": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "29e417ddcfd05b80cf2a92f36bad02730a746b5da08c0f88848e19ca267cc1e8",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {}\n}\n"
+    },
+    "wf-draft-bad-field": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "e8db26fd1b1ca8973073fe6a867f0e95dea33483d89e4b237645756e640a1528",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Ghost_Field__s\",\n      \"op\": \"eq\",\n      \"value\": \"x\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-field\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-injection": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "98058751115317f1862047d4dd6e9cd26c12b0bcb84491627c3485eeaa599694",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"closed-won\",\n        \"type\": \"send_email\"\n      },\n      {\n        \"type\": \"purge_everything\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-bad-injection\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-lowconf": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "19f46fa0f0026c25700b51aaa2609c6555fa75dcc137da704d99646173717c68",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.4,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-lowconf\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-offset": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "53a7cedc0bda7698ab1a288f9927268611faa4d29181b9aa93244427a8d281b1",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.9,\n  \"rationale\": \"recorded wrong on purpose.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"welcome\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"scheduled\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-bad-offset\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-bad-schema": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "17ea47a53ac473953b7a76d287339245c5de61998fe10549d8ff926a0db52cde",
+      "response": "{\"rule\": {\"id\": \"x\", \"event\": "
+    },
+    "wf-draft-good-01": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "ab2c94382aaa6f9e91930c766e20fad08b74478ee26a76665d11b0d8f470ffc0",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-01\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-02": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "b1c991d942e4a6c8c5db4c6d3b1f743567528e865a424a54a07c730b29df2170",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"gt\",\n      \"value\": 0\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-02\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-03": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "20552384ebbaf0c7193ff8251e7051155f912ccf6ed934c29a817b3417d9d2b4",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"delay_days\": 2,\n        \"type\": \"create_task\",\n        \"value\": \"Follow up in 2 days\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"changed_to\",\n      \"value\": \"Negotiation\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"stage_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-03\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-04": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "f235c7a3ace6d06f3ce78a7c7d76fafb273c6e44b591fbce5f424c956062e0b1",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"closed-won\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-04\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-05": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c1ae47af802c7a53e2a768dae973d6869a14dd14731d8668b2e4a6d7bfb15b1d",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"key-accounts-team\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"gt\",\n      \"value\": 100000\n    },\n    \"event\": {\n      \"type\": \"record_edited\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-05\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-06": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "8cec46084a96ab41829705fc112272c3b9fe74733c65b099040cef288753b516",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"welcome\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"offset_days\": 2,\n      \"type\": \"scheduled\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-06\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-07": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "d8a2495762f33580520c750156631c9341d9d03884cbff9112cdeb7074e08cf8",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"closing-today\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"field\": \"Closing_Date\",\n      \"offset_days\": 0,\n      \"type\": \"date_field_reached\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-07\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-08": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "c7ea804040a5a490e82db763345d12200fb58217514c36f4f6de40f2ae688485",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"any\": [\n        {\n          \"field\": \"Lead_Source\",\n          \"op\": \"eq\",\n          \"value\": \"Web\"\n        },\n        {\n          \"field\": \"Lead_Source\",\n          \"op\": \"eq\",\n          \"value\": \"Referral\"\n        }\n      ]\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-08\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-09": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "543e119f8142cb83268263eb61057824b8f46ea7c0fea47b140b9d2ed25c6dad",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Lead_Source\",\n      \"op\": \"neq\",\n      \"value\": \"Cold Call\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-09\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-10": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "78c8c8c1104e9e83d63e8f099e4bcf7810e2869a4dd53191b7d4271473ecba7f",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"create_task\",\n        \"value\": \"Review deal\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"in\",\n      \"value\": [\n        \"Negotiation\",\n        \"Proposal\"\n      ]\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-10\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-11": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "f211f7c8ae78832c7bb15067aad6766909f9190ebe946272c1fefeac1ea6c733",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Owner\",\n      \"op\": \"is_empty\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-11\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-12": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "4195fcb45b28775ab7c9f92e901a24d895aabeae8fc639d488da8c32917122ca",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"stall\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"changed_from\",\n      \"value\": \"Proposal\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-12\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-13": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "cdb172158736336b1bbde2275e889b2fbe7cfb119a33932943e9769397e63a9d",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"webhook\",\n        \"url\": \"https://example.invalid/hooks/billing\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-13\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-14": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "1268265402440e738f8b8bb8afd931fd2376f644c3f893e5d78cd5439c7d4da4",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"function_name\": \"score_lead\",\n        \"side_effects\": [\n          \"declared\"\n        ],\n        \"type\": \"function\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-14\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-15": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "30620d452fbbb4ba095aa2bcfce029dc773d71340b2d76d8543af17194edb2b7",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"key-accounts-team\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"gt\",\n      \"value\": 50000\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-15\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-16": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "d53f32432fec4d7d2434dbd874882314f23d74ae6800cf01954434d678e3ab8a",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"all\": [\n        {\n          \"field\": \"Amount\",\n          \"op\": \"gt\",\n          \"value\": 10000\n        },\n        {\n          \"field\": \"Stage\",\n          \"op\": \"eq\",\n          \"value\": \"Negotiation\"\n        }\n      ]\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-16\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-17": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "6719ff8e62694613028738dc0574198a28bf4033e72ccdb0d49c134e88f3f24a",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"create_task\",\n        \"value\": \"Check in\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"neq\",\n      \"value\": \"Closed Won\"\n    },\n    \"event\": {\n      \"type\": \"record_edited\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-17\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-18": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "b324be61c49eb387d08e7d4723d25f3baf23aec318562028f5749ba9ab397885",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"owner-alert\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"lt\",\n      \"value\": 1000\n    },\n    \"event\": {\n      \"field\": \"Amount\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-18\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-19": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "319467337f10f9274faf5ba8f350ad555646f18ed732843fed65d7a4ccb0374c",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Lead_Source\",\n      \"op\": \"not_in\",\n      \"value\": [\n        \"Web\",\n        \"Referral\"\n      ]\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-19\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-20": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "9625a696a97dadf2b33bd3caaa50a688ae95a5bdb4a22b383197462e07c66ea1",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"not\": {\n        \"field\": \"Deal_Name\",\n        \"op\": \"is_empty\"\n      }\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-20\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-21": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "df5d0d4caeb18ee949351eaa72b8eded4e1c54aa3389b9c9e3b50f24b7828e60",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      },\n      {\n        \"owner\": \"regional-manager\",\n        \"type\": \"assign_owner\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-21\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-22": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "4d23b46275d69d0ff6181d9e3428c57194e501305760f83e8aba64892a455b3d",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"create_task\",\n        \"value\": \"Log stage change\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"field\": \"Stage\",\n      \"type\": \"field_changed\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-22\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-23": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "37230b1906e150f92c7d2991f63fda91180216f8f688791e343fc763eeca9fc7",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"template\": \"review\",\n        \"type\": \"send_email\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": null,\n    \"event\": {\n      \"field\": \"Closing_Date\",\n      \"offset_days\": 7,\n      \"type\": \"date_field_reached\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-23\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-24": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "b87542a682260e43cecd0006fd65ddb4034efe22b6df3165ff8f1abc1be064ca",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"field\": \"Stage\",\n        \"type\": \"field_update\",\n        \"value\": \"Qualification\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Amount\",\n      \"op\": \"is_empty\"\n    },\n    \"event\": {\n      \"type\": \"record_created\"\n    },\n    \"execute_on\": \"both\",\n    \"id\": \"wf-draft-good-24\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-25": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "d30fcfa81e61323e8db8f9396b0a0bea1764eccec4802a7e5805ca8f9e7df18f",
+      "response": "{\n  \"abstain\": false,\n  \"abstain_reason\": \"\",\n  \"confidence\": 0.93,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {\n    \"actions\": [\n      {\n        \"type\": \"create_task\",\n        \"value\": \"Touch deal\"\n      }\n    ],\n    \"active\": true,\n    \"criteria\": {\n      \"field\": \"Stage\",\n      \"op\": \"eq\",\n      \"value\": \"Negotiation\"\n    },\n    \"event\": {\n      \"type\": \"record_edited\"\n    },\n    \"execute_on\": \"edit\",\n    \"id\": \"wf-draft-good-25\",\n    \"module\": \"Deals\",\n    \"priority\": 100,\n    \"repeat\": true\n  }\n}\n"
+    },
+    "wf-draft-good-26": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "bafb5e8521ced8e86b98346142a53fc7c6707686b0e74fbd590c66239a988add",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {}\n}\n"
+    },
+    "wf-draft-good-27": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "42fd426971c82d0428dbaaa03c9fe958dfd66546232299655e6464fa3d7b2e64",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {}\n}\n"
+    },
+    "wf-draft-good-28": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "72b31028ef8086ba6c62b4daa2d787914daf7f477a79e0857824864f15caab2e",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {}\n}\n"
+    },
+    "wf-draft-good-29": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "069886d0b8316c55a06b5ddba1f677c026c2cf2a3a61ca9b7c2c2018fbc8dcc1",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {}\n}\n"
+    },
+    "wf-draft-good-30": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "2523577da6b93b6614549e5a18fd8bc35a8c3aeead588fbd8125195f160f4695",
+      "response": "{\n  \"abstain\": true,\n  \"abstain_reason\": \"too vague to draft\",\n  \"confidence\": 0.2,\n  \"rationale\": \"Mapped from the deal lifecycle vocabulary.\",\n  \"rule\": {}\n}\n"
+    }
+  },
+  "origin": "hand-authored synthetic"
+}

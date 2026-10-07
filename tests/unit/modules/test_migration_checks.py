@@ -73,6 +73,9 @@ def test_target_search_email_first_and_budget_truncation() -> None:
     assert coverage.severity == "info"
     assert coverage.evidence == {"checked": 1, "total": 3, "truncated": True}
     assert coverage.message == "Target duplicate search checked 1 / 3 rows."
+    rerun = coverage_finding("people", checked=2, total=9, truncated=False)
+    assert rerun.id == coverage.id
+    assert rerun.evidence == {"checked": 2, "total": 9, "truncated": False}
 
 
 STAGE_META = FieldMeta(

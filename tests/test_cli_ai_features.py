@@ -48,7 +48,7 @@ def test_explain_json_template_internal(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert payload["audience"] == "internal"
-    assert payload["source"] == "ai"
+    assert payload["source"] == "template"
     assert payload["ai_status"] == "disabled"
     assert payload["sentences"], "template explains every finding"
     assert payload["sentences"][0]["finding_ids"] == []

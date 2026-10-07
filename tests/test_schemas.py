@@ -77,7 +77,13 @@ def test_workflow_rule_v2_schema_matches_model() -> None:
 def test_ai_suggestion_schemas_match_models() -> None:
     """AI suggestion outputs export under schemas/ai/ (STD-AI3)."""
     from zohokit.ai.explain import ExplainResult
-    from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+    from zohokit.ai.schemas import (
+        ExplainDraft,
+        LoopExplanation,
+        MappingDraft,
+        RuleDraft,
+        TransformDraft,
+    )
     from zohokit.modules.migration.suggest import (
         SuggestMappingResult,
         SuggestTransformResult,
@@ -87,6 +93,8 @@ def test_ai_suggestion_schemas_match_models() -> None:
         ("explain", ExplainDraft),
         ("mapping", MappingDraft),
         ("transform", TransformDraft),
+        ("workflow_draft", RuleDraft),
+        ("workflow_loop", LoopExplanation),
         ("explain-result", ExplainResult),
         ("suggest-mapping-result", SuggestMappingResult),
         ("suggest-transform-result", SuggestTransformResult),

@@ -67,10 +67,38 @@ class TransformDraft(BaseModel):
     evidence_samples_idx: list[int] = Field(default_factory=list)
 
 
+class RuleDraft(BaseModel):
+    """One natural-language rule draft for human review (AI-WF-1).
+
+    ``rule`` is a v2 rule payload (validated against the language
+    schema plus the field allowlist); ``abstain`` marks descriptions
+    too vague to draft from. Nothing is ever deployed: drafts simulate
+    only.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    rule: dict[str, Any] = Field(default_factory=dict)
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    rationale: str = ""
+    abstain: bool = False
+    abstain_reason: str = ""
+
+
+class LoopExplanation(BaseModel):
+    """Plain-English loop explanation citing the rule chain (AI-WF-2)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    sentences: list[ExplainSentence] = Field(default_factory=list)
+
+
 __all__: list[str] = [
     "ExplainDraft",
     "ExplainSentence",
+    "LoopExplanation",
     "MappingDraft",
     "MappingSuggestion",
+    "RuleDraft",
     "TransformDraft",
 ]

@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-      - run: uv sync --locked --group dev
+      - run: uv sync --locked --group dev --extra ai
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy --strict src

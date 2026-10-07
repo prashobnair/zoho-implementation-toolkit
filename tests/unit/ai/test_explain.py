@@ -92,7 +92,9 @@ def test_internal_audience_keeps_messages() -> None:
 def test_run_explain_without_provider_is_disabled() -> None:
     result = run_explain(_report(), "internal", provider=None)
     assert result.ai_status == "disabled"
-    assert result.source == "ai"
+    assert result.source == "template"
+    assert result.model == ""
+    assert result.prompt_hash == ""
     assert result.prompt_version == "template"
     assert len(result.sentences) == 3
     assert result.usage.status == "disabled"

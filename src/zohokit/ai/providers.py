@@ -223,7 +223,12 @@ class AnthropicProvider:
         return self._model
 
     def complete_raw(self, prompt: Prompt, *, max_tokens: int, temperature: float = 0.0) -> str:
-        """Call the messages API and return the concatenated text."""
+        """Call the messages API and return the concatenated text.
+
+        The locked SDK (anthropic 1.11.0) types ``messages.create``
+        without a ``temperature`` field, so the caller's temperature is
+        accepted for protocol compatibility but never forwarded.
+        """
         try:
             import anthropic
         except ImportError:
@@ -235,7 +240,6 @@ class AnthropicProvider:
             response = client.messages.create(
                 model=self._model,
                 max_tokens=max_tokens,
-                temperature=temperature,
                 system=prompt.system,
                 messages=[{"role": "user", "content": prompt.text}],
             )
