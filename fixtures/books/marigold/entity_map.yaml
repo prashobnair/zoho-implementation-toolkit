@@ -1,0 +1,12 @@
+in-entity:
+  books_org_id_ref: in-entity
+  base_currency: INR
+  crm_criteria: {field: Entity, equals: India}
+us-entity:
+  books_org_id_ref: us-entity
+  base_currency: USD
+  crm_criteria: {field: Entity, equals: US}
+eu-entity:
+  books_org_id_ref: eu-entity
+  base_currency: EUR
+  crm_criteria: {field: Entity, equals: EU}

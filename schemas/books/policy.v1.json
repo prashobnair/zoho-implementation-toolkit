@@ -1,0 +1,163 @@
+{
+  "$defs": {
+    "AllowMultiple": {
+      "description": "When several invoices may sum to one deal net (UC-BK-2 staged billing).",
+      "properties": {
+        "billing_plan_field": {
+          "default": "Billing_Plan",
+          "title": "Billing Plan Field",
+          "type": "string"
+        }
+      },
+      "title": "AllowMultiple",
+      "type": "object"
+    },
+    "PeriodWindow": {
+      "description": "Month window; both bounds inclusive (see :mod:`period`).",
+      "properties": {
+        "by": {
+          "default": "deal_closing_date",
+          "enum": [
+            "deal_closing_date",
+            "invoice_date"
+          ],
+          "title": "By",
+          "type": "string"
+        },
+        "end": {
+          "default": "2026-09-30",
+          "format": "date",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "default": "2026-09-01",
+          "format": "date",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "title": "PeriodWindow",
+      "type": "object"
+    },
+    "Tolerance": {
+      "description": "Absolute + percentage tolerance bounds (both must hold).",
+      "properties": {
+        "abs": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "1.00",
+          "title": "Abs"
+        },
+        "pct": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            }
+          ],
+          "default": "0.5",
+          "title": "Pct"
+        }
+      },
+      "title": "Tolerance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Validated Books reconciliation policy (TK-BK-F1).",
+  "properties": {
+    "allow_multiple_invoices_when": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AllowMultiple"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "credit_notes": {
+      "const": "net_off",
+      "default": "net_off",
+      "title": "Credit Notes",
+      "type": "string"
+    },
+    "custom_field_label": {
+      "default": "CRM Deal ID",
+      "title": "Custom Field Label",
+      "type": "string"
+    },
+    "include_draft": {
+      "default": false,
+      "title": "Include Draft",
+      "type": "boolean"
+    },
+    "include_void": {
+      "default": false,
+      "title": "Include Void",
+      "type": "boolean"
+    },
+    "key_strategy": {
+      "default": "crm_deal_id_in_invoice_custom_field",
+      "enum": [
+        "crm_deal_id_in_invoice_custom_field",
+        "reference_number",
+        "sales_order_link"
+      ],
+      "title": "Key Strategy",
+      "type": "string"
+    },
+    "period": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PeriodWindow"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "tax": {
+      "default": "compare_net_only",
+      "enum": [
+        "compare_net_only",
+        "compare_gross_with_tax_table"
+      ],
+      "title": "Tax",
+      "type": "string"
+    },
+    "tax_table": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "type": "string"
+          }
+        ]
+      },
+      "title": "Tax Table",
+      "type": "object"
+    },
+    "tolerance": {
+      "$ref": "#/$defs/Tolerance"
+    }
+  },
+  "title": "MatchPolicy",
+  "type": "object"
+}
