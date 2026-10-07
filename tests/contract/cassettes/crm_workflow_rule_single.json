@@ -1,0 +1,88 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/workflow_rules/5550000000011000002"
+  },
+  "response": {
+    "body": {
+      "workflow_rules": [
+        {
+          "category": "default",
+          "conditions": [
+            {
+              "criteria_details": {
+                "criteria": {
+                  "comparator": "equal",
+                  "field": {
+                    "api_name": "Stage",
+                    "id": "5550000000000002565"
+                  },
+                  "type": "value",
+                  "value": "Negotiation"
+                }
+              },
+              "id": "5550000000011000011",
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000300001",
+                    "name": "Notify owner",
+                    "related_details": null,
+                    "type": "email_notifications"
+                  }
+                ]
+              },
+              "scheduled_actions": [
+                {
+                  "actions": [
+                    {
+                      "id": "5550000000000300002",
+                      "name": "Follow up task",
+                      "related_details": null,
+                      "type": "tasks"
+                    }
+                  ],
+                  "execute_after": {
+                    "period": "days",
+                    "unit": 2
+                  },
+                  "id": "5550000000011000012"
+                }
+              ],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "criteria": {
+                "comparator": "equal",
+                "field": {
+                  "api_name": "Stage",
+                  "id": "5550000000000002565"
+                },
+                "type": "value",
+                "value": "Negotiation"
+              },
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "field_update"
+          },
+          "id": "5550000000011000002",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Follow up on negotiation",
+          "status": {
+            "active": true
+          }
+        }
+      ]
+    }
+  }
+}

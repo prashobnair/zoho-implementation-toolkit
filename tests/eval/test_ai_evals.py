@@ -28,7 +28,13 @@ from zohokit.ai.pipeline import AiRequest, run_ai
 from zohokit.ai.prompts import load_template
 from zohokit.ai.providers import FakeProvider
 from zohokit.ai.redaction import build_prompt
-from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+from zohokit.ai.schemas import (
+    ExplainDraft,
+    LoopExplanation,
+    MappingDraft,
+    RuleDraft,
+    TransformDraft,
+)
 from zohokit.core.redact import Redactor
 
 pytestmark = pytest.mark.eval
@@ -49,11 +55,15 @@ def _load_metrics_module(feature: str) -> Any:
 explain_metrics = _load_metrics_module("explain")
 mapping_metrics = _load_metrics_module("mapping")
 transform_metrics = _load_metrics_module("transform")
+workflow_draft_metrics = _load_metrics_module("workflow_draft")
+workflow_loop_metrics = _load_metrics_module("workflow_loop")
 
 FEATURES: dict[str, dict[str, Any]] = {
     "explain": {"schema": ExplainDraft, "metrics": explain_metrics},
     "mapping": {"schema": MappingDraft, "metrics": mapping_metrics},
     "transform": {"schema": TransformDraft, "metrics": transform_metrics},
+    "workflow_draft": {"schema": RuleDraft, "metrics": workflow_draft_metrics},
+    "workflow_loop": {"schema": LoopExplanation, "metrics": workflow_loop_metrics},
 }
 
 
@@ -90,20 +100,24 @@ def _split_cases(cases: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], lis
 
 def _good_metrics(feature: str, cases: list[dict[str, Any]]) -> dict[str, float]:
     metrics = FEATURES[feature]["metrics"]
-    if feature == "explain":
+    if feature in ("explain", "workflow_loop"):
         grades = []
         for case in cases:
             outcome, raw = _replay(feature, case, _recordings(feature))
             assert outcome.ai_status == "ok", case["case_id"]
             grades.append(metrics.grade_good(case, outcome.data, raw))
         return metrics.good_metrics(grades)
-    if feature == "mapping":
+    if feature in ("mapping", "workflow_draft"):
         totals = {
             "correct": 0,
             "predicted": 0,
             "gold_positive": 0,
             "abstain_correct": 0,
             "abstain_total": 0,
+            "slots_matched": 0,
+            "slots_total": 0,
+            "valid": 0,
+            "total": 0,
         }
         for case in cases:
             outcome, _raw = _replay(feature, case, _recordings(feature))
@@ -126,7 +140,7 @@ def _catch_rate(feature: str, cases: list[dict[str, Any]]) -> tuple[float, list[
     for case in cases:
         outcome, raw = _replay(feature, case, _recordings(feature))
         draft = outcome.data if outcome.ai_status not in ("fallback", "disabled") else None
-        if feature == "explain":
+        if feature in ("explain", "workflow_loop"):
             caught = metrics.bad_caught(case, outcome.ai_status, draft, raw)
         else:
             caught = metrics.bad_caught(case, outcome.ai_status, draft)
@@ -201,6 +215,8 @@ def _generator_builders() -> dict[str, Any]:
         "explain": module.build_explain,
         "mapping": module.build_mapping,
         "transform": module.build_transform,
+        "workflow_draft": module.build_workflow_draft,
+        "workflow_loop": module.build_workflow_loop,
     }
 
 

@@ -1,0 +1,298 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/workflow_rules?module=Deals"
+  },
+  "response": {
+    "body": {
+      "info": {
+        "count": 6,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      },
+      "workflow_rules": [
+        {
+          "conditions": [
+            {
+              "criteria_details": {
+                "criteria": {
+                  "comparator": "equal",
+                  "field": {
+                    "api_name": "Owner",
+                    "id": "5550000000000001001"
+                  },
+                  "type": "value",
+                  "value": "regional-manager"
+                }
+              },
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000700001",
+                    "name": "Set stage to Negotiation",
+                    "related_details": null,
+                    "type": "field_updates"
+                  }
+                ]
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "criteria": {
+                "comparator": "equal",
+                "field": {
+                  "api_name": "Owner",
+                  "id": "5550000000000001001"
+                },
+                "type": "value",
+                "value": "regional-manager"
+              },
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "field_update"
+          },
+          "id": "5550000000011000011",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed loop A (writes Stage on Owner change)",
+          "status": {
+            "active": true
+          }
+        },
+        {
+          "conditions": [
+            {
+              "criteria_details": {
+                "criteria": {
+                  "comparator": "equal",
+                  "field": {
+                    "api_name": "Stage",
+                    "id": "5550000000000002565"
+                  },
+                  "type": "value",
+                  "value": "Negotiation"
+                }
+              },
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000700003",
+                    "name": "Reassign owner",
+                    "related_details": null,
+                    "type": "field_updates"
+                  }
+                ]
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "criteria": {
+                "comparator": "equal",
+                "field": {
+                  "api_name": "Stage",
+                  "id": "5550000000000002565"
+                },
+                "type": "value",
+                "value": "Negotiation"
+              },
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "field_update"
+          },
+          "id": "5550000000011000012",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed loop B (writes Owner on Stage change)",
+          "status": {
+            "active": true
+          }
+        },
+        {
+          "conditions": [
+            {
+              "criteria_details": {},
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000700001",
+                    "name": "Set stage to Negotiation",
+                    "related_details": null,
+                    "type": "field_updates"
+                  }
+                ]
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "create_or_edit"
+          },
+          "id": "5550000000011000021",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed conflict A (Stage to Negotiation)",
+          "status": {
+            "active": true
+          }
+        },
+        {
+          "conditions": [
+            {
+              "criteria_details": {},
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000700002",
+                    "name": "Set stage to Proposal",
+                    "related_details": null,
+                    "type": "field_updates"
+                  }
+                ]
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "create_or_edit"
+          },
+          "id": "5550000000011000022",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed conflict B (Stage to Proposal)",
+          "status": {
+            "active": true
+          }
+        },
+        {
+          "conditions": [
+            {
+              "criteria_details": {
+                "criteria": {
+                  "comparator": "equal",
+                  "field": {
+                    "api_name": "Ghost_Field__s",
+                    "id": "5550000000000009999"
+                  },
+                  "type": "value",
+                  "value": "x"
+                }
+              },
+              "instant_actions": {
+                "actions": [
+                  {
+                    "id": "5550000000000700002",
+                    "name": "Set stage to Proposal",
+                    "related_details": null,
+                    "type": "field_updates"
+                  }
+                ]
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "create"
+          },
+          "id": "5550000000011000031",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed stale field reference",
+          "status": {
+            "active": true
+          }
+        },
+        {
+          "conditions": [
+            {
+              "criteria_details": {
+                "criteria": {
+                  "comparator": "equal",
+                  "field": {
+                    "api_name": "Stage",
+                    "id": "5550000000000002565"
+                  },
+                  "type": "value",
+                  "value": "New"
+                }
+              },
+              "instant_actions": {
+                "actions": []
+              },
+              "scheduled_actions": [],
+              "sequence_number": 1
+            }
+          ],
+          "editable": true,
+          "execute_when": {
+            "details": {
+              "trigger_module": {
+                "api_name": "Deals",
+                "id": "5550000000000002181"
+              }
+            },
+            "type": "create"
+          },
+          "id": "5550000000011000041",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Seed empty rule",
+          "status": {
+            "active": true
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/workflow_configurations?module=Deals"
+  },
+  "response": {
+    "body": {
+      "workflow_configurations": {
+        "actions": [
+          {
+            "api_name": "field_updates",
+            "associate_action": true,
+            "is_clickable": true,
+            "limit": 5,
+            "limit_per_action": null,
+            "name": "Fieldupdate",
+            "supported_in_scheduled_action": true
+          },
+          {
+            "api_name": "webhooks",
+            "associate_action": true,
+            "is_clickable": true,
+            "limit": 1,
+            "limit_per_action": null,
+            "name": "Webhook",
+            "supported_in_scheduled_action": true
+          }
+        ],
+        "triggers": [
+          {
+            "actions": [
+              "field_updates",
+              "assign_owner",
+              "email_notifications",
+              "tasks",
+              "webhooks",
+              "functions"
+            ],
+            "api_name": "create",
+            "deprecated": false,
+            "name": "Create",
+            "scheduled_actions_supported": true
+          },
+          {
+            "actions": [
+              "field_updates",
+              "assign_owner",
+              "email_notifications",
+              "tasks",
+              "webhooks",
+              "functions"
+            ],
+            "api_name": "field_update",
+            "deprecated": false,
+            "name": "FieldUpdate",
+            "scheduled_actions_supported": true
+          }
+        ]
+      }
+    }
+  }
+}

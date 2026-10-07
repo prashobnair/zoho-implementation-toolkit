@@ -1,0 +1,139 @@
+# Marigold Labs deal-lifecycle rule suite (UC-WF-2, TK-WF-F5/F6).
+#
+# Synthetic deal automation for the Marigold story: ownership, stage
+# progression, negotiation follow-ups and closed-won notices. Every
+# rule fires in at least one case and every criteria sees both
+# outcomes, so rule and branch coverage are 100%.
+
+version: 1
+module: Deals
+rules:
+  - id: ml-assign-owner
+    module: Deals
+    event: {type: record_created}
+    execute_on: both
+    priority: 1
+    actions:
+      - {type: assign_owner, owner: regional-manager}
+  - id: ml-qualify
+    module: Deals
+    event: {type: record_created}
+    execute_on: both
+    priority: 2
+    criteria: {field: Amount, op: gt, value: 0}
+    actions:
+      - {type: field_update, field: Stage, value: Qualification}
+  - id: ml-negotiation-task
+    module: Deals
+    event: {type: stage_changed, field: Stage}
+    execute_on: edit
+    priority: 1
+    criteria: {field: Stage, op: changed_to, value: Negotiation}
+    actions:
+      - {type: create_task, value: Follow up in 2 days, delay_days: 2}
+  - id: ml-close-notify
+    module: Deals
+    event: {type: field_changed, field: Stage}
+    execute_on: edit
+    priority: 2
+    criteria: {field: Stage, op: eq, value: Closed Won}
+    actions:
+      - {type: send_email, template: closed-won}
+  - id: ml-high-value
+    module: Deals
+    event: {type: record_edited}
+    execute_on: edit
+    priority: 3
+    criteria: {field: Amount, op: gt, value: 100000}
+    actions:
+      - {type: assign_owner, owner: key-accounts-team}
+
+cases:
+  - name: create-basic
+    given:
+      record: {id: ml-1, Stage: New, Amount: 5000}
+      event: record_created
+    then:
+      fired: [ml-assign-owner, ml-qualify]
+      state: {Owner: regional-manager, Stage: Qualification}
+      no_findings: true
+
+  - name: create-zero
+    given:
+      record: {id: ml-2, Stage: New, Amount: 0}
+      event: record_created
+    then:
+      fired: [ml-assign-owner]
+      state: {Owner: regional-manager, Stage: New}
+      no_findings: true
+
+  - name: create-high-value
+    given:
+      record: {id: ml-3, Stage: New, Amount: 200000}
+      event: record_created
+    then:
+      fired: [ml-assign-owner, ml-high-value, ml-qualify]
+      state: {Owner: key-accounts-team, Stage: Qualification}
+      no_findings: true
+
+  - name: negotiation
+    given:
+      record: {id: ml-4, Stage: Negotiation, Amount: 5000}
+      event: stage_changed
+      event_field: Stage
+      fields_changed: [Stage]
+    then:
+      fired: [ml-negotiation-task]
+      no_findings: true
+
+  - name: negotiation-noop
+    given:
+      record: {id: ml-5, Stage: Proposal, Amount: 5000}
+      event: stage_changed
+      event_field: Stage
+      fields_changed: [Stage]
+    then:
+      fired: []
+      state: {Stage: Proposal}
+      no_findings: true
+
+  - name: close-won
+    given:
+      record: {id: ml-6, Stage: Closed Won, Amount: 5000}
+      event: field_changed
+      event_field: Stage
+      fields_changed: [Stage]
+    then:
+      fired: [ml-close-notify]
+      no_findings: true
+
+  - name: close-other
+    given:
+      record: {id: ml-7, Stage: Proposal, Amount: 5000}
+      event: field_changed
+      event_field: Stage
+      fields_changed: [Stage]
+    then:
+      fired: []
+      no_findings: true
+
+  - name: edit-standard
+    given:
+      record: {id: ml-8, Stage: Qualification, Amount: 5000}
+      event: record_edited
+      fields_changed: [Amount]
+    then:
+      fired: []
+      no_findings: true
+
+  - name: create-nonpositive
+    params:
+      - {name: zero, Amount: 0}
+      - {name: negative, Amount: -5}
+    given:
+      record: {id: ml-9, Stage: New}
+      event: record_created
+    then:
+      fired: [ml-assign-owner]
+      state: {Owner: regional-manager, Stage: New}
+      no_findings: true

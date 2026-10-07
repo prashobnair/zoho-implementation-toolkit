@@ -1,0 +1,27 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/email_notifications"
+  },
+  "response": {
+    "body": {
+      "email_notifications": [
+        {
+          "id": "5550000000000300001",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Notify owner"
+        }
+      ],
+      "info": {
+        "count": 1,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

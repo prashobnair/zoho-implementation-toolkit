@@ -67,10 +67,23 @@ def test_release_manifest_schema_matches_model() -> None:
     assert on_disk == _dump(Manifest.model_json_schema()), "release manifest.v2 schema is stale"
 
 
+def test_workflow_rule_v2_schema_matches_model() -> None:
+    from zohokit.modules.workflow.language import RulesetV2
+
+    on_disk = (ROOT / "schemas" / "workflow" / "rule.v2.json").read_text(encoding="utf-8")
+    assert on_disk == _dump(RulesetV2.model_json_schema()), "workflow rule.v2 schema is stale"
+
+
 def test_ai_suggestion_schemas_match_models() -> None:
     """AI suggestion outputs export under schemas/ai/ (STD-AI3)."""
     from zohokit.ai.explain import ExplainResult
-    from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+    from zohokit.ai.schemas import (
+        ExplainDraft,
+        LoopExplanation,
+        MappingDraft,
+        RuleDraft,
+        TransformDraft,
+    )
     from zohokit.modules.migration.suggest import (
         SuggestMappingResult,
         SuggestTransformResult,
@@ -80,6 +93,8 @@ def test_ai_suggestion_schemas_match_models() -> None:
         ("explain", ExplainDraft),
         ("mapping", MappingDraft),
         ("transform", TransformDraft),
+        ("workflow_draft", RuleDraft),
+        ("workflow_loop", LoopExplanation),
         ("explain-result", ExplainResult),
         ("suggest-mapping-result", SuggestMappingResult),
         ("suggest-transform-result", SuggestTransformResult),

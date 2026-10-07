@@ -1,0 +1,25 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/webhooks"
+  },
+  "response": {
+    "body": {
+      "info": {
+        "count": 1,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      },
+      "webhooks": [
+        {
+          "id": "5550000000000720001",
+          "method": "POST",
+          "name": "Sync to billing",
+          "url": "https://example.invalid/hooks/billing"
+        }
+      ]
+    }
+  }
+}

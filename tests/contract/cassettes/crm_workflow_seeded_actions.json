@@ -1,0 +1,67 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/crm/v8/settings/automation/field_updates"
+  },
+  "response": {
+    "body": {
+      "field_updates": [
+        {
+          "field": {
+            "api_name": "Stage",
+            "id": "5550000000000002565"
+          },
+          "id": "5550000000000700001",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Set stage to Negotiation",
+          "type": "static",
+          "value": [
+            "Negotiation"
+          ]
+        },
+        {
+          "field": {
+            "api_name": "Stage",
+            "id": "5550000000000002565"
+          },
+          "id": "5550000000000700002",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Set stage to Proposal",
+          "type": "static",
+          "value": [
+            "Proposal"
+          ]
+        },
+        {
+          "field": {
+            "api_name": "Owner",
+            "id": "5550000000000001001"
+          },
+          "id": "5550000000000700003",
+          "module": {
+            "api_name": "Deals",
+            "id": "5550000000000002181"
+          },
+          "name": "Reassign owner",
+          "type": "static",
+          "value": [
+            "regional-manager"
+          ]
+        }
+      ],
+      "info": {
+        "count": 3,
+        "more_records": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

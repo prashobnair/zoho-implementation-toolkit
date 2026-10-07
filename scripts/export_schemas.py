@@ -14,7 +14,13 @@ from typing import Any
 from pydantic import BaseModel
 
 from zohokit.ai.explain import ExplainResult
-from zohokit.ai.schemas import ExplainDraft, MappingDraft, TransformDraft
+from zohokit.ai.schemas import (
+    ExplainDraft,
+    LoopExplanation,
+    MappingDraft,
+    RuleDraft,
+    TransformDraft,
+)
 from zohokit.core.findings import Report
 from zohokit.modules.books.models import BooksInput
 from zohokit.modules.forms.models import FormsInput
@@ -26,6 +32,7 @@ from zohokit.modules.migration.suggest import SuggestMappingResult, SuggestTrans
 from zohokit.modules.release.manifest import Manifest
 from zohokit.modules.release.models import ReleaseInput
 from zohokit.modules.timeline.models import TimelineInput
+from zohokit.modules.workflow.language import RulesetV2
 from zohokit.modules.workflow.models import WorkflowInput
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -62,10 +69,13 @@ def main() -> None:
         # copy so every output model resolves under schemas/<module>/.
         _write(ROOT / "schemas" / module / f"report.v{SCHEMA_VERSION}.json", report_schema)
     _write(ROOT / "schemas" / "release" / "manifest.v2.json", Manifest.model_json_schema())
+    _write(ROOT / "schemas" / "workflow" / "rule.v2.json", RulesetV2.model_json_schema())
     _write(ROOT / "schemas" / "migration" / "mapping.v1.json", MappingDoc.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "explain.v1.json", ExplainDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "mapping.v1.json", MappingDraft.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "transform.v1.json", TransformDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "workflow_draft.v1.json", RuleDraft.model_json_schema())
+    _write(ROOT / "schemas" / "ai" / "workflow_loop.v1.json", LoopExplanation.model_json_schema())
     _write(ROOT / "schemas" / "ai" / "explain-result.v1.json", ExplainResult.model_json_schema())
     _write(
         ROOT / "schemas" / "ai" / "suggest-mapping-result.v1.json",
@@ -75,7 +85,7 @@ def main() -> None:
         ROOT / "schemas" / "ai" / "suggest-transform-result.v1.json",
         SuggestTransformResult.model_json_schema(),
     )
-    print(f"wrote {2 * len(INPUTS) + 8} schemas (v{SCHEMA_VERSION})")
+    print(f"wrote {2 * len(INPUTS) + 11} schemas (v{SCHEMA_VERSION})")
 
 
 if __name__ == "__main__":

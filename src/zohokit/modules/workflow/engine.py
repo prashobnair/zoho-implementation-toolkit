@@ -14,8 +14,10 @@ from zohokit.core.context import RunContext
 from zohokit.core.findings import Finding, Report, Severity
 from zohokit.core.ids import canonical_json
 from zohokit.modules import Analysis
+from zohokit.modules.workflow.language import RulesetV2, parse_ruleset
 from zohokit.modules.workflow.models import WorkflowInput
 from zohokit.modules.workflow.report import build_report
+from zohokit.modules.workflow.simulator import simulate_v2
 
 ALLOWED_EVENTS = {"deal_created", "stage_changed", "followup_due"}
 ALLOWED_ACTIONS = {"assign_owner", "set_stage", "queue_followup"}
@@ -111,15 +113,113 @@ def _simulate(
 
 
 def _entity_id(item: dict[str, Any]) -> str:
-    if isinstance(item.get("rule"), str):
+    if isinstance(item.get("rule"), str) and item["rule"]:
         return str(item["rule"])
     if isinstance(item.get("event"), str):
         return str(item["event"])
     return str(item["code"])
 
 
+def _v2_chain(item: dict[str, Any]) -> list[str]:
+    """Rule IDs of the steps behind a cycle/step-limit finding, in order."""
+    chain = [str(rule_id) for rule_id in item.get("rules", []) if str(rule_id)]
+    if chain:
+        return chain
+    single = str(item.get("rule", ""))
+    return [single] if single else []
+
+
+def _v2_entity(item: dict[str, Any], record_id: str) -> tuple[str, str, str]:
+    """Stable (entity, entity_id, discriminator) for one v2 sim finding."""
+    code = str(item["code"])
+    if code == "duplicate_side_effect":
+        return (
+            "record",
+            record_id,
+            "\0".join(
+                [
+                    "duplicate",
+                    str(item.get("rule", "")),
+                    str(item.get("action", "")),
+                    str(item.get("target", "")),
+                    str(item.get("day", "")),
+                ]
+            ),
+        )
+    chain = _v2_chain(item)
+    if code == "step_limit":
+        if not chain:
+            return ("trace", str(item.get("rule", "trace")), "step-limit")
+        return ("trace", min(chain), "step-limit\0" + "\0".join(chain))
+    if not chain:
+        return ("trace", str(item.get("rule", "") or "cycle"), "cycle")
+    return ("trace", min(chain), "cycle\0" + "\0".join(chain))
+
+
+def _v2_message(item: dict[str, Any]) -> str:
+    code = str(item["code"])
+    if code == "duplicate_side_effect":
+        return (
+            f"Simulated {item.get('action', 'action')} for rule {item.get('rule', '')} "
+            f"would duplicate within day {item.get('day', 0)}; dropped."
+        )
+    chain = _v2_chain(item)
+    if code == "step_limit":
+        if not chain:
+            return f"Simulation exceeded the step budget (rule {item.get('rule', '')})."
+        return "Simulation exceeded the step budget (rules " + " -> ".join(chain) + ")."
+    if not chain:
+        return "Simulation revisited a state signature; stopped to avoid a loop."
+    return "Simulation revisited a state signature via " + " -> ".join(chain) + "; stopped."
+
+
+_V2_SEVERITY: dict[str, Severity] = {
+    "cycle_detected": Severity.ERROR,
+    "step_limit": Severity.ERROR,
+    "duplicate_side_effect": Severity.ERROR,
+}
+
+#: Legacy v1 event names mapped to their v2 equivalents so `simulate`
+#: keeps working with its historical default (`deal_created`).
+LEGACY_EVENT_ALIASES: dict[str, str] = {
+    "deal_created": "record_created",
+    "followup_due": "scheduled",
+}
+
+
 def analyze(inputs: WorkflowInput) -> Analysis:
-    """Simulate the trace; return findings plus the legacy result dict."""
+    """Simulate the trace; return findings plus the legacy result dict.
+
+    v2 rule sets run the deterministic simulator (TK-WF-F2/F3); legacy
+    v1 rules run the unchanged legacy engine (parity green).
+    """
+    kind, parsed = parse_ruleset(copy.deepcopy(inputs.rules))
+    if kind == "v2":
+        ruleset = parsed if isinstance(parsed, RulesetV2) else RulesetV2(rules=())
+        event = LEGACY_EVENT_ALIASES.get(inputs.initial_event, inputs.initial_event)
+        legacy = simulate_v2(
+            ruleset,
+            copy.deepcopy(inputs.record),
+            event,
+            inputs.max_steps,
+            list(inputs.initial_fields_changed),
+            inputs.event_field,
+        )
+        record_id = str(inputs.record.get("id", "record"))
+        created = tuple(
+            Finding.create(
+                module="workflow",
+                code=str(item["code"]),
+                severity=_V2_SEVERITY.get(str(item["code"]), Severity.ERROR),
+                entity=_v2_entity(item, record_id)[0],
+                entity_id=_v2_entity(item, record_id)[1],
+                message=_v2_message(item),
+                evidence={"sim_finding": item},
+                discriminator=_v2_entity(item, record_id)[2],
+            )
+            for item in legacy["findings"]
+        )
+        return Analysis(findings=created, legacy=legacy, ready=not created)
     legacy = _simulate(
         copy.deepcopy(inputs.rules),
         copy.deepcopy(inputs.record),

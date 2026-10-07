@@ -175,6 +175,7 @@ def run_explain(
     if provider is None:
         return ExplainResult(
             audience=audience,
+            source="template",
             model="",
             prompt_version="template",
             prompt_hash="",

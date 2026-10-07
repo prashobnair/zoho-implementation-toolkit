@@ -79,7 +79,11 @@ def check_against_target(
 
 
 def coverage_finding(entity_name: str, *, checked: int, total: int, truncated: bool) -> Finding:
-    """Info finding reporting the target-search coverage (``checked N / M``)."""
+    """Info finding reporting the target-search coverage (``checked N / M``).
+
+    The identity keys on the entity only; row counts ride in evidence
+    so re-running a bigger batch keeps the finding ID stable.
+    """
     return Finding.create(
         module="migration",
         code="target_dedupe_coverage",
@@ -89,7 +93,7 @@ def coverage_finding(entity_name: str, *, checked: int, total: int, truncated: b
         message=f"Target duplicate search checked {checked} / {total} rows.",
         evidence={"checked": checked, "total": total, "truncated": truncated},
         remediation="Raise the API budget or narrow the batch when truncated.",
-        discriminator=f"coverage\0{checked}\0{total}\0{int(truncated)}",
+        discriminator="coverage",
     )
 
 
