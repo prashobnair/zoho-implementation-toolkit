@@ -49,3 +49,10 @@ def test_module_help_snapshot(argv: list[str], snapshot: SnapshotAssertion) -> N
     result = runner.invoke(app, argv)
     assert result.exit_code == 0
     assert _normalize(result.output) == snapshot
+
+
+def test_workflow_lint_metadata_help_keeps_brackets() -> None:
+    """Rich markup must not swallow the ``[field api_names]`` help text."""
+    result = runner.invoke(app, ["workflow", "lint", "--help"])
+    assert result.exit_code == 0
+    assert "JSON {module: [field api_names]}." in _normalize(result.output)

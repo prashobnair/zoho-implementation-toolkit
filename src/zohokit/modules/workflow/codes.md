@@ -8,8 +8,8 @@
 | `no_op_stage` | error | A set-stage action targets the stage already set. |
 | `duplicate_followup` | error | The same follow-up would fire twice for one record. |
 | `duplicate_side_effect` | error | A simulated email/webhook/task would fire twice for one record, action, template/url and day; the repeat was dropped. |
-| `conflicting_field_updates` | error | Two rules on the same trigger update the same field to different values. |
-| `potential_loop` | error | A rule writes fields that trigger other rules in a cycle; the chain path is reported. |
+| `conflicting_field_updates` | error | Two rules on the same trigger update the same field to different values (assigning owners counts as writing `Owner`). |
+| `potential_loop` | error | Rules write fields that re-trigger each other; one finding per rule group with the member rules and a representative path. |
 | `stale_field_reference` | error | A rule references a field absent from the module metadata. |
 | `empty_rule` | warning | A rule has no actions. |
 | `dead_rule` | warning | An inactive rule is still referenced (or never fires). |

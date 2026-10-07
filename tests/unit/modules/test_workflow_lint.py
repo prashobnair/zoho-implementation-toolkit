@@ -59,6 +59,10 @@ def test_seeded_set_finds_exactly_four_issues() -> None:
     ]
     by_code = {finding.code: finding for finding in findings}
     assert by_code["potential_loop"].entity_id == "5550000000011000011"
+    assert by_code["potential_loop"].evidence["rules"] == [
+        "5550000000011000011",
+        "5550000000011000012",
+    ]
     assert by_code["potential_loop"].evidence["path"] == [
         "5550000000011000011",
         "5550000000011000012",
@@ -160,3 +164,135 @@ def test_unsupported_constructs_listed_never_approximated() -> None:
 def test_stale_uses_real_deals_metadata() -> None:
     assert "Stage" in _deals_fields()
     assert "Ghost_Field__s" not in _deals_fields()
+
+
+def _dense_ruleset(size: int) -> RulesetV2:
+    """Every rule fires on any edit and writes Stage (complete digraph)."""
+    kind, parsed = parse_ruleset(
+        [
+            {
+                "id": f"dense-{number:03d}",
+                "event": {"type": "record_edited"},
+                "actions": [{"type": "field_update", "field": "Stage", "value": "Open"}],
+            }
+            for number in range(size)
+        ]
+    )
+    assert kind == "v2"
+    assert isinstance(parsed, RulesetV2)
+    return parsed
+
+
+def test_dense_rules_collapse_to_one_loop_finding() -> None:
+    """N=10 fully-connected rules give exactly 1 loop listing all 10."""
+    from zohokit.modules.workflow.analyzer import potential_loops
+
+    findings = potential_loops(_dense_ruleset(10))
+    assert len(findings) == 1
+    assert findings[0].entity_id == "dense-000"
+    assert findings[0].evidence["rules"] == [f"dense-{number:03d}" for number in range(10)]
+    path = findings[0].evidence["path"]
+    assert path[0] == path[-1] == "dense-000"
+
+
+def test_dense_300_rules_lint_fast() -> None:
+    """N=300 fully-connected rules lint in < 10 s (linear SCC, not cycles)."""
+    import time
+
+    from zohokit.modules.workflow.analyzer import potential_loops
+
+    started = time.perf_counter()
+    findings = potential_loops(_dense_ruleset(300))
+    elapsed = time.perf_counter() - started
+    assert len(findings) == 1
+    assert len(findings[0].evidence["rules"]) == 300
+    assert elapsed < 10, f"loop detection took {elapsed:.1f}s"
+
+
+def test_two_disjoint_cycles_give_two_findings() -> None:
+    from zohokit.modules.workflow.analyzer import potential_loops
+
+    kind, parsed = parse_ruleset(
+        [
+            {
+                "id": "a1",
+                "event": {"type": "field_changed", "field": "F"},
+                "actions": [{"type": "field_update", "field": "G", "value": "x"}],
+            },
+            {
+                "id": "a2",
+                "event": {"type": "field_changed", "field": "G"},
+                "actions": [{"type": "field_update", "field": "F", "value": "x"}],
+            },
+            {
+                "id": "b1",
+                "event": {"type": "field_changed", "field": "H"},
+                "actions": [{"type": "field_update", "field": "I", "value": "x"}],
+            },
+            {
+                "id": "b2",
+                "event": {"type": "field_changed", "field": "I"},
+                "actions": [{"type": "field_update", "field": "H", "value": "x"}],
+            },
+        ]
+    )
+    assert kind == "v2"
+    assert isinstance(parsed, RulesetV2)
+    findings = potential_loops(parsed)
+    assert [finding.entity_id for finding in findings] == ["a1", "b1"]
+    assert [finding.evidence["rules"] for finding in findings] == [["a1", "a2"], ["b1", "b2"]]
+    assert [finding.evidence["path"] for finding in findings] == [
+        ["a1", "a2", "a1"],
+        ["b1", "b2", "b1"],
+    ]
+
+
+def test_self_edge_reports_a_single_rule_loop() -> None:
+    from zohokit.modules.workflow.analyzer import potential_loops
+
+    kind, parsed = parse_ruleset(
+        [
+            {
+                "id": "solo",
+                "event": {"type": "record_edited"},
+                "actions": [{"type": "field_update", "field": "Stage", "value": "x"}],
+            },
+        ]
+    )
+    assert kind == "v2"
+    assert isinstance(parsed, RulesetV2)
+    findings = potential_loops(parsed)
+    assert len(findings) == 1
+    assert findings[0].entity_id == "solo"
+    assert findings[0].evidence == {"rules": ["solo"], "path": ["solo", "solo"]}
+
+
+def test_assign_owner_counts_as_an_owner_write() -> None:
+    """Two rules on one trigger assigning different owners conflict."""
+    from zohokit.modules.workflow.analyzer import conflicting_field_updates
+
+    kind, parsed = parse_ruleset(
+        [
+            {
+                "id": "o1",
+                "event": {"type": "record_created"},
+                "actions": [{"type": "assign_owner", "owner": "regional-manager"}],
+            },
+            {
+                "id": "o2",
+                "event": {"type": "record_created"},
+                "actions": [{"type": "assign_owner", "owner": "inside-sales"}],
+            },
+            {
+                "id": "o3",
+                "event": {"type": "record_edited"},
+                "actions": [{"type": "assign_owner", "owner": "other-trigger"}],
+            },
+        ]
+    )
+    assert kind == "v2"
+    assert isinstance(parsed, RulesetV2)
+    findings = conflicting_field_updates(parsed)
+    assert len(findings) == 1
+    assert findings[0].entity_id == "Deals.Owner"
+    assert findings[0].evidence["rule_ids"] == ["o1", "o2"]

@@ -70,7 +70,8 @@ def lint_cmd(
         Path | None, typer.Option("--actions", help="JSON action maps for real-shaped rules.")
     ] = None,
     metadata: Annotated[
-        Path | None, typer.Option("--metadata", help="JSON {module: [field api_names]}.")
+        Path | None,
+        typer.Option("--metadata", help="JSON {module: \\[field api_names]}."),
     ] = None,
     module: Annotated[str, typer.Option("--module", help="Module for live reads.")] = "Deals",
     strict: Annotated[bool, typer.Option("--strict", help="Exit 2 when findings remain.")] = False,
