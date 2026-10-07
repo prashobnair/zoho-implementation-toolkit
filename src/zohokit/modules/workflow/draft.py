@@ -183,7 +183,7 @@ def _url_host(url: str) -> str:
 _URL_RE = re.compile(r"https?://[^\s,;\"']+", re.IGNORECASE)
 
 #: Surrounding punctuation stripped before whole-token comparison.
-_TOKEN_STRIP = ",.;:!?'\"()[]"
+_WORD_EDGE_PUNCT = ",.;:!?\"'()[]"
 
 
 def _whole_token_match(target: str, description: str) -> bool:
@@ -198,9 +198,9 @@ def _whole_token_match(target: str, description: str) -> bool:
     if not lowered:
         return False
     tokens = [
-        token.strip(_TOKEN_STRIP)
+        token.strip(_WORD_EDGE_PUNCT)
         for token in description.casefold().split()
-        if token.strip(_TOKEN_STRIP)
+        if token.strip(_WORD_EDGE_PUNCT)
     ]
     if lowered in tokens:
         return True
