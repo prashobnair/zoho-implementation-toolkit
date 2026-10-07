@@ -255,13 +255,18 @@ def analyze_recon(
             )
             continue
         deal_ccy = str(deal.get("currency", ""))
+        deal_customer = str(deal.get("customer_name", ""))
         if deal_ccy != entry.currency:
             builder.record(
                 "entity_currency_mismatch",
                 "deal",
                 deal_id,
                 deal_id,
-                {"entity_key": entity_key, "org_fingerprint": fingerprints.get(entity_key, "")},
+                {
+                    "entity_key": entity_key,
+                    "org_fingerprint": fingerprints.get(entity_key, ""),
+                    "customer_name": deal_customer,
+                },
             )
         if not deal_in_scope(deal):
             continue
@@ -273,7 +278,7 @@ def analyze_recon(
                 "deal",
                 deal_id,
                 deal_id,
-                {"row": "deal", "value": deal.get("net_amount")},
+                {"row": "deal", "value": deal.get("net_amount"), "customer_name": deal_customer},
             )
             deal_net = None
 
@@ -295,7 +300,7 @@ def analyze_recon(
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {"invoice_id": invoice_id},
+                    {"invoice_id": invoice_id, "customer_name": deal_customer},
                 )
                 continue
             if status in _VOID_STATUSES and not policy.include_void:
@@ -325,11 +330,14 @@ def analyze_recon(
                     "invoice_id": invoice_id,
                     "entity_fingerprint": fingerprints.get(entity_key, ""),
                     "invoice_org_fingerprint": fingerprints.get(other_key, ""),
+                    "customer_name": deal_customer,
                 },
             )
 
         if not effective:
-            builder.record("missing_invoice", "deal", deal_id, deal_id, {})
+            builder.record(
+                "missing_invoice", "deal", deal_id, deal_id, {"customer_name": deal_customer}
+            )
             continue
 
         plan_field = (
@@ -344,7 +352,10 @@ def analyze_recon(
                 "deal",
                 deal_id,
                 deal_id,
-                {"invoice_ids": sorted(str(inv.get("id", "")) for inv in effective)},
+                {
+                    "invoice_ids": sorted(str(inv.get("id", "")) for inv in effective),
+                    "customer_name": deal_customer,
+                },
             )
             continue
 
@@ -371,7 +382,12 @@ def analyze_recon(
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {"row": "invoice", "value": raw_amount, "invoice_id": invoice_id},
+                    {
+                        "row": "invoice",
+                        "value": raw_amount,
+                        "invoice_id": invoice_id,
+                        "customer_name": deal_customer,
+                    },
                 )
                 skip_compare = True
                 continue
@@ -388,6 +404,7 @@ def analyze_recon(
                             "invoice_id": invoice_id,
                             "from_currency": inv_ccy,
                             "to_currency": deal_ccy,
+                            "customer_name": deal_customer,
                         },
                     )
                     skip_compare = True
@@ -422,6 +439,7 @@ def analyze_recon(
                             "row": "credit_note",
                             "value": cn.get("net_amount", cn.get("total")),
                             "credit_note_id": str(cn.get("id", "")),
+                            "customer_name": str(cn.get("customer_name", "")),
                         },
                     )
                     skip_compare = True
@@ -444,6 +462,7 @@ def analyze_recon(
             "deal_net": str(deal_net),
             "invoiced_total": str(invoiced),
             "currency": deal_ccy,
+            "customer_name": deal_customer,
         }
         if tax_fallback:
             evidence["tax_fallback_net"] = True
@@ -535,6 +554,7 @@ def analyze_recon(
                         "invoice_org_fingerprint": fingerprints.get(entity_key, ""),
                         "candidate_deals": sorted(candidates),
                         "candidate_fingerprints": sorted(set(candidate_prints)),
+                        "customer_name": customer,
                     },
                 )
                 continue
@@ -548,7 +568,7 @@ def analyze_recon(
             "invoice",
             invoice_id,
             invoice_id,
-            {"org_fingerprint": fingerprints.get(entity_key, "")},
+            {"org_fingerprint": fingerprints.get(entity_key, ""), "customer_name": customer},
         )
 
     known_invoice_ids = {
@@ -568,7 +588,11 @@ def analyze_recon(
             "credit_note",
             cn_id,
             cn_id,
-            {"credit_note_id": cn_id, "invoice_id": linked_to},
+            {
+                "credit_note_id": cn_id,
+                "invoice_id": linked_to,
+                "customer_name": str(cn.get("customer_name", "")),
+            },
         )
 
     findings = sorted(builder.findings, key=lambda item: item.sort_key())

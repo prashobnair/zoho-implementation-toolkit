@@ -98,6 +98,8 @@
   └──────────────────────────────────────────────────────────────────────────────┘
   ┌─ Commands ───────────────────────────────────────────────────────────────────┐
   │ reconcile  Reconcile every deal against its invoices and report mismatches.  │
+  │ explain    Narrate a recon report for the controller (template, or AI with   │
+  │            --ai).                                                            │
   └──────────────────────────────────────────────────────────────────────────────┘
   
   
