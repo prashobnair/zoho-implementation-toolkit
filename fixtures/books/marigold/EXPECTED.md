@@ -5,9 +5,13 @@ Offline fixture for the Books month-end workbench
 an unreachable EU entity, reconciled with `policy.yaml`,
 `entity_map.yaml` and `fx_rates.csv`.
 
-Run: `zohokit books reconcile recon.json --input-format legacy-v1
+Run: `zohokit books reconcile recon.json
 --policy policy.yaml --entity-map entity_map.yaml --fx-rates fx_rates.csv
 --unavailable eu-entity`
+
+The workbench envelope (`{deals, invoices, credit_notes}`, no `entities`
+key) auto-detects as `recon-v2` (`--input-format recon-v2` explicitly);
+the golden-output envelope stays `legacy-v1`.
 
 Raw Books org IDs in the test profile only (`555000001/2/3`,
 synthetic): `in-entity`, `us-entity`, `eu-entity`. Reports carry
@@ -33,6 +37,9 @@ synthetic): `in-entity`, `us-entity`, `eu-entity`. Reports carry
 | d-in-13 | — | closing 2026-08-31 US-Pacific: out of window |
 | d-in-14 | — | closing 2026-10-01 IST: out of window |
 | d-in-15 | `within_tolerance` (info) | closing 2026-09-30 IST: in window |
+| d-in-16 | `void_invoice_excluded` (info) + `missing_invoice` | only a void invoice, excluded by default with an audit trail (TK-BK-F5) |
+| d-in-17 | `invalid_date` (review) | missing closing date: flagged per row, excluded from matching |
+| i-in-99 | `invalid_date` (review) | unparseable date: excluded, so d-in-06 stays `missing_invoice` |
 | d-us-01 | `within_tolerance` (info) | exact USD match |
 | d-us-02 | `missing_invoice` | no invoice |
 | d-eu-01 / i-eu-01 | — | org unreachable: `source_unavailable` on `eu-entity`, records skipped |

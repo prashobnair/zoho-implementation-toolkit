@@ -11,11 +11,14 @@ calendar date in its own timezone falls inside the window:
   though it is 1 September in UTC.
 
 In other words the comparison uses the date as written in the record's
-own offset (a bare ``YYYY-MM-DD`` is that date). Records without a date
-are treated as in-window — only a dated record outside the window is
-excluded. Unparseable dates are treated as missing (in-window); there is
-no finding code for bad dates, so the rule is documented here instead
-of guessed per record.
+own offset (a bare ``YYYY-MM-DD`` is that date). :func:`in_window`
+treats records without a date (or with an unparseable date) as
+in-window — only a dated record outside the window is excluded. The
+reconciliation engine (:mod:`reconcile`) does NOT rely on that fallback
+for windowed runs: a deal with a missing/unparseable ``closing_date``
+or an invoice with a missing/unparseable ``date`` gets ``invalid_date``
+(review) and is excluded from every matching pass, row-level
+(TK-FIX-2 style) like ``invalid_amount``.
 """
 
 from __future__ import annotations

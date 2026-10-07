@@ -113,6 +113,8 @@ Case issues are **info** when source and target handle them identically,
 | `credit_note_unlinked` | review | A credit note links to no known invoice. |
 | `fx_rate_missing` | review | No exact FX rate covers the conversion; comparison skipped, never guessed. |
 | `draft_invoice_excluded` | info | A draft invoice was excluded from matching by policy. |
+| `void_invoice_excluded` | info | A void/voided/cancelled invoice was excluded from matching by policy. |
+| `invalid_date` | review | A missing or unparseable record date; that row is excluded from matching. |
 | `source_unavailable` | error | One org's pull failed; its records are out of scope while others continue. |
 
 ## metrics

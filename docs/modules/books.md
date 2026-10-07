@@ -32,18 +32,25 @@ uv run zohokit books reconcile period.json --strict
 Month-end workbench (policy-driven, multi-org):
 
 ```sh
-uv run zohokit books reconcile recon.json --input-format legacy-v1 \
+uv run zohokit books reconcile recon.json \
   --policy policy.yaml --entity-map entity_map.yaml --fx-rates fx_rates.csv \
   --period 2026-09 --unavailable eu-entity
-uv run zohokit books reconcile deals.json --input-format legacy-v1 \
+uv run zohokit books reconcile recon.json --input-format recon-v2 \
   --live --profile dev-in --books-orgs in-entity,us-entity \
   --entity-map entity_map.yaml --policy policy.yaml --period 2026-09 \
   --experimental
 ```
 
-The live form reads Books invoices, credit notes, contacts, currencies
-and taxes per org (unverified endpoints, so `--experimental` is required;
-CRM deals stay offline in the fixture file). One malformed org response
+The `recon.json` workbench envelope (`{deals, invoices, credit_notes?}`,
+no `entities` key) auto-detects — `--input-format recon-v2` is accepted
+explicitly, while the golden-output envelope stays `legacy-v1`. The live
+form reads CRM Deals live through the GET-only CRM v8 reader (explicit
+`fields=` list from the policy `crm_fields` mapping: `Amount`,
+`Closing_Date`, `Currency`, `Account_Name`, `Billing_Plan` plus the
+entity map's `crm_criteria` field; budget-capped, period-windowed) together
+with Books invoices, credit notes, contacts, currencies and taxes per org
+(unverified Books endpoints, so `--experimental` is required; the fixture
+file path stays the offline input). One malformed org response
 marks that org `source_unavailable` while the others continue.
 
 ## How it works
@@ -54,11 +61,15 @@ emits findings with stable IDs plus a `ready_for_sync` flag. Render with
 
 With `--policy` (schema `schemas/books/policy.v1.json`) the v2 engine runs
 instead: key strategies (`crm_deal_id_in_invoice_custom_field`,
-`reference_number`, `sales_order_link`), absolute + percentage tolerance,
-staged billing summed to the deal net (`Billing_Plan`), credit-note
-netting, net-only vs gross-with-tax-table comparison, draft/void handling
-(drafts excluded by default), and period windowing (`deal_closing_date` or
-`invoice_date`, both bounds inclusive on the record's own calendar date).
+`reference_number`, `sales_order_link`), absolute + percentage tolerance
+(only the stated bounds apply — both when both are given, exact match
+when neither is), staged billing summed to the deal net (`Billing_Plan`),
+credit-note netting, net-only vs gross-with-tax-table comparison,
+draft/void handling (both excluded by default, each with an info audit
+finding), missing/unparseable dates flagged per row (`invalid_date`,
+review; the row is excluded from matching), and period windowing
+(`deal_closing_date` or `invoice_date`, both bounds inclusive on the
+record's own calendar date).
 Entity maps keep raw Books org IDs in the local profile only; reports show
 `sha256:` fingerprints. An exact-match FX table converts cross-currency
 amounts with `Decimal` (missing rate → `fx_rate_missing`, never guessed).
@@ -85,6 +96,8 @@ amounts with `Decimal` (missing rate → `fx_rate_missing`, never guessed).
 | `credit_note_unlinked` | review | A credit note links to no known invoice. |
 | `fx_rate_missing` | review | No exact FX rate covers the conversion; comparison skipped, never guessed. |
 | `draft_invoice_excluded` | info | A draft invoice was excluded from matching by policy. |
+| `void_invoice_excluded` | info | A void/voided/cancelled invoice was excluded from matching by policy. |
+| `invalid_date` | review | A missing or unparseable record date; that row is excluded from matching. |
 | `source_unavailable` | error | One org's pull failed; its records are out of scope while others continue. |
 
 ## Scope & safety

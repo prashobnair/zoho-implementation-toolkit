@@ -46,9 +46,9 @@ Finding semantics for amount verdicts:
 - a credit note linked to no known invoice: ``credit_note_unlinked``
   (review, entity ``credit_note``).
 
-Messages are value-free (code + stable ids only); amounts live in
-evidence for the finance workbook. ``ready`` is true when no
-error- or review-severity finding remains.
+Messages are finance-readable (amounts and currencies are not PII);
+amount detail lives in evidence as well for the finance workbook.
+``ready`` is true when no error- or review-severity finding remains.
 """
 
 from __future__ import annotations
@@ -84,8 +84,10 @@ _CODE_SEVERITY: dict[str, Severity] = {
     "source_unavailable": Severity.ERROR,
     "credit_note_unlinked": Severity.REVIEW,
     "fx_rate_missing": Severity.REVIEW,
+    "invalid_date": Severity.REVIEW,
     "within_tolerance": Severity.INFO,
     "draft_invoice_excluded": Severity.INFO,
+    "void_invoice_excluded": Severity.INFO,
     "orphan_invoice_reference": Severity.ERROR,
 }
 
@@ -155,10 +157,40 @@ def _invoice_gross(invoice: dict[str, Any]) -> Any:
 
 
 def within_tolerance(diff: Decimal, deal_net: Decimal, policy: MatchPolicy) -> bool:
-    """Whether ``|diff|`` fits both the absolute and percentage bounds."""
+    """Whether ``|diff|`` fits every tolerance bound the policy states.
+
+    Both bounds when both are given, the single stated bound when only
+    one is given, and exact match (``diff == 0``) when neither is given.
+    A policy that sets only ``pct`` never inherits a default ``abs``.
+    """
     magnitude = abs(diff)
-    pct_bound = abs(deal_net) * policy.tolerance.pct / Decimal(100)
-    return magnitude <= policy.tolerance.abs and magnitude <= pct_bound
+    checks: list[bool] = []
+    if policy.tolerance.abs is not None:
+        checks.append(magnitude <= policy.tolerance.abs)
+    if policy.tolerance.pct is not None:
+        pct_bound = abs(deal_net) * policy.tolerance.pct / Decimal(100)
+        checks.append(magnitude <= pct_bound)
+    if not checks:
+        return diff == 0
+    return all(checks)
+
+
+def _fmt_amount(raw: Any) -> str:
+    """Format a parsed amount as ``49,500.00`` (fallback: the raw text)."""
+    try:
+        return f"{Decimal(str(raw)):,.2f}"
+    except Exception:
+        return str(raw)
+
+
+def _tolerance_text(policy: MatchPolicy) -> str:
+    """Human-readable tolerance bounds, e.g. ``±1.00 and 0.5%``."""
+    parts: list[str] = []
+    if policy.tolerance.abs is not None:
+        parts.append(f"\u00b1{_fmt_amount(policy.tolerance.abs)}")
+    if policy.tolerance.pct is not None:
+        parts.append(f"{policy.tolerance.pct}%")
+    return " and ".join(parts) if parts else "exact match"
 
 
 def _invoice_day(invoice: dict[str, Any]) -> date | None:
@@ -169,9 +201,10 @@ def _invoice_day(invoice: dict[str, Any]) -> date | None:
 class _Builder:
     """Collects v2 findings with stable, source-keyed identities."""
 
-    def __init__(self) -> None:
+    def __init__(self, policy: MatchPolicy) -> None:
         self.findings: list[Finding] = []
         self.legacy: list[dict[str, str]] = []
+        self.policy = policy
 
     def record(
         self,
@@ -181,7 +214,7 @@ class _Builder:
         discriminator: str,
         evidence: dict[str, Any],
     ) -> None:
-        message = f"{code} on {entity} {entity_id or '<missing>'}"
+        message = _message(code, entity, entity_id, evidence, self.policy)
         self.legacy.append({"deal": entity_id, "code": code})
         self.findings.append(
             Finding.create(
@@ -197,6 +230,139 @@ class _Builder:
         )
 
 
+def _message(
+    code: str,
+    entity: str,
+    entity_id: str,
+    evidence: dict[str, Any],
+    policy: MatchPolicy,
+) -> str:
+    """Finance-readable message for *code* (amounts/currency are not PII)."""
+    tolerance = _tolerance_text(policy)
+    if code == "outside_tolerance":
+        net = _fmt_amount(evidence.get("deal_net", ""))
+        total = _fmt_amount(evidence.get("invoiced_total", ""))
+        diff = _fmt_amount(evidence.get("diff", ""))
+        ccy = str(evidence.get("currency", ""))
+        return (
+            f"Invoiced {total} {ccy} against a deal net of {net} {ccy} "
+            f"({diff}), outside tolerance ({tolerance})."
+        )
+    if code == "under_invoiced":
+        net = _fmt_amount(evidence.get("deal_net", ""))
+        total = _fmt_amount(evidence.get("invoiced_total", ""))
+        diff = _fmt_amount(evidence.get("diff", ""))
+        ccy = str(evidence.get("currency", ""))
+        return (
+            f"Deal {entity_id} under-invoiced: staged invoices total {total} {ccy} "
+            f"against a deal net of {net} {ccy} ({diff}), outside tolerance "
+            f"({tolerance})."
+        )
+    if code == "over_invoiced":
+        net = _fmt_amount(evidence.get("deal_net", ""))
+        total = _fmt_amount(evidence.get("invoiced_total", ""))
+        diff = _fmt_amount(evidence.get("diff", ""))
+        ccy = str(evidence.get("currency", ""))
+        return (
+            f"Deal {entity_id} over-invoiced: staged invoices total {total} {ccy} "
+            f"against a deal net of {net} {ccy} (+{diff.lstrip('-')}), outside "
+            f"tolerance ({tolerance})."
+        )
+    if code == "within_tolerance":
+        net = _fmt_amount(evidence.get("deal_net", ""))
+        total = _fmt_amount(evidence.get("invoiced_total", ""))
+        ccy = str(evidence.get("currency", ""))
+        return (
+            f"Deal {entity_id} matched: invoiced {total} {ccy} against a deal "
+            f"net of {net} {ccy}, within tolerance ({tolerance})."
+        )
+    if code == "missing_invoice":
+        missing_net = evidence.get("deal_net")
+        ccy = str(evidence.get("currency", ""))
+        if missing_net not in (None, ""):
+            return (
+                f"Deal {entity_id} ({_fmt_amount(missing_net)} {ccy}) is missing its "
+                f"invoice for the period."
+            )
+        return f"Deal {entity_id} is missing its invoice for the period."
+    if code == "duplicate_invoice_reference":
+        ids = evidence.get("invoice_ids") or []
+        field = str(evidence.get("billing_plan_field", "Billing_Plan"))
+        return (
+            f"Deal {entity_id} has {len(ids)} invoices sharing its reference "
+            f"({', '.join(str(item) for item in ids)}); staged billing needs "
+            f"{field}."
+        )
+    if code == "cross_entity_invoice" and entity == "deal":
+        inv = str(evidence.get("invoice_id", ""))
+        deal_entity = str(evidence.get("deal_entity", ""))
+        inv_entity = str(evidence.get("invoice_entity", ""))
+        return f"Invoice {inv} for deal {entity_id} ({deal_entity}) was raised in {inv_entity}."
+    if code == "cross_entity_invoice":
+        inv_entity = str(evidence.get("invoice_entity", ""))
+        deals = ", ".join(str(item) for item in evidence.get("candidate_deals", []))
+        entities = ", ".join(str(item) for item in evidence.get("candidate_entities", []))
+        return (
+            f"Invoice {entity_id} ({inv_entity}) shares its customer with "
+            f"deal(s) {deals} in {entities}; never matched by name."
+        )
+    if code == "orphan_invoice_reference":
+        amount = evidence.get("invoice_amount")
+        ccy = str(evidence.get("invoice_currency", ""))
+        if amount not in (None, ""):
+            return f"Invoice {entity_id} ({_fmt_amount(amount)} {ccy}) references no known deal."
+        return f"Invoice {entity_id} references no known deal."
+    if code == "credit_note_unlinked":
+        amount = evidence.get("credit_note_amount")
+        ccy = str(evidence.get("credit_note_currency", ""))
+        linked = str(evidence.get("invoice_id", ""))
+        if amount not in (None, ""):
+            if linked:
+                return (
+                    f"Credit note {entity_id} ({_fmt_amount(amount)} {ccy}) links "
+                    f"to unknown invoice {linked}."
+                )
+            return (
+                f"Credit note {entity_id} ({_fmt_amount(amount)} {ccy}) links to no known invoice."
+            )
+        if linked:
+            return f"Credit note {entity_id} links to unknown invoice {linked}."
+        return f"Credit note {entity_id} links to no known invoice."
+    if code == "fx_rate_missing":
+        frm = str(evidence.get("from_currency", ""))
+        to = str(evidence.get("to_currency", ""))
+        day = str(evidence.get("invoice_date", ""))
+        return (
+            f"Deal {entity_id}: no exact {frm}->{to} rate for {day}; comparison "
+            f"skipped, never guessed."
+        )
+    if code == "draft_invoice_excluded":
+        inv = str(evidence.get("invoice_id", ""))
+        return f"Invoice {inv} for deal {entity_id} is a draft, excluded by policy."
+    if code == "void_invoice_excluded":
+        inv = str(evidence.get("invoice_id", ""))
+        status = str(evidence.get("status", "void"))
+        return f"Invoice {inv} for deal {entity_id} is {status}, excluded by policy."
+    if code == "invalid_amount":
+        value = evidence.get("value")
+        return (
+            f"Row {entity_id} carries a malformed amount {value!r}; excluded "
+            f"from amount comparison."
+        )
+    if code == "invalid_date":
+        value = evidence.get("value")
+        field = str(evidence.get("field", "date"))
+        return (
+            f"Row {entity_id} carries a missing or unparseable {field} "
+            f"{value!r}; excluded from matching."
+        )
+    if code == "source_unavailable":
+        return (
+            f"Org pull for {entity_id} failed; its records are out of scope while others continue."
+        )
+    return f"{code} on {entity} {entity_id or '<missing>'}"
+
+
 def analyze_recon(
     *,
     deals: list[dict[str, Any]],
@@ -209,12 +375,25 @@ def analyze_recon(
     unavailable: tuple[str, ...] = (),
 ) -> Analysis:
     """Reconcile one month across entities under *policy* (offline v2)."""
-    builder = _Builder()
+    builder = _Builder(policy)
     credit_notes = list(credit_notes or [])
     resolved_orgs = dict(org_ids or {})
-    fingerprints = {
-        key: org_fingerprint(resolved_orgs[key]) if key in resolved_orgs else "" for key in entities
-    }
+
+    def _print(key: str) -> str | None:
+        """Org fingerprint for *key*, or ``None`` when no profile org id.
+
+        The key is omitted from evidence when no profile org id exists —
+        never an empty string (UC-BK-3).
+        """
+        if key in resolved_orgs:
+            return org_fingerprint(resolved_orgs[key])
+        return None
+
+    def _with_print(evidence: dict[str, Any], key: str, entity_key: str) -> dict[str, Any]:
+        printed = _print(entity_key)
+        if printed is not None:
+            evidence[key] = printed
+        return evidence
 
     for entity_key in sorted(set(unavailable)):
         if entity_key in entities:
@@ -223,9 +402,62 @@ def analyze_recon(
                 "entity",
                 entity_key,
                 entity_key,
-                {"org_fingerprint": fingerprints.get(entity_key, ""), "entity_key": entity_key},
+                _with_print({"entity_key": entity_key}, "org_fingerprint", entity_key),
             )
     dead = set(unavailable)
+
+    # Row-level date validation (TK-FIX-2 style): a missing or
+    # unparseable date never counts as in-window. The row gets
+    # ``invalid_date`` (review) and is excluded from every matching
+    # pass below, as ``invalid_amount`` rows are excluded from amount
+    # comparison. Only applies to windowed runs (``policy.period`` set).
+    bad_deals: set[str] = set()
+    bad_invoices: set[str] = set()
+    if policy.period is not None:
+        for deal in deals:
+            if not isinstance(deal, dict):
+                continue
+            deal_id = str(deal.get("id", ""))
+            entity_key = str(deal.get("entity", ""))
+            if entity_key in dead or entity_key not in entities:
+                continue
+            raw_date = deal.get("closing_date")
+            if record_date(raw_date) is None:
+                bad_deals.add(deal_id)
+                builder.record(
+                    "invalid_date",
+                    "deal",
+                    deal_id,
+                    deal_id,
+                    {
+                        "row": "deal",
+                        "field": "closing_date",
+                        "value": raw_date,
+                        "deal_entity": entity_key,
+                    },
+                )
+        for inv in invoices:
+            if not isinstance(inv, dict):
+                continue
+            invoice_id = str(inv.get("id", ""))
+            entity_key = str(inv.get("entity", ""))
+            if entity_key in dead or entity_key not in entities:
+                continue
+            raw_date = inv.get("date")
+            if record_date(raw_date) is None:
+                bad_invoices.add(invoice_id)
+                builder.record(
+                    "invalid_date",
+                    "invoice",
+                    invoice_id,
+                    invoice_id,
+                    {
+                        "row": "invoice",
+                        "field": "date",
+                        "value": raw_date,
+                        "invoice_entity": entity_key,
+                    },
+                )
 
     def deal_in_scope(deal: dict[str, Any]) -> bool:
         """Deals are windowed by closing date only in ``deal_closing_date`` mode."""
@@ -248,6 +480,8 @@ def analyze_recon(
         entity_key = str(deal.get("entity", ""))
         if entity_key in dead:
             continue
+        if deal_id in bad_deals:
+            continue
         entry = entities.get(entity_key)
         if entry is None:
             builder.record(
@@ -261,7 +495,11 @@ def analyze_recon(
                 "deal",
                 deal_id,
                 deal_id,
-                {"entity_key": entity_key, "org_fingerprint": fingerprints.get(entity_key, "")},
+                _with_print(
+                    {"entity_key": entity_key, "deal_entity": entity_key},
+                    "org_fingerprint",
+                    entity_key,
+                ),
             )
         if not deal_in_scope(deal):
             continue
@@ -273,7 +511,7 @@ def analyze_recon(
                 "deal",
                 deal_id,
                 deal_id,
-                {"row": "deal", "value": deal.get("net_amount")},
+                {"row": "deal", "value": deal.get("net_amount"), "deal_entity": entity_key},
             )
             deal_net = None
 
@@ -282,6 +520,7 @@ def analyze_recon(
             for inv in invoices
             if isinstance(inv, dict)
             and str(inv.get("entity", "")) == entity_key
+            and str(inv.get("id", "")) not in bad_invoices
             and invoice_in_scope(inv)
             and match_key(policy, deal, inv)
         ]
@@ -295,15 +534,34 @@ def analyze_recon(
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {"invoice_id": invoice_id},
+                    {
+                        "invoice_id": invoice_id,
+                        "status": str(inv.get("status", "sent")),
+                        "deal_entity": entity_key,
+                        "invoice_entity": entity_key,
+                    },
                 )
                 continue
             if status in _VOID_STATUSES and not policy.include_void:
+                builder.record(
+                    "void_invoice_excluded",
+                    "deal",
+                    deal_id,
+                    invoice_id or deal_id,
+                    {
+                        "invoice_id": invoice_id,
+                        "status": str(inv.get("status", "sent")),
+                        "deal_entity": entity_key,
+                        "invoice_entity": entity_key,
+                    },
+                )
                 continue
             effective.append(inv)
 
         for inv in invoices:
             if not isinstance(inv, dict) or str(inv.get("entity", "")) == entity_key:
+                continue
+            if str(inv.get("id", "")) in bad_invoices:
                 continue
             if not invoice_in_scope(inv):
                 continue
@@ -315,21 +573,34 @@ def analyze_recon(
                 continue
             # Key-matched across legal entities: misfiled, never auto-matched
             # (UC-BK-3). The deal keeps missing_invoice; the invoice is
-            # flagged here with both org fingerprints.
+            # flagged here naming both entities, with org fingerprints only
+            # when a profile org id exists (omitted, never "").
             builder.record(
                 "cross_entity_invoice",
                 "deal",
                 deal_id,
                 invoice_id or deal_id,
-                {
-                    "invoice_id": invoice_id,
-                    "entity_fingerprint": fingerprints.get(entity_key, ""),
-                    "invoice_org_fingerprint": fingerprints.get(other_key, ""),
-                },
+                _with_print(
+                    _with_print(
+                        {
+                            "invoice_id": invoice_id,
+                            "deal_entity": entity_key,
+                            "invoice_entity": other_key,
+                        },
+                        "entity_fingerprint",
+                        entity_key,
+                    ),
+                    "invoice_org_fingerprint",
+                    other_key,
+                ),
             )
 
         if not effective:
-            builder.record("missing_invoice", "deal", deal_id, deal_id, {})
+            missing_evidence: dict[str, Any] = {"deal_entity": entity_key}
+            if deal_net is not None:
+                missing_evidence["deal_net"] = str(deal_net)
+                missing_evidence["currency"] = deal_ccy
+            builder.record("missing_invoice", "deal", deal_id, deal_id, missing_evidence)
             continue
 
         plan_field = (
@@ -344,7 +615,11 @@ def analyze_recon(
                 "deal",
                 deal_id,
                 deal_id,
-                {"invoice_ids": sorted(str(inv.get("id", "")) for inv in effective)},
+                {
+                    "invoice_ids": sorted(str(inv.get("id", "")) for inv in effective),
+                    "billing_plan_field": plan_field,
+                    "deal_entity": entity_key,
+                },
             )
             continue
 
@@ -371,7 +646,13 @@ def analyze_recon(
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {"row": "invoice", "value": raw_amount, "invoice_id": invoice_id},
+                    {
+                        "row": "invoice",
+                        "value": raw_amount,
+                        "invoice_id": invoice_id,
+                        "deal_entity": entity_key,
+                        "invoice_entity": entity_key,
+                    },
                 )
                 skip_compare = True
                 continue
@@ -388,6 +669,13 @@ def analyze_recon(
                             "invoice_id": invoice_id,
                             "from_currency": inv_ccy,
                             "to_currency": deal_ccy,
+                            "invoice_date": str(inv.get("date", "")),
+                            "deal_net": str(deal_net),
+                            "currency": deal_ccy,
+                            "invoice_amount": str(raw_amount),
+                            "invoice_currency": inv_ccy,
+                            "deal_entity": entity_key,
+                            "invoice_entity": entity_key,
                         },
                     )
                     skip_compare = True
@@ -444,6 +732,8 @@ def analyze_recon(
             "deal_net": str(deal_net),
             "invoiced_total": str(invoiced),
             "currency": deal_ccy,
+            "diff": str(diff),
+            "deal_entity": entity_key,
         }
         if tax_fallback:
             evidence["tax_fallback_net"] = True
@@ -453,20 +743,14 @@ def analyze_recon(
             if within_tolerance(diff, target, policy):
                 builder.record("within_tolerance", "deal", deal_id, deal_id, evidence)
             else:
-                builder.record(
-                    "outside_tolerance", "deal", deal_id, deal_id, {**evidence, "diff": str(diff)}
-                )
+                builder.record("outside_tolerance", "deal", deal_id, deal_id, evidence)
         else:
             if within_tolerance(diff, target, policy):
                 builder.record("within_tolerance", "deal", deal_id, deal_id, evidence)
             elif diff < 0:
-                builder.record(
-                    "under_invoiced", "deal", deal_id, deal_id, {**evidence, "diff": str(diff)}
-                )
+                builder.record("under_invoiced", "deal", deal_id, deal_id, evidence)
             else:
-                builder.record(
-                    "over_invoiced", "deal", deal_id, deal_id, {**evidence, "diff": str(diff)}
-                )
+                builder.record("over_invoiced", "deal", deal_id, deal_id, evidence)
 
     matched_ids = set()
     for deal in deals:
@@ -475,12 +759,15 @@ def analyze_recon(
         entity_key = str(deal.get("entity", ""))
         if entity_key in dead or entity_key not in entities:
             continue
+        if str(deal.get("id", "")) in bad_deals:
+            continue
         if not deal_in_scope(deal):
             continue
         for inv in invoices:
             if (
                 isinstance(inv, dict)
                 and str(inv.get("entity", "")) == entity_key
+                and str(inv.get("id", "")) not in bad_invoices
                 and invoice_in_scope(inv)
                 and match_key(policy, deal, inv)
             ):
@@ -494,12 +781,15 @@ def analyze_recon(
         invoice_id = str(inv.get("id", ""))
         if invoice_id in matched_ids:
             continue
+        if invoice_id in bad_invoices:
+            continue
         if not invoice_in_scope(inv):
             continue
         key_matches_anywhere = any(
             isinstance(deal, dict)
             and str(deal.get("entity", "")) not in dead
             and str(deal.get("entity", "")) in entities
+            and str(deal.get("id", "")) not in bad_deals
             and deal_in_scope(deal)
             and match_key(policy, deal, inv)
             for deal in deals
@@ -511,6 +801,7 @@ def analyze_recon(
         customer = str(inv.get("customer_name", ""))
         if customer:
             candidates: list[str] = []
+            candidate_entities: list[str] = []
             candidate_prints: list[str] = []
             for deal in deals:
                 if not isinstance(deal, dict):
@@ -518,24 +809,36 @@ def analyze_recon(
                 other = str(deal.get("entity", ""))
                 if other == entity_key or other in dead or other not in entities:
                     continue
+                if str(deal.get("id", "")) in bad_deals:
+                    continue
                 if not deal_in_scope(deal):
                     continue
                 if str(deal.get("customer_name", "")) == customer:
                     candidates.append(str(deal.get("id", "")))
-                    candidate_prints.append(fingerprints.get(other, ""))
+                    candidate_entities.append(other)
+                    printed = _print(other)
+                    if printed is not None:
+                        candidate_prints.append(printed)
             if candidates:
                 # Stray invoice sharing a customer name across entities:
-                # flagged once on the invoice (never matched by name).
+                # flagged once on the invoice (never matched by name),
+                # naming the invoice entity and the candidate deal entities.
+                distinct_entities = sorted(set(candidate_entities))
+                stray_evidence: dict[str, Any] = {
+                    "invoice_entity": entity_key,
+                    "deal_entity": distinct_entities[0],
+                    "candidate_deals": sorted(candidates),
+                    "candidate_entities": distinct_entities,
+                }
+                if candidate_prints:
+                    stray_evidence["candidate_fingerprints"] = sorted(set(candidate_prints))
+                stray_evidence = _with_print(stray_evidence, "invoice_org_fingerprint", entity_key)
                 builder.record(
                     "cross_entity_invoice",
                     "invoice",
                     invoice_id,
                     invoice_id,
-                    {
-                        "invoice_org_fingerprint": fingerprints.get(entity_key, ""),
-                        "candidate_deals": sorted(candidates),
-                        "candidate_fingerprints": sorted(set(candidate_prints)),
-                    },
+                    stray_evidence,
                 )
                 continue
         status = str(inv.get("status", "sent")).casefold()
@@ -548,7 +851,17 @@ def analyze_recon(
             "invoice",
             invoice_id,
             invoice_id,
-            {"org_fingerprint": fingerprints.get(entity_key, "")},
+            _with_print(
+                {
+                    "invoice_entity": entity_key,
+                    "invoice_amount": str(_invoice_net(inv))
+                    if _invoice_net(inv) is not None
+                    else "",
+                    "invoice_currency": str(inv.get("currency", "")),
+                },
+                "org_fingerprint",
+                entity_key,
+            ),
         )
 
     known_invoice_ids = {
@@ -563,12 +876,19 @@ def analyze_recon(
         linked_to = str(cn.get("invoice_id", ""))
         if linked_to and linked_to in known_invoice_ids:
             continue
+        cn_raw = cn.get("net_amount", cn.get("total"))
         builder.record(
             "credit_note_unlinked",
             "credit_note",
             cn_id,
             cn_id,
-            {"credit_note_id": cn_id, "invoice_id": linked_to},
+            {
+                "credit_note_id": cn_id,
+                "invoice_id": linked_to,
+                "credit_note_amount": str(cn_raw) if cn_raw is not None else "",
+                "credit_note_currency": str(cn.get("currency", "")),
+                "credit_note_entity": str(cn.get("entity", "")),
+            },
         )
 
     findings = sorted(builder.findings, key=lambda item: item.sort_key())
