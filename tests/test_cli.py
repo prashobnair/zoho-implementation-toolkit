@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from syrupy.assertion import SnapshotAssertion
 from typer.testing import CliRunner
 
 from zohokit import __version__
@@ -84,6 +85,42 @@ def test_workflow_simulate_markdown() -> None:
     )
     assert result.exit_code == 0
     assert result.output.startswith("# zohokit workflow report")
+
+
+def test_workflow_simulate_v2_trace_snapshot(tmp_path: Path, snapshot: SnapshotAssertion) -> None:
+    """A v2 rule set simulates through the CLI with a snapshot trace (TK-WF-F2)."""
+    fixture = tmp_path / "rules.json"
+    fixture.write_text(
+        json.dumps(
+            {
+                "rules": [
+                    {
+                        "id": "promote",
+                        "event": {"type": "record_created"},
+                        "priority": 1,
+                        "actions": [
+                            {"type": "field_update", "field": "Stage", "value": "Negotiation"}
+                        ],
+                    },
+                    {
+                        "id": "followup",
+                        "event": {"type": "stage_changed", "field": "Stage"},
+                        "priority": 2,
+                        "criteria": {"field": "Stage", "op": "changed_to", "value": "Negotiation"},
+                        "actions": [{"type": "create_task", "value": "Follow up", "delay_days": 2}],
+                    },
+                ],
+                "record": {"id": "d-2", "Stage": "Proposal"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    result = runner.invoke(app, ["workflow", "simulate", str(fixture)])
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert set(payload["simulation"]) == {"trace", "ledger", "external_actions", "days_elapsed"}
+    assert payload["simulation"]["external_actions"] == 0
+    assert payload["simulation"] == snapshot
 
 
 def test_forms_parity_strict_exit_2() -> None:

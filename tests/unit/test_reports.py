@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from zohokit.core.findings import Finding, Report, ReportSource, Severity, SideEffects
 from zohokit.core.ids import finding_id
-from zohokit.reports import render_html, render_json, render_markdown, render_table
+from zohokit.reports import render_html, render_json, render_junit, render_markdown, render_table
 
 FIXED_START_ISO = "2026-09-27T06:30:00Z"
 
@@ -125,7 +125,7 @@ def test_render_markdown_escapes_cells() -> None:
     )
     rebuilt = Report.build(
         module="migration",
-        run_id="run-0001",
+        run_id=report.run_id,
         started_at=report.started_at,
         finished_at=report.finished_at,
         findings=[tricky],
@@ -133,3 +133,62 @@ def test_render_markdown_escapes_cells() -> None:
     )
     row = [line for line in render_markdown(rebuilt).splitlines() if "`x`" in line]
     assert row == ["| info | deals/d-1 | `x` | a\\|b<br>c |"]
+
+
+def _simulated_report() -> Report:
+    """A workflow report carrying the reachable simulation block."""
+    report = sample_report()
+    return Report.build(
+        module="workflow",
+        run_id=report.run_id,
+        started_at=report.started_at,
+        finished_at=report.finished_at,
+        findings=[],
+        ready=True,
+        simulation={
+            "trace": [
+                {
+                    "step": "s1",
+                    "rule": "promote",
+                    "action": "field_update",
+                    "day": 0,
+                    "caused_by": "e0",
+                    "fields_changed": ["Stage"],
+                }
+            ],
+            "ledger": [],
+            "external_actions": 0,
+            "days_elapsed": 0,
+        },
+    )
+
+
+def test_render_markdown_lists_the_simulation_trace() -> None:
+    markdown = render_markdown(_simulated_report())
+    assert "## Simulation trace" in markdown
+    assert "| Step | Rule | Action | Day | Caused by | Fields changed |" in markdown
+    assert "| s1 | promote | field_update | 0 | e0 | Stage |" in markdown
+    assert "External actions: 0" in markdown
+
+
+def test_render_markdown_without_simulation_has_no_trace_section() -> None:
+    assert "## Simulation trace" not in render_markdown(sample_report())
+
+
+def test_render_html_lists_the_simulation_trace() -> None:
+    html = render_html(_simulated_report())
+    assert "<h2>Simulation trace</h2>" in html
+    assert "<td>s1</td>" in html
+    assert "<td>promote</td>" in html
+    assert "<td>field_update</td>" in html
+    assert "External actions: 0" in html
+
+
+def test_render_html_without_simulation_has_no_trace_section() -> None:
+    assert "<h2>Simulation trace</h2>" not in render_html(sample_report())
+
+
+def test_render_junit_without_coverage_stays_per_finding() -> None:
+    xml = render_junit(sample_report())
+    assert 'tests="2"' in xml
+    assert xml.count("<testcase") == 2

@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from zohokit.core.context import RunContext
 from zohokit.core.ids import canonical_json
-from zohokit.modules.workflow.engine import analyze
+from zohokit.modules.workflow.engine import analyze, run
 from zohokit.modules.workflow.language import (
     V2_ACTIONS,
     V2_EVENTS,
@@ -18,6 +22,7 @@ from zohokit.modules.workflow.language import (
 from zohokit.modules.workflow.ledger import SideEffectLedger
 from zohokit.modules.workflow.models import WorkflowInput
 from zohokit.modules.workflow.simulator import simulate_v2
+from zohokit.reports import render_json
 
 
 def _v2_rule(rule_id: str, **over: object) -> dict[str, object]:
@@ -217,6 +222,113 @@ def test_simulator_cycle_detection_and_step_limit() -> None:
         parsed, {"id": "d-3", "Stage": "New"}, initial_event="record_edited", max_steps=1
     )
     assert [item["code"] for item in limited["findings"]] == ["step_limit"]
+
+
+def _toggle_rules() -> list[dict[str, object]]:
+    """Two rules toggling Stage A <-> B on record edits."""
+    return [
+        {
+            "id": "t-a",
+            "event": {"type": "record_edited"},
+            "criteria": {"field": "Stage", "op": "eq", "value": "A"},
+            "actions": [{"type": "field_update", "field": "Stage", "value": "B"}],
+        },
+        {
+            "id": "t-b",
+            "event": {"type": "record_edited"},
+            "criteria": {"field": "Stage", "op": "eq", "value": "B"},
+            "actions": [{"type": "field_update", "field": "Stage", "value": "A"}],
+        },
+    ]
+
+
+def test_cycle_finding_names_the_rule_chain() -> None:
+    kind, parsed = parse_ruleset(_toggle_rules())
+    assert kind == "v2"
+    result = simulate_v2(parsed, {"id": "d-4", "Stage": "B"}, initial_event="record_edited")
+    assert len(result["findings"]) == 1
+    item = result["findings"][0]
+    assert item["code"] == "cycle_detected"
+    assert item["rules"] == ["t-a", "t-b"]
+    analysis = analyze(
+        WorkflowInput(
+            rules=_toggle_rules(), record={"id": "d-4", "Stage": "B"}, initial_event="record_edited"
+        )
+    )
+    assert [finding.code for finding in analysis.findings] == ["cycle_detected"]
+    finding = analysis.findings[0]
+    assert finding.entity_id == "t-a"
+    assert finding.evidence["sim_finding"]["rules"] == ["t-a", "t-b"]
+    assert finding.message == "Simulation revisited a state signature via t-a -> t-b; stopped."
+
+
+def test_step_limit_finding_names_the_rule_chain() -> None:
+    analysis = analyze(
+        WorkflowInput(
+            rules=_toggle_rules(),
+            record={"id": "d-5", "Stage": "B"},
+            initial_event="record_edited",
+            max_steps=2,
+        )
+    )
+    assert [finding.code for finding in analysis.findings] == ["step_limit"]
+    finding = analysis.findings[0]
+    assert finding.entity_id == "t-a"
+    assert finding.evidence["sim_finding"]["rules"] == ["t-b", "t-a", "t-b"]
+    assert "t-b -> t-a -> t-b" in finding.message
+
+
+def test_simulation_block_reaches_the_report() -> None:
+    """The JSON report carries the reachable causal trace (TK-WF-F2)."""
+    inputs = WorkflowInput(
+        rules=[
+            {
+                "id": "promote",
+                "event": {"type": "record_created"},
+                "priority": 1,
+                "actions": [{"type": "field_update", "field": "Stage", "value": "Negotiation"}],
+            },
+        ],
+        record={"id": "d-6", "Stage": "Proposal"},
+    )
+    ctx = RunContext(now=datetime.fromisoformat("2026-10-07T00:00:00+00:00"), mode="offline")
+    report = run(inputs, ctx=ctx)
+    assert report.simulation is not None
+    assert report.simulation["external_actions"] == 0
+    assert report.simulation["days_elapsed"] == 0
+    assert report.simulation["ledger"] == []
+    assert report.simulation["trace"] == [
+        {
+            "step": "s1",
+            "rule": "promote",
+            "action": "field_update",
+            "day": 0,
+            "caused_by": "e0",
+            "fields_changed": ["Stage"],
+        }
+    ]
+    payload = json.loads(render_json(report))
+    assert payload["simulation"]["trace"][0]["rule"] == "promote"
+    assert set(payload["simulation"]) == {"trace", "ledger", "external_actions", "days_elapsed"}
+
+
+def test_legacy_v1_report_carries_no_simulation_block() -> None:
+    """Legacy reports keep the parity shape: no new top-level block."""
+    inputs = WorkflowInput(
+        rules=[
+            {
+                "id": "owner",
+                "event": "deal_created",
+                "action": "assign_owner",
+                "value": "fictional-team",
+            }
+        ],
+        record={"id": "x", "stage": "new"},
+    )
+    ctx = RunContext(now=datetime.fromisoformat("2026-10-07T00:00:00+00:00"), mode="offline")
+    report = run(inputs, ctx=ctx)
+    assert report.simulation is None
+    assert "simulation" not in json.loads(render_json(report))
 
 
 def test_ledger_duplicate_detection() -> None:

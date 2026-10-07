@@ -38,8 +38,8 @@ with `--format json|table|markdown|html|sarif|junit` and write to a file with `-
 
 | Code | Severity | Meaning |
 |---|---|---|
-| `cycle_detected` | error | The trace revisited a state signature; simulation stopped. |
-| `step_limit` | error | The rule trace exceeded the step budget. |
+| `cycle_detected` | error | The trace revisited a state signature; the rule chain is reported and simulation stopped. |
+| `step_limit` | error | The rule trace exceeded the step budget; the rule chain is reported. |
 | `missing_owner` | error | An assign-owner action has no usable owner value. |
 | `no_op_stage` | error | A set-stage action targets the stage already set. |
 | `duplicate_followup` | error | The same follow-up would fire twice for one record. |

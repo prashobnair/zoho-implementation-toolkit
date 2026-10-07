@@ -159,6 +159,19 @@
       "title": "Artifacts",
       "type": "object"
     },
+    "coverage": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Coverage"
+    },
     "findings": {
       "items": {
         "$ref": "#/$defs/Finding"
@@ -204,6 +217,19 @@
     },
     "side_effects": {
       "$ref": "#/$defs/SideEffects"
+    },
+    "simulation": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Simulation"
     },
     "source": {
       "$ref": "#/$defs/ReportSource"
