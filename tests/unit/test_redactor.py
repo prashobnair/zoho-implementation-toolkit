@@ -259,3 +259,15 @@ def test_structural_tz_offset_survives_redaction() -> None:
     # Anything else under ``offset`` is still masked like a phone number.
     assert plain.redact_value("offset", "9876543210") == "********10"
     assert plain.redact_value("phone", "19800000") == "******00"
+
+
+def test_structural_money_survives_redaction() -> None:
+    """Books money numbers are amounts, not phone numbers."""
+    plain = Redactor()
+    assert plain.redact_value("total", 420000.0) == 420000.0
+    assert plain.redact_value("sub_total", "420000.0") == "420000.0"
+    assert plain.redact_value("tax_total", 75600) == 75600
+    assert plain.redact_obj({"invoice": {"total": 420000.0}}) == {"invoice": {"total": 420000.0}}
+    # Anything else under a money key is still masked like a phone number.
+    assert plain.redact_value("total", "call 98765 43210") != "call 98765 43210"
+    assert plain.redact_value("phone", 420000.0) != 420000.0
