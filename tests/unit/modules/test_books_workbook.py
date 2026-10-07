@@ -18,7 +18,7 @@ from zohokit.modules.books.reconcile import analyze_recon, run_recon
 from zohokit.modules.books.workbook import (
     BOOKS_SHEETS,
     render_books_workbook,
-    sum_range,
+    sum_if_range,
 )
 from zohokit.reports.xlsx import render_xlsx, safe_text
 
@@ -67,24 +67,93 @@ def test_workbook_tabs_in_order() -> None:
     )
 
 
-def test_totals_are_formulas_that_recompute() -> None:
+def test_totals_are_per_currency_sumif_that_recompute() -> None:
     book = _book(render_books_workbook(_marigold_report()))
     matched = book["Matched"]
-    totals = [cell.value for cell in matched[matched.max_row] if cell.value is not None]
-    formulas = [value for value in totals if isinstance(value, str) and value.startswith("=")]
-    assert formulas, "totals row must carry SUM formulas"
-    for formula in formulas:
-        assert formula.startswith("=SUM(")
-    net_total = sum_range(matched.cell(row=matched.max_row, column=5).value, matched)
-    inv_total = sum_range(matched.cell(row=matched.max_row, column=6).value, matched)
-    assert net_total == pytest.approx(775410.00)
-    assert inv_total == pytest.approx(775410.00)
+    labels = [matched.cell(row=row, column=1).value for row in range(8, matched.max_row + 1)]
+    assert labels == ["Total INR", "Total USD", "Total converted INR"]
+    inr_net = sum_if_range(matched.cell(row=8, column=6).value, matched)
+    inr_inv = sum_if_range(matched.cell(row=8, column=7).value, matched)
+    assert inr_net == pytest.approx(420000 + 100000 + 88410 + 95000 + 62000)
+    assert inr_inv == pytest.approx(420000 + 100000 + 88410 + 95000 + 62000)
+    usd_net = sum_if_range(matched.cell(row=9, column=6).value, matched)
+    assert usd_net == pytest.approx(10000.00)
+    converted = sum_if_range(matched.cell(row=10, column=9).value, matched)
+    assert converted == pytest.approx(88410.00)
+    for row in (8, 9, 10):
+        for column in (6, 7, 9):
+            value = matched.cell(row=row, column=column).value
+            if isinstance(value, str):
+                assert value.startswith("=SUMIF("), value
     mismatched = book["Mismatched"]
-    mis_net = sum_range(mismatched.cell(row=mismatched.max_row, column=5).value, mismatched)
+    assert mismatched.cell(row=mismatched.max_row, column=1).value == "Total INR"
+    mis_net = sum_if_range(mismatched.cell(row=mismatched.max_row, column=6).value, mismatched)
     assert mis_net == pytest.approx(50000.00 + 200000.00 + 100000.00)
     fx_sheet = book["FX"]
-    fx_total = sum_range(fx_sheet.cell(row=fx_sheet.max_row, column=5).value, fx_sheet)
-    assert fx_total == pytest.approx(88410.00)
+    fx_labels = [fx_sheet.cell(row=row, column=1).value for row in range(4, fx_sheet.max_row + 1)]
+    assert fx_labels == ["Total original USD", "Total converted INR"]
+    fx_original = sum_if_range(fx_sheet.cell(row=4, column=3).value, fx_sheet)
+    assert fx_original == pytest.approx(1000.00 + 1000.00)
+    fx_converted = sum_if_range(fx_sheet.cell(row=5, column=5).value, fx_sheet)
+    assert fx_converted == pytest.approx(88410.00)
+
+
+def test_record_and_legal_entity_columns() -> None:
+    book = _book(render_books_workbook(_marigold_report()))
+    matched = book["Matched"]
+    assert matched.cell(row=1, column=1).value == "Record"
+    assert matched.cell(row=1, column=2).value == "Legal entity"
+    rows = {
+        matched.cell(row=row, column=3).value: (
+            matched.cell(row=row, column=1).value,
+            matched.cell(row=row, column=2).value,
+        )
+        for row in range(2, 8)
+    }
+    assert rows["d-in-01"] == ("deal", "in-entity")
+    assert rows["d-us-01"] == ("deal", "us-entity")
+    review = book["Needs review"]
+    review_rows = {
+        review.cell(row=row, column=3).value: (
+            review.cell(row=row, column=1).value,
+            review.cell(row=row, column=2).value,
+        )
+        for row in range(2, 12)
+    }
+    assert review_rows["d-in-09"] == ("deal", "in-entity")
+    assert review_rows["i-us-02"] == ("invoice", "us-entity")
+    assert review_rows["cn-us-01"] == ("credit_note", "us-entity")
+    assert review_rows["eu-entity"] == ("entity", "eu-entity")
+
+
+def test_needs_review_rows_show_known_amounts() -> None:
+    book = _book(render_books_workbook(_marigold_report()))
+    review = book["Needs review"]
+    by_id = {}
+    for row in range(2, 12):
+        by_id[review.cell(row=row, column=3).value] = row
+    fx_row = by_id["d-in-10"]
+    assert review.cell(row=fx_row, column=6).value == pytest.approx(88000.00)
+    assert review.cell(row=fx_row, column=7).value == pytest.approx(1000.00)
+    assert review.cell(row=fx_row, column=8).value == "INR"
+    fx_sheet = book["FX"]
+    assert fx_sheet.cell(row=2, column=3).value == pytest.approx(1000.00)
+    assert fx_sheet.cell(row=2, column=4).value == "USD"
+    draft_row = by_id["d-in-07"]
+    assert review.cell(row=draft_row, column=6).value == pytest.approx(30000.00)
+    assert review.cell(row=draft_row, column=7).value == pytest.approx(30000.00)
+    date_row = by_id["d-in-17"]
+    assert review.cell(row=date_row, column=6).value == pytest.approx(26000.00)
+
+
+def test_amount_cells_use_money_format() -> None:
+    book = _book(render_books_workbook(_marigold_report()))
+    matched = book["Matched"]
+    assert matched.cell(row=2, column=6).number_format == "#,##0.00"
+    assert matched.cell(row=2, column=7).number_format == "#,##0.00"
+    fx_sheet = book["FX"]
+    assert fx_sheet.cell(row=3, column=3).number_format == "#,##0.00"
+    assert fx_sheet.cell(row=3, column=5).number_format == "#,##0.00"
 
 
 def test_headers_frozen_and_signoff_blank() -> None:
@@ -150,7 +219,7 @@ def test_injection_stored_as_text_in_every_workbook() -> None:
         assert guarded, "payload must be stored as guarded text"
         assert all(value == "'" + PAYLOAD for value in guarded)
         for _title, _coord, value in formula_cells:
-            assert isinstance(value, str) and value.startswith("=SUM("), value
+            assert isinstance(value, str) and value.startswith(("=SUM(", "=SUMIF(")), value
 
 
 def test_cli_xlsx_writes_finance_workbook(tmp_path: Path) -> None:

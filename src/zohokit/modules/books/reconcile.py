@@ -424,18 +424,24 @@ def analyze_recon(
             raw_date = deal.get("closing_date")
             if record_date(raw_date) is None:
                 bad_deals.add(deal_id)
+                date_evidence: dict[str, Any] = {
+                    "row": "deal",
+                    "field": "closing_date",
+                    "value": raw_date,
+                    "deal_entity": entity_key,
+                    "customer_name": str(deal.get("customer_name", "")),
+                }
+                try:
+                    date_evidence["deal_net"] = str(_parse_strict(deal.get("net_amount")))
+                    date_evidence["currency"] = str(deal.get("currency", ""))
+                except MoneyError:
+                    pass
                 builder.record(
                     "invalid_date",
                     "deal",
                     deal_id,
                     deal_id,
-                    {
-                        "row": "deal",
-                        "field": "closing_date",
-                        "value": raw_date,
-                        "deal_entity": entity_key,
-                        "customer_name": str(deal.get("customer_name", "")),
-                    },
+                    date_evidence,
                 )
         for inv in invoices:
             if not isinstance(inv, dict):
@@ -447,18 +453,22 @@ def analyze_recon(
             raw_date = inv.get("date")
             if record_date(raw_date) is None:
                 bad_invoices.add(invoice_id)
+                inv_date_evidence: dict[str, Any] = {
+                    "row": "invoice",
+                    "field": "date",
+                    "value": raw_date,
+                    "invoice_entity": entity_key,
+                    "customer_name": str(inv.get("customer_name", "")),
+                }
+                if _invoice_net(inv) is not None:
+                    inv_date_evidence["invoice_amount"] = str(_invoice_net(inv))
+                    inv_date_evidence["invoice_currency"] = str(inv.get("currency", ""))
                 builder.record(
                     "invalid_date",
                     "invoice",
                     invoice_id,
                     invoice_id,
-                    {
-                        "row": "invoice",
-                        "field": "date",
-                        "value": raw_date,
-                        "invoice_entity": entity_key,
-                        "customer_name": str(inv.get("customer_name", "")),
-                    },
+                    inv_date_evidence,
                 )
 
     def deal_in_scope(deal: dict[str, Any]) -> bool:
@@ -541,33 +551,47 @@ def analyze_recon(
             status = str(inv.get("status", "sent")).casefold()
             invoice_id = str(inv.get("id", ""))
             if status in _DRAFT_STATUSES and not policy.include_draft:
+                excluded_evidence: dict[str, Any] = {
+                    "invoice_id": invoice_id,
+                    "status": str(inv.get("status", "sent")),
+                    "deal_entity": entity_key,
+                    "invoice_entity": entity_key,
+                    "customer_name": deal_customer,
+                }
+                if deal_net is not None:
+                    excluded_evidence["deal_net"] = str(deal_net)
+                    excluded_evidence["currency"] = deal_ccy
+                if _invoice_net(inv) is not None:
+                    excluded_evidence["invoice_amount"] = str(_invoice_net(inv))
+                    excluded_evidence["invoice_currency"] = str(inv.get("currency", "")) or deal_ccy
                 builder.record(
                     "draft_invoice_excluded",
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {
-                        "invoice_id": invoice_id,
-                        "status": str(inv.get("status", "sent")),
-                        "deal_entity": entity_key,
-                        "invoice_entity": entity_key,
-                        "customer_name": deal_customer,
-                    },
+                    excluded_evidence,
                 )
                 continue
             if status in _VOID_STATUSES and not policy.include_void:
+                void_evidence: dict[str, Any] = {
+                    "invoice_id": invoice_id,
+                    "status": str(inv.get("status", "sent")),
+                    "deal_entity": entity_key,
+                    "invoice_entity": entity_key,
+                    "customer_name": deal_customer,
+                }
+                if deal_net is not None:
+                    void_evidence["deal_net"] = str(deal_net)
+                    void_evidence["currency"] = deal_ccy
+                if _invoice_net(inv) is not None:
+                    void_evidence["invoice_amount"] = str(_invoice_net(inv))
+                    void_evidence["invoice_currency"] = str(inv.get("currency", "")) or deal_ccy
                 builder.record(
                     "void_invoice_excluded",
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {
-                        "invoice_id": invoice_id,
-                        "status": str(inv.get("status", "sent")),
-                        "deal_entity": entity_key,
-                        "invoice_entity": entity_key,
-                        "customer_name": deal_customer,
-                    },
+                    void_evidence,
                 )
                 continue
             effective.append(inv)
@@ -660,19 +684,23 @@ def analyze_recon(
             try:
                 amount = _parse_strict(raw_amount)
             except MoneyError:
+                invalid_evidence: dict[str, Any] = {
+                    "row": "invoice",
+                    "value": raw_amount,
+                    "invoice_id": invoice_id,
+                    "deal_entity": entity_key,
+                    "invoice_entity": entity_key,
+                    "customer_name": deal_customer,
+                }
+                if deal_net is not None:
+                    invalid_evidence["deal_net"] = str(deal_net)
+                    invalid_evidence["currency"] = deal_ccy
                 builder.record(
                     "invalid_amount",
                     "deal",
                     deal_id,
                     invoice_id or deal_id,
-                    {
-                        "row": "invoice",
-                        "value": raw_amount,
-                        "invoice_id": invoice_id,
-                        "deal_entity": entity_key,
-                        "invoice_entity": entity_key,
-                        "customer_name": deal_customer,
-                    },
+                    invalid_evidence,
                 )
                 skip_compare = True
                 continue

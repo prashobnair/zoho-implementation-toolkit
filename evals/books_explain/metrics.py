@@ -53,15 +53,16 @@ def case_variables(case: dict[str, Any]) -> dict[str, str]:
 
 
 def allowed_money(case: dict[str, Any]) -> list[MoneyFigure]:
-    """Report amounts a narrative may restate (exact Decimal values)."""
+    """Report amounts a narrative may restate (exact Decimal values).
+
+    The dataset ``amounts`` string carries ``VALUE [CUR]`` pairs, so a
+    marked narrative figure must match a same-currency amount (see
+    :func:`check_money_grounded`); bare numbers stay currency-agnostic.
+    """
+    from zohokit.ai.validators import parse_report_amounts
+
     variables = case_variables(case)
-    figures: list[MoneyFigure] = []
-    for token in variables["amounts"].replace(",", " ").split():
-        try:
-            value = Decimal(token)
-        except InvalidOperation:
-            continue
-        figures.append(MoneyFigure(value=value, precision=Decimal("0.01")))
+    figures: list[MoneyFigure] = list(parse_report_amounts(variables["amounts"]))
     for token in extract_report_tokens(
         variables["report_summary"] + "\n" + variables["findings"]
     ).numbers:

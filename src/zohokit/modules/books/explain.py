@@ -5,13 +5,16 @@
 every figure is verified against the report (STD-AI7): citations replay
 STD-AI6, plain numbers/dates replay STD-AI7 on money-blanked text, and
 scale-suffixed amounts (``₹4.2L``/``lakh``/``Cr``/``crore``/``$1.2k``/
-``1.2M``) must equal a report amount at their own stated precision.
-Every error-severity finding's entity must be cited — omitting one is a
-coverage violation. With no provider the deterministic template runs
-(``source: "template"``, ``ai_status: "disabled"``).
+``1.2M``) must match a report amount at their own stated precision AND
+within 2% with a matching currency. Every error-severity finding's
+entity must be cited — omitting one is a coverage violation. With no
+provider the deterministic template runs (``source: "template"``,
+``ai_status: "disabled"``).
 """
 
 from __future__ import annotations
+
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -60,20 +63,31 @@ def recon_variables(report: Report) -> dict[str, str]:
     )
     lines = []
     amounts: list[str] = []
+
+    def _tagged(value: Any, currency: Any) -> None:
+        if value in (None, ""):
+            return
+        text = str(value)
+        ccy = str(currency or "")
+        amounts.append(f"{text} {ccy}" if ccy else text)
+
     for item in dumped.get("findings", []):
         evidence = item.get("evidence") or {}
         lines.append(
             f"{item.get('id')} | {item.get('code')} | {item.get('severity')} | "
             f"{item.get('entity')}:{item.get('entity_id')} | {item.get('message')}"
         )
-        for key in ("deal_net", "invoiced_total", "converted", "original"):
-            if evidence.get(key) not in (None, ""):
-                amounts.append(str(evidence[key]))
+        deal_ccy = evidence.get("currency", "")
+        _tagged(evidence.get("deal_net"), deal_ccy)
+        _tagged(evidence.get("invoiced_total"), deal_ccy)
+        _tagged(evidence.get("converted"), evidence.get("converted_currency", deal_ccy))
+        _tagged(evidence.get("original"), evidence.get("original_currency", deal_ccy))
+        _tagged(evidence.get("invoice_amount"), evidence.get("invoice_currency", ""))
+        _tagged(evidence.get("credit_note_amount"), evidence.get("credit_note_currency", ""))
         for entry in evidence.get("conversions") or []:
             if isinstance(entry, dict):
-                for key in ("original", "converted"):
-                    if entry.get(key) not in (None, ""):
-                        amounts.append(str(entry[key]))
+                _tagged(entry.get("original"), entry.get("original_currency", ""))
+                _tagged(entry.get("converted"), entry.get("converted_currency", ""))
     return {
         "report_summary": summary_text,
         "amounts": ", ".join(amounts),
@@ -82,16 +96,18 @@ def recon_variables(report: Report) -> dict[str, str]:
 
 
 def report_money_figures(variables: dict[str, str]) -> list[MoneyFigure]:
-    """Report amounts a narrative may restate (exact Decimal values)."""
+    """Report amounts a narrative may restate (exact Decimal values).
+
+    The ``amounts`` variable carries ``VALUE [CUR]`` pairs (currency
+    from the finding evidence); bare numbers stay currency-agnostic for
+    older bundles. Message-derived numbers feed the exact-token path
+    with unit precision, as before.
+    """
     from decimal import Decimal, InvalidOperation
 
-    figures: list[MoneyFigure] = []
-    for token in variables["amounts"].replace(",", " ").split():
-        try:
-            value = Decimal(token)
-        except InvalidOperation:
-            continue
-        figures.append(MoneyFigure(value=value, precision=Decimal("0.01")))
+    from zohokit.ai.validators import parse_report_amounts
+
+    figures: list[MoneyFigure] = list(parse_report_amounts(variables["amounts"]))
     for token in extract_report_tokens(
         variables["report_summary"] + "\n" + variables["findings"]
     ).numbers:

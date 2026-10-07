@@ -2358,7 +2358,7 @@ def build_workflow_loop() -> tuple[list[dict[str, Any]], dict[str, str]]:
 
 
 # ---------------------------------------------------------------------------
-# books_explain (AI-BK-1): 30 good + 6 bad
+# books_explain (AI-BK-1): 30 good + 9 bad
 # ---------------------------------------------------------------------------
 
 #: Recon finding templates: (code, severity, entity, entity_id, message, amounts).
@@ -2474,7 +2474,7 @@ def _books_inr(amount: int) -> str:
 
 
 def build_books_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
-    """30 good + 6 bad controller-narrative cases (hand-authored synthetic)."""
+    """30 good + 9 bad controller-narrative cases (hand-authored synthetic)."""
     cases: list[dict[str, Any]] = []
     responses: dict[str, str] = {}
     counter = 0
@@ -2698,6 +2698,73 @@ def build_books_explain() -> tuple[list[dict[str, Any]], dict[str, str]]:
                     "Deal d-m-88 matched at Rs.1L with extra words added.",
                     quoted["id"],
                     "Deal d-m-88 matched at a different amount entirely.",
+                )
+            ]
+        },
+    )
+
+    def _currency_report(
+        n: int, amount: int, finding_id: int
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        message = f"Deal d-in-{n} ({amount} INR) is missing its invoice for September 2026."
+        report = {
+            "summary": {"error": 1, "review": 0, "warning": 0, "info": 0},
+            "ready": False,
+            "findings": [
+                {
+                    "id": f"{finding_id:024x}",
+                    "code": "missing_invoice",
+                    "severity": "error",
+                    "entity": "deal",
+                    "entity_id": f"d-in-{n}",
+                    "message": message,
+                }
+            ],
+            "amounts": f"{amount} INR",
+        }
+        return report, report["findings"][0]
+
+    fx_report, fx_item = _currency_report(89, 420000, 1000)
+    _bad_case(
+        "books-bad-currency",
+        "a USD figure for an INR report amount",
+        fx_report,
+        {
+            "sentences": [
+                _sentence(
+                    "Deal d-in-89 ($4.2L) is missing its invoice.",
+                    fx_item["id"],
+                    fx_item["message"],
+                )
+            ]
+        },
+    )
+    coarse_report, coarse_item = _currency_report(90, 5200000, 1001)
+    _bad_case(
+        "books-bad-coarse",
+        "a coarse crore figure beyond 2% of the report amount",
+        coarse_report,
+        {
+            "sentences": [
+                _sentence(
+                    "Deal d-in-90 holds ₹1 Cr in missing invoices.",
+                    coarse_item["id"],
+                    coarse_item["message"],
+                )
+            ]
+        },
+    )
+    zero_report, zero_item = _currency_report(91, 420000, 1002)
+    _bad_case(
+        "books-bad-zero",
+        "a stated zero for a non-zero report amount",
+        zero_report,
+        {
+            "sentences": [
+                _sentence(
+                    "Deal d-in-91 booked ₹0 Cr this month.",
+                    zero_item["id"],
+                    zero_item["message"],
                 )
             ]
         },

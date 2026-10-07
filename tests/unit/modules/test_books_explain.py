@@ -71,6 +71,67 @@ def test_money_precision_accepts_rounding_rejects_overprecision() -> None:
     assert check_money_grounded(narrative="booked ₹4.3L", allowed=allowed).ok is False
 
 
+def _inr_entries(*values: str) -> list[_MoneyFigure]:
+    return [
+        _MoneyFigure(value=Decimal(value), precision=Decimal("0.01"), currency="INR")
+        for value in values
+    ]
+
+
+def test_lead_money_probes_reject_coarse_and_foreign_currency() -> None:
+    """Every lead probe rejected, except ``₹4.2L`` vs 420000 INR."""
+    inr_420k = _inr_entries("420000")
+    # Stated zero never matches a non-zero report.
+    assert check_money_grounded(narrative="booked ₹0 Cr", allowed=inr_420k).ok is False
+    # Coarse units: within stated precision but beyond 2% of the report.
+    assert check_money_grounded(narrative="booked ₹4L", allowed=inr_420k).ok is False
+    assert (
+        check_money_grounded(narrative="holds ₹1 Cr", allowed=_inr_entries("5200000")).ok is False
+    )
+    assert (
+        check_money_grounded(narrative="holds ₹0.5 Cr", allowed=_inr_entries("5200000")).ok is False
+    )
+    assert (
+        check_money_grounded(narrative="holds ₹0.5 Cr", allowed=_inr_entries("10000")).ok is False
+    )
+    # Foreign markers never ground an INR report, even at the exact value.
+    assert check_money_grounded(narrative="booked $4.2L", allowed=inr_420k).ok is False
+    assert check_money_grounded(narrative="booked USD 420,000", allowed=inr_420k).ok is False
+    # The one passing probe: exact value, matching currency.
+    assert check_money_grounded(narrative="booked ₹4.2L", allowed=inr_420k).ok is True
+
+
+def test_money_currency_rules() -> None:
+    inr_420k = _inr_entries("420000")
+    usd_10k = [_MoneyFigure(value=Decimal("10000"), precision=Decimal("0.01"), currency="USD")]
+    # Marked figures need a same-currency amount.
+    assert check_money_grounded(narrative="fee $10k", allowed=usd_10k).ok is True
+    assert check_money_grounded(narrative="fee ₹10k", allowed=usd_10k).ok is False
+    assert check_money_grounded(narrative="fee $4.2L", allowed=inr_420k).ok is False
+    # Unmarked figures only match a single-currency report.
+    assert check_money_grounded(narrative="booked 4.2 lakh", allowed=inr_420k).ok is True
+    mixed = inr_420k + usd_10k
+    assert check_money_grounded(narrative="booked 4.2 lakh", allowed=mixed).ok is False
+    assert check_money_grounded(narrative="booked ₹4.2L", allowed=mixed).ok is True
+    # Stated zero only matches a report zero.
+    zero_inr = _inr_entries("0")
+    assert check_money_grounded(narrative="booked ₹0 Cr", allowed=zero_inr).ok is True
+    assert check_money_grounded(narrative="booked ₹0", allowed=inr_420k).ok is False
+    # Reports without currency info stay value-only (older eval bundles).
+    bare = [_MoneyFigure(value=Decimal("420000"), precision=Decimal("0.01"))]
+    assert check_money_grounded(narrative="booked ₹4.2L", allowed=bare).ok is True
+    assert check_money_grounded(narrative="booked $4.2L", allowed=bare).ok is True
+
+
+def test_report_amounts_feed_money_figures() -> None:
+    variables = recon_variables(_report())
+    values = {figure.value for figure in report_money_figures(variables)}
+    assert Decimal("420000.00") in values
+    assert Decimal("88410.00") in values
+    inr = {figure.currency for figure in report_money_figures(variables) if figure.currency}
+    assert {"INR", "USD"} <= inr
+
+
 def test_strip_money_figures_blanks_spans() -> None:
     stripped = strip_money_figures("Deal d-1 matched at ₹4.2L on 2026-09-15.")
     assert "4.2" not in stripped
@@ -89,13 +150,6 @@ def test_template_narrative_cites_every_error() -> None:
     variables = recon_variables(report)
     draft = template_narrative(report)
     assert validate_books_explain(variables, draft) == []
-
-
-def test_report_amounts_feed_money_figures() -> None:
-    variables = recon_variables(_report())
-    values = {figure.value for figure in report_money_figures(variables)}
-    assert Decimal("420000.00") in values
-    assert Decimal("88410.00") in values
 
 
 def test_valid_ai_narrative_passes() -> None:

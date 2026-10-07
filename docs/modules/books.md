@@ -78,8 +78,14 @@ amounts with `Decimal` (missing rate → `fx_rate_missing`, never guessed).
 
 `--format xlsx` on a v2 recon writes the sign-off workbook (seven tabs:
 Matched / Mismatched / Missing invoice / Orphan invoice / Needs review /
-FX / Sign-off). Amount columns carry real `=SUM(...)` totals formulas so
-finance can audit the arithmetic; every other cell is literal text
+FX / Sign-off). Rows carry the record type (`Record`) plus the legal
+entity (`in-entity`/`us-entity`); Needs-review rows show the known
+amounts too (e.g. `fx_rate_missing` shows the deal net and the original
+invoice amount). Amount columns carry real per-currency `=SUMIF(...)`
+totals formulas (`Total INR` / `Total USD`, converted totals only in
+their converted currency) so finance can audit the arithmetic without
+ever mixing currencies; amount cells use the `#,##0.00` money format.
+Every other cell is literal text
 (data starting with `=`, `+`, `-`, `@`, tab or CR is stored guarded,
 never as a formula — only the toolkit's own totals may be formulas).
 Headers are frozen and the sign-off sheet's preparer, reviewer and date
@@ -90,7 +96,8 @@ stay blank for the human gate.
 `zohokit books explain <report.json> [--ai]` narrates the recon for the
 controller ("3 deals (₹4.2L) missing invoices; 1 invoice in wrong
 entity…"). With `--ai` every figure is verified against the report —
-Indian-notation amounts only at their stated precision, and every
+Indian-notation amounts only at their stated precision AND within 2%
+with a matching currency, and every
 error-severity finding's entity cited — or the deterministic template
 runs instead. Without a provider the tool prints `AI disabled` and the
 template runs (`source: "template"`).

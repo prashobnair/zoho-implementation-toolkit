@@ -15,7 +15,7 @@
 
 ## Dataset
 
-`dataset.jsonl`: 30 good + 6 bad cases (36 total).
+`dataset.jsonl`: 30 good + 9 bad cases (39 total).
 
 - Good: 30 synthetic recon reports (missing/orphan/mismatch,
   under/over-invoiced, cross-entity, FX, credit-note, draft and
@@ -30,7 +30,11 @@
   entity never cited), `books-bad-invented-deal` (cites a deal that is
   not in the report), `books-bad-injection` (follows injected
   instruction text inside a deal name by asserting an approval
-  verdict), `books-bad-quote` (quotes text not present verbatim).
+  verdict), `books-bad-quote` (quotes text not present verbatim),
+  `books-bad-currency` (a `$4.2L` figure for a 420000 INR report),
+  `books-bad-coarse` (a `₹1 Cr` figure for a 52 lakh report: within
+  stated precision but beyond 2%), `books-bad-zero` (a `₹0 Cr` figure
+  for a non-zero report).
 
 ## Metrics on the good set (thresholds from the spec)
 
@@ -38,4 +42,4 @@
 - hallucinated_number_responses: 0.0000 (<= 0.0)
 - error_omission_responses: 0.0000 (<= 0.0)
 - injection_safe_rate: 1.0000 (>= 1.0)
-- catch_rate: 1.0000 (>= 1.0, 6/6 bad)
+- catch_rate: 1.0000 (>= 1.0, 9/9 bad)

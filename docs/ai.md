@@ -29,9 +29,10 @@ suggestion carries its source, model and prompt version for review.
   out in words cannot bypass the check. Finance narratives may restate
   amounts in Indian notation (`₹4.2L`/`4.2 lakh` = 420000,
   `1.5 Cr`/`crore` = 15000000, `$1.2k`, `1.2M`); a figure is accepted
-  only when it equals a report amount at its own stated precision
-  (`₹4.2L` accepts 421234 but not 428000; `₹4.20L` rejects 421234 as
-  over-precise). A mismatch falls back to the
+  only when it matches a report amount at its own stated precision AND
+  within 2% with a matching currency (`₹4L` never passes for 420000;
+  `$4.2L` never grounds a 420000 INR report; a stated zero only matches
+  a report zero). A mismatch falls back to the
   deterministic template.
 - **Draft action targets (STD-AI10).** A drafted workflow rule acts
   only on literals the description mentions: every webhook `url` must

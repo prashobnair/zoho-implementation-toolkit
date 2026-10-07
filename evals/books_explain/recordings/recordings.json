@@ -1,5 +1,15 @@
 {
   "cases": {
+    "books-bad-coarse": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "b989fa891c4c0fe0001457c958d17f9625efd7be406f491911b2fb392c55024d",
+      "response": "{\n  \"sentences\": [\n    {\n      \"confidence\": 0.9,\n      \"finding_ids\": [\n        \"0000000000000000000003e9\"\n      ],\n      \"quotes\": [\n        \"Deal d-in-90 (5200000 INR) is missing its invoice for September 2026.\"\n      ],\n      \"text\": \"Deal d-in-90 holds \\u20b91 Cr in missing invoices.\"\n    }\n  ]\n}\n"
+    },
+    "books-bad-currency": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "e9defb50bc2769f9df9ebf84b68d061d61cb3278227f2a967b420073da1672f2",
+      "response": "{\n  \"sentences\": [\n    {\n      \"confidence\": 0.9,\n      \"finding_ids\": [\n        \"0000000000000000000003e8\"\n      ],\n      \"quotes\": [\n        \"Deal d-in-89 (420000 INR) is missing its invoice for September 2026.\"\n      ],\n      \"text\": \"Deal d-in-89 ($4.2L) is missing its invoice.\"\n    }\n  ]\n}\n"
+    },
     "books-bad-injection": {
       "origin": "hand-authored synthetic",
       "prompt_hash": "69d859a88a3d4db8eac226756e4f4e814892ede13cfb0b9f9ffa200c85d88023",
@@ -29,6 +39,11 @@
       "origin": "hand-authored synthetic",
       "prompt_hash": "fd3463b40e9fc5c8494f641e2b54498444dcd2bd2b80e56131cc7d26d514201c",
       "response": "{\n  \"sentences\": [\n    {\n      \"confidence\": 0.9,\n      \"finding_ids\": [\n        \"00000000000000000000004d\"\n      ],\n      \"quotes\": [\n        \"Deal d-m-88 matched at a different amount entirely.\"\n      ],\n      \"text\": \"Deal d-m-88 matched at Rs.1L with extra words added.\"\n    }\n  ]\n}\n"
+    },
+    "books-bad-zero": {
+      "origin": "hand-authored synthetic",
+      "prompt_hash": "5600788254e076f42fecce00e9ccf9b0e8bc5b785c9757a2b4d6dbc8d7b1f20d",
+      "response": "{\n  \"sentences\": [\n    {\n      \"confidence\": 0.9,\n      \"finding_ids\": [\n        \"0000000000000000000003ea\"\n      ],\n      \"quotes\": [\n        \"Deal d-in-91 (420000 INR) is missing its invoice for September 2026.\"\n      ],\n      \"text\": \"Deal d-in-91 booked \\u20b90 Cr this month.\"\n    }\n  ]\n}\n"
     },
     "books-good-01": {
       "origin": "hand-authored synthetic",
