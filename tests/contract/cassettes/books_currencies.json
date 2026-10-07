@@ -1,0 +1,30 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/settings/currencies?organization_id=555000001&page=1&per_page=200"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "currencies": [
+        {
+          "currency_code": "INR",
+          "currency_id": "555000401",
+          "currency_symbol": "Rs."
+        },
+        {
+          "currency_code": "USD",
+          "currency_id": "555000402",
+          "currency_symbol": "$"
+        }
+      ],
+      "message": "success",
+      "page_context": {
+        "has_more_page": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

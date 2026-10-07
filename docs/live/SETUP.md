@@ -57,6 +57,23 @@ and repeat this step).
 When you are done, clear the terminal exports (`unset ZOHO_CLIENT_ID
 ZOHO_CLIENT_SECRET`).
 
+## Books scopes (needed later; not granted yet)
+
+Month-end reconciliation reads Zoho Books through these read-only
+scopes (see `docs/API_CONTRACTS.md`; the readers are unverified, so
+every Books call additionally needs `--experimental`):
+
+- `ZohoBooks.invoices.READ`
+- `ZohoBooks.contacts.READ`
+- `ZohoBooks.creditnotes.READ`
+- `ZohoBooks.settings.READ` (currencies, taxes, organizations)
+
+Do not tick them on the Self Client yet: there is no Books org to verify
+against, and the committed `profiles/dev-in.json` stays CRM-only until
+the owner approves a Books verification run. Raw Books organization IDs
+live only in the local (uncommitted) profile copy under `books_orgs`;
+reports and logs carry fingerprints only.
+
 ## 3. Save the three secrets for scheduled runs
 
 The weekly verification runs on GitHub, not on your machine, so it

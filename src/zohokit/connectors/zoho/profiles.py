@@ -28,6 +28,10 @@ class Profile(BaseModel):
     environment: EnvironmentType = "developer_edition"
     org_name: str = ""
     saved_at: str = ""
+    #: Books organization ids keyed by local ref (TK-BK-F2). Raw ids live
+    #: only in the local (uncommitted) profile copy — never in reports,
+    #: logs, or the committed sample profile.
+    books_orgs: dict[str, str] = Field(default_factory=dict)
 
 
 def profiles_dir(base: Path | None = None) -> Path:

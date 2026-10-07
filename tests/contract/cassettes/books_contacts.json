@@ -1,0 +1,25 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/contacts?organization_id=555000001&page=1&per_page=200"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "contacts": [
+        {
+          "contact_id": "555000101",
+          "contact_name": "Marigold Labs",
+          "customer_name": "Marigold Labs"
+        }
+      ],
+      "message": "success",
+      "page_context": {
+        "has_more_page": false,
+        "page": 1,
+        "per_page": 200
+      }
+    }
+  }
+}

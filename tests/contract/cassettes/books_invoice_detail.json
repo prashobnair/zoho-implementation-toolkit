@@ -1,0 +1,31 @@
+{
+  "request": {
+    "headers": {},
+    "method": "GET",
+    "url": "https://www.zohoapis.in/books/v3/invoices/555000201?organization_id=555000001"
+  },
+  "response": {
+    "body": {
+      "code": 0,
+      "invoice": {
+        "currency_code": "INR",
+        "custom_fields": [
+          {
+            "label": "CRM Deal ID",
+            "value": "d-in-01"
+          }
+        ],
+        "customer_id": "555000101",
+        "customer_name": "Marigold Labs",
+        "date": "2026-09-15",
+        "invoice_id": "555000201",
+        "invoice_number": "INV-001",
+        "reference_number": "REF-001",
+        "status": "sent",
+        "sub_total": 420000.0,
+        "total": 420000.0
+      },
+      "message": "success"
+    }
+  }
+}
